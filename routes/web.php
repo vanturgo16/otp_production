@@ -49,12 +49,26 @@ Route::middleware(['auth'])->group(function () {
 	Route::get('/production-ent-material-use-print/{id}', [ProductionController::class, 'production_entry_material_use_print'])->name('production_entry_material_use_print');
 	Route::get('/production-ent-material-use-detail/{id}', [ProductionController::class, 'production_entry_material_use_detail'])->name('production_entry_material_use_detail');
     Route::post('/production-entry-material-use-detail-add', [ProductionController::class, 'production_entry_material_use_detail_add'])->name('production_entry_material_use_detail_add');
-	Route::get('/production-entry-material-use-detail-edit-get/{id}', [ProductionController::class, 'production_entry_material_use_detail_edit_get'])->name('production_entry_material_use_detail_edit_get');
-	Route::put('/production-entry-material-use-detail-edit-save/{id}', [ProductionController::class, 'production_entry_material_use_detail_edit_save'])->name('production_entry_material_use_detail_edit_save');
+	Route::get('/production-entry-material-use-detail-edit/{id_rm}/{id_rm_detail}', [ProductionController::class, 'production_entry_material_use_detail_edit'])->name('production_entry_material_use_detail_edit');
+	Route::post('/production-entry-material-use-detail-edit-save', [ProductionController::class, 'production_entry_material_use_detail_edit_save'])->name('production_entry_material_use_detail_edit_save');
+	//Route::get('/production-entry-material-use-detail-edit-get/{id}', [ProductionController::class, 'production_entry_material_use_detail_edit_get'])->name('production_entry_material_use_detail_edit_get');
+	//Route::put('/production-entry-material-use-detail-edit-save/{id}', [ProductionController::class, 'production_entry_material_use_detail_edit_save'])->name('production_entry_material_use_detail_edit_save');
     Route::post('/production-entry-material-use-detail-delete', [ProductionController::class, 'production_entry_material_use_detail_delete'])->name('production_entry_material_use_detail_delete');
+	
 	//END ENTRY MATERIAL USE
 	//START REPORT BLOW
-	//Route::get('/production-ent-report-blow', [ProductionController::class, 'production_entry_report_blow'])->name('production_entry_report_blow');
+	Route::get('/production-ent-report-blow', [ProductionController::class, 'production_entry_report_blow'])->name('production_entry_report_blow');
+	Route::get('/production-ent-report-blow-json', [ProductionController::class, 'production_entry_report_blow_json'])->name('production_entry_report_blow_json');
+	Route::get('/production-ent-report-blow-add', [ProductionController::class, 'production_entry_report_blow_add'])->name('production_entry_report_blow_add');
+	Route::get('/json_get_produk', [ProductionController::class, 'jsonGetProduk'])->name('jsonGetProduk');
+	Route::get('/json_get_customer', [ProductionController::class, 'jsonGetCustomers'])->name('jsonGetCustomers');
+	Route::post('/production-ent-report-blow-save', [ProductionController::class, 'production_entry_report_blow_save'])->name('production_entry_report_blow_save');
+	Route::get('/production-ent-report-blow-detail/{id}', [ProductionController::class, 'production_entry_report_blow_detail'])->name('production_entry_report_blow_detail');
+	Route::post('/production-ent-report-blow-update', [ProductionController::class, 'production_entry_report_blow_update'])->name('production_entry_report_blow_update');
+	Route::get('/json_get_barcode', [ProductionController::class, 'jsonGetBarcode'])->name('jsonGetBarcode');
+	Route::get('/production-ent-report-blow-material-use/{id}', [ProductionController::class, 'production_entry_report_blow_material_use'])->name('production_entry_report_blow_material_use');
+	Route::get('/production-ent-report-blow-material-use-json', [ProductionController::class, 'production_entry_report_blow_material_use_json'])->name('production_entry_report_blow_material_use_json');
+	
 	//END REPORT BLOW
 	
     //Dashboard

@@ -13,11 +13,11 @@
             <div class="row">
                 <div class="col-12">
                     <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                        <h4 class="mb-sm-0 font-size-18"> Report Blow</h4>
+                        <h4 class="mb-sm-0 font-size-18"> Report Material Use <br> <code>WO Number : {{ $data[0]->wo_number; }}</code></h4>
                         <div class="page-title-right">
                             <ol class="breadcrumb m-0">
                                 <li class="breadcrumb-item"><a href="javascript: void(0);">Production</a></li>
-                                <li class="breadcrumb-item active"> Report Blow</li>
+                                <li class="breadcrumb-item active"> Report Material Use</li>
                             </ol>
                         </div>
                     </div>
@@ -29,7 +29,7 @@
                         <div class="card-header">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <a href="/production-ent-report-blow-add" class="btn btn-success waves-effect waves-light">
+                                    <a href="/production-ent-material-use-add" class="btn btn-success waves-effect waves-light">
 										<i class="bx bx-plus" title="Add Data" ></i>
 										ADD
 									</a>                                   
@@ -38,30 +38,36 @@
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
-                                <table class="table table-bordered dt-responsive nowrap w-100 datatable-rb-json">
+								<table class="table table-bordered dt-responsive nowrap w-100 datatable-emu-json">
                                     <thead>
                                         <tr>
-                                            <th width='10%'>Report Info</th>
-                                            <th width='10%'>Order Info</th>
-                                            <th width='20%'>Team Info</th>
-                                            <th width='10%'>Checklist</th>
-                                            <th width='10%'>Update Stok</th>
+                                            <th width='10%'>Work Order</th>
+                                            <th width='10%'>Date</th>
+                                            <th width='20%'>Regus</th>
+                                            <th width='10%'>Shift</th>
+                                            <th width='20%'>Work Centers</th>
+                                            <th width='10%'>Status</th>
                                             <th width='10%'>Aksi</th>
                                         </tr>
                                     </thead>
-                                </table>
+								</table>
 								<script type="text/javascript">
 								  $(function () {
-									var table = $('.datatable-rb-json').DataTable({
+									var table = $('.datatable-emu-json').DataTable({
 										processing: true,
 										serverSide: true,
-										ajax: '/production-ent-report-blow-json',
+										ajax: {
+											url: '/production-ent-report-blow-material-use-json',
+											data: {
+												work_order: '{{ $data[0]->wo_number }}'
+										}},
 										columns: [
-											{data: 'report_info', name: 'report_info', orderable: true, searchable: true},
-											{data: 'order_info', name: 'order_info', orderable: true, searchable: true},
-											{data: 'team', name: 'team', orderable: true, searchable: true},
-											{data: 'checklist', name: 'checklist', orderable: false, searchable: false},
-											{data: 'update', name: 'update', orderable: false, searchable: false},
+											{data: 'wo_number', name: 'wo_number', orderable: true, searchable: true},
+											{data: 'date', name: 'date', orderable: true, searchable: true},
+											{data: 'regu', name: 'regu', orderable: true, searchable: true},
+											{data: 'shift', name: 'shift', orderable: true, searchable: true},
+											{data: 'work_center', name: 'work_center', orderable: true, searchable: true},
+											{data: 'status', name: 'status', orderable: true, searchable: true},
 											{data: 'action', name: 'action', orderable: false, searchable: false},
 										],
 										aaSorting: [
@@ -70,7 +76,7 @@
 									});
 								  });
 								</script>
-                            </div>
+							</div>							
                         </div>
                     </div>
                 </div>

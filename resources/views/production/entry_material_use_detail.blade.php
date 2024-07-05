@@ -45,7 +45,7 @@
 									<div class="row mb-4 field-wrapper required-field">
 										<label for="horizontal-password-input" class="col-sm-3 col-form-label">Work Orders</label>
 										<div class="col-sm-9">
-											<select class="form-select " name="id_work_orders" id="id_work_orders">
+											<select class="form-select data-select2" name="id_work_orders" id="id_work_orders">
 												<option value="">** Please Select A Work Orders</option>
 												@foreach ($ms_work_orders as $data_for)
 													<option value="{{ $data_for->id }}" data-id_master_process_productions="{{ $data_for->id_master_process_productions }}" {{ $data_for->id == $data[0]->id_work_orders ? 'selected' : '' }}>{{ $data_for->wo_number }}</option>
@@ -69,7 +69,7 @@
 									<div class="row mb-4 field-wrapper required-field">
 										<label for="horizontal-password-input" class="col-sm-3 col-form-label">Work Centers </label>
 										<div class="col-sm-9">
-											<select class="form-select" name="id_master_work_centers" id="id_master_work_centers" required readonly>
+											<select class="form-select data-select2" name="id_master_work_centers" id="id_master_work_centers" required readonly>
 												<option value="">** Please Select A Work Centers</option>
 												@foreach ($ms_work_centers as $data_for)
 													<option value="{{ $data_for->id }}" {{ $data_for->id == $data[0]->id_master_work_centers ? 'selected' : '' }}>{{ $data_for->work_center_code }} - {{ $data_for->work_center }}</option>
@@ -83,7 +83,7 @@
 									<div class="row mb-4 field-wrapper required-field">
 										<label for="horizontal-password-input" class="col-sm-3 col-form-label">Regu  </label>
 										<div class="col-sm-9">
-											<select class="form-select" name="id_master_regus" id="id_master_regus" required>
+											<select class="form-select data-select2" name="id_master_regus" id="id_master_regus" required>
 												<option value="">** Please Select A Regu</option>
 												@foreach ($ms_regus as $data_for)
 													<option value="{{ $data_for->id }}" {{ $data_for->id == $data[0]->id_master_regus ? 'selected' : '' }}>{{ $data_for->regu }}</option>
@@ -97,7 +97,7 @@
 									<div class="row mb-4 field-wrapper required-field">
 										<label for="horizontal-password-input" class="col-sm-3 col-form-label">Shift  </label>
 										<div class="col-sm-9">
-											<select class="form-select" name="shift" id="shift" required>
+											<select class="form-select data-select2" name="shift" id="shift" required>
 												<option value="">** Please Select A Shift</option>
 												<option value="1" {{ $data[0]->shift=='1'?'selected':'' }}>1</option>
 												<option value="2" {{ $data[0]->shift=='2'?'selected':'' }}>2</option>
@@ -197,7 +197,7 @@
 									<div class="row mb-4 field-wrapper required-field">
 										<label for="horizontal-password-input" class="col-sm-3 col-form-label">Barcode  </label>
 										<div class="col-sm-9">
-											<select class="form-select" name="id_barcode" id="id_barcode" required>
+											<select class="form-select data-select2" name="id_barcode" id="id_barcode" required>
 												<option value="">** Please Select A Barcode</option>
 												@foreach ($ms_barcodes as $data)
 													<option value="{{ $data->id }}" data-lot_number="{{ $data->lot_number }}" data-sisa="{{ $data->sisa }}" data-id="{{ sha1($data->id) }}">{{ $data->lot_number }} ( EXT : {{ $data->ext_lot_number }} ) - {{ $data->description }} ( Sisa Per EXT : {{ $data->sisa }} Kg)</option>
@@ -340,10 +340,14 @@
 											usage.addEventListener('input', function() {
 												var n_taking = parseFloat(document.getElementById('taking').value);
 												var n_usage = parseFloat(document.getElementById('usage').value);
+												var n_sisa_campuran = parseFloat(document.getElementById('sisa_campuran').value);
+												
+												var n_sisa_campuran = !isNaN(n_sisa_campuran)?n_sisa_campuran:0;
 												
 												var n_usage = n_usage > n_taking ? n_taking : n_usage ;
+												var n_sisa_campuran = n_sisa_campuran > n_taking ? n_taking : n_sisa_campuran ;
 												
-												var hasil = (n_taking-n_usage).toFixed(1);
+												var hasil = ((n_taking-n_usage)+n_sisa_campuran).toFixed(1);
 												konten = '<div class="alert alert-warning alert-dismissible alert-label-icon label-arrow fade show" role="alert"><i class="mdi mdi-alert-outline label-icon"></i><strong><font>'+hasil+'</font></strong> Kg</div>';
 												$( "#div-info-remaining" ).html( konten );
 											});
@@ -352,6 +356,8 @@
 												var n_taking = parseFloat(document.getElementById('taking').value);
 												var n_usage = parseFloat(document.getElementById('usage').value);
 												var n_sisa_campuran = parseFloat(document.getElementById('sisa_campuran').value);
+												
+												var n_sisa_campuran = !isNaN(n_sisa_campuran)?n_sisa_campuran:0;
 												
 												var n_usage = n_usage > n_taking ? n_taking : n_usage ;
 												var n_sisa_campuran = n_sisa_campuran > n_taking ? n_taking : n_sisa_campuran ;
@@ -406,9 +412,9 @@
 									@foreach ($data_detail as $data)
 									<tr>
 										<td>
-											{{ $data->lot_number }} <br>
+											LOT : {{ $data->lot_number }} <br>
 											<font style="font-size:8px:"> 
-												EXT : <b>{{ $data->ext_lot_number}}</b>
+												Ext LOT : <b>{{ $data->ext_lot_number}}</b>
 											</font>
 										</td>
 										<td>
@@ -432,14 +438,16 @@
 														<i class="bx bx-trash-alt" title="Delete" ></i> DELETE
 													</button>
 												</form>	
-												<button type="button" class="btn btn-info waves-effect waves-light" id=""
+												<!--button type="button" class="btn btn-info waves-effect waves-light" id=""
 													data-bs-toggle="modal"
 													onclick="#detail_entry_material_use_edit('{{ $data->id }}')"
 													data-bs-target="#detail-entry-material-use-edit" data-id="">
 													<i class="bx bx-edit-alt" title="Edit"></i> EDIT
-												</button>
+												</button-->
+												<a href="/production-entry-material-use-detail-edit/{{ Request::segment(2) }}/{{ sha1($data->id) }}" class="btn btn-info waves-effect waves-light">
+													<i class="bx bx-edit-alt" title="Edit"></i> EDIT
+												</a>
 											</center>											
-											@include('production.modal_detail_entry_material_use')
 										</td>
 									 
 									</tr>

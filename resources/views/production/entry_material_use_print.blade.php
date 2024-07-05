@@ -87,11 +87,11 @@
 									<td>{{ $loop->iteration }}x</td>
 									<td>{{ $data->rm_name }}</td>
 									<td>-</td>
-									<td><pre>{{ $data->sisa_champ==0?0:$data->sisa_champ }}</pre></td>
+									<td><pre>{{ $data->sisa_camp==0?0:$data->sisa_camp }}</pre></td>
 									<td>{{ $data->taking==0?0:$data->taking }}</td>
 									<td>{{ $data->usage==0?0:$data->usage }}</td>
 									<td>{{ $data->remaining==0?0:$data->remaining }}</td>
-									<td>{{ $data->lot_number }}</td>
+									<td>{{ $data->lot_number }} ( EXT : {{ $data->ext_lot_number }} )</td>
 										
 								</tr>	
 							@empty  	
