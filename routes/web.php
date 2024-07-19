@@ -10,6 +10,7 @@ use App\Http\Controllers\TransDataKasController;
 
 //PRODUCTION
 use App\Http\Controllers\ProductionController;
+use App\Http\Controllers\ProductionReportSlittingController;
 
 //Route Login
 Route::get('/', [AuthController::class, 'login'])->name('login');
@@ -69,7 +70,29 @@ Route::middleware(['auth'])->group(function () {
 	Route::get('/production-ent-report-blow-material-use/{id}', [ProductionController::class, 'production_entry_report_blow_material_use'])->name('production_entry_report_blow_material_use');
 	Route::get('/production-ent-report-blow-material-use-json', [ProductionController::class, 'production_entry_report_blow_material_use_json'])->name('production_entry_report_blow_material_use_json');
 	
+	Route::post('/production-entry-report-blow-detail-production-result-add', [ProductionController::class, 'production_entry_report_blow_detail_production_result_add'])->name('production_entry_report_blow_detail_production_result_add');
+	Route::get('/production-entry-report-blow-detail-production-result-edit/{id_rb}/{id_rb_pr}', [ProductionController::class, 'production_entry_report_blow_detail_production_result_edit'])->name('production_entry_report_blow_detail_production_result_edit');
+	Route::post('/production-entry-report-blow-detail-production-result-edit-save', [ProductionController::class, 'production_entry_report_blow_detail_production_result_edit_save'])->name('production_entry_report_blow_detail_production_result_edit_save');
+	Route::post('/production-entry-report-blow-detail-production-result-delete', [ProductionController::class, 'production_entry_report_blow_detail_production_result_delete'])->name('production_entry_report_blow_detail_production_result_delete');
+	
+	Route::post('/production-entry-report-blow-detail-waste-add', [ProductionController::class, 'production_entry_report_blow_detail_waste_add'])->name('production_entry_report_blow_detail_waste_add');
+	Route::get('/production-entry-report-blow-detail-waste-edit/{id_rb}/{id_rb_w}', [ProductionController::class, 'production_entry_report_blow_detail_waste_edit'])->name('production_entry_report_blow_detail_waste_edit');
+	Route::post('/production-entry-report-blow-detail-waste-edit-save', [ProductionController::class, 'production_entry_report_blow_detail_waste_edit_save'])->name('production_entry_report_blow_detail_waste_edit_save');
+	Route::post('/production-entry-report-blow-detail-waste-delete', [ProductionController::class, 'production_entry_report_blow_detail_waste_delete'])->name('production_entry_report_blow_detail_waste_delete');
+	
+	Route::get('/production-ent-report-blow-json-preparation', [ProductionController::class, 'production_entry_report_blow_json_preparation'])->name('production_entry_report_blow_json_preparation');
+	Route::get('/production-ent-report-blow-json-hygiene', [ProductionController::class, 'production_entry_report_blow_json_hygiene'])->name('production_entry_report_blow_json_hygiene');
+	Route::get('/production-ent-report-blow-json-update-stock', [ProductionController::class, 'production_entry_report_blow_json_update_stock'])->name('production_entry_report_blow_json_update_stock');
+	Route::get('/production-entry-report-blow-update-stock/{id}', [ProductionController::class, 'production_entry_report_blow_update_stock'])->name('production_entry_report_blow_update_stock');//masih bermaslah di update stock
+		
+	Route::get('/production-ent-report-blow-print/{id}', [ProductionController::class, 'production_entry_report_blow_print'])->name('production_entry_report_blow_print');	
 	//END REPORT BLOW
+	
+	//START REPORT SLITTING
+	Route::get('/production-ent-report-slitting', [ProductionReportSlittingController::class, 'production_entry_report_slitting'])->name('production_entry_report_slitting');
+	Route::get('/production-ent-report-slitting-json', [ProductionReportSlittingController::class, 'production_entry_report_slitting_json'])->name('production_entry_report_slitting_json');
+	
+	//END REPORT SLITTING
 	
     //Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');

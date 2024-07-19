@@ -27,6 +27,12 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         @endif
+		@if (session('pesan_danger'))
+            <div class="alert alert-danger alert-dismissible alert-label-icon label-arrow fade show" role="alert">
+                <i class="mdi mdi-alert-octagon-outline label-icon"></i><strong>Dangers</strong> - {{ session('pesan_danger') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
 		@if(!empty($data[0]))
         <div class="row">
             <div class="col-lg-12">
@@ -689,31 +695,55 @@
 										
 									</div>
 									<div class="card-body p-4">
-										<form method="post" action="/production-entry-material-use-detail-add" class="form-material m-t-40" enctype="multipart/form-data">
+										<form method="post" action="/production-entry-report-blow-detail-production-result-add" class="form-material m-t-40" enctype="multipart/form-data">
 											@csrf
 											<div class="row mb-4 field-wrapper required-field">
 												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Start Time </label>
 												<div class="col-sm-8">
-													<input type="text" class="form-control" name="start">
+													<input type="time" class="form-control" name="start" id="start" value="07:30">
+													<div id="displayHours_start" class="text-danger"></div>
 													@if($errors->has('start'))
 														<div class="text-danger"><b>{{ $errors->first('start') }}</b></div>
 													@endif
+													<script>
+														document.getElementById('start').addEventListener('input', function() {
+															let timeValue = this.value;
+															let timeParts = timeValue.split(':');
+															let hours = parseInt(timeParts[0], 10);
+															let minutes = timeParts[1];
+															let displayHours = (hours === 0) ? 24 : hours;
+
+															document.getElementById('displayHours_start').textContent = `Konversi Waktu Lokal : ${displayHours}:${minutes}`;
+														});
+													</script>
 												</div>
 											</div> 
 											<div class="row mb-4 field-wrapper required-field">
 												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Finish Time </label>
 												<div class="col-sm-8">
-													<input type="text" class="form-control" name="finish">
+													<input type="time" class="form-control" name="finish" id="finish" value="07:30">
+													<div id="displayHours_finish" class="text-danger"></div>
 													@if($errors->has('finish'))
 														<div class="text-danger"><b>{{ $errors->first('finish') }}</b></div>
 													@endif
+													<script>
+														document.getElementById('finish').addEventListener('input', function() {
+															let timeValue = this.value;
+															let timeParts = timeValue.split(':');
+															let hours = parseInt(timeParts[0], 10);
+															let minutes = timeParts[1];
+															let displayHours = (hours === 0) ? 24 : hours;
+
+															document.getElementById('displayHours_finish').textContent = `Konversi Waktu Lokal : ${displayHours}:${minutes}`;
+														});
+													</script>
 												</div>
 											</div> 
 											<div class="row mb-4 field-wrapper required-field">
 												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Barcode </label>
 												<div class="col-sm-8">
 													<select class="form-select data-select2" name="id_master_barcode" id="id_master_barcode">
-														<option value="">** Please Select A Customers</option>
+														<option value="">** Please Select A Barcodes</option>
 													</select>
 													@if($errors->has('id_master_barcode'))
 														<div class="text-danger"><b>{{ $errors->first('id_master_barcode') }}</b></div>
@@ -810,7 +840,7 @@
 												</div>
 											</div> 
 											
-											<input id="request_id_original" type="hidden" class="form-control" name="request_id" value="{{ Request::segment(2) }}">
+											<input type="hidden" class="form-control" name="request_id" value="{{ Request::segment(2) }}">
 											
 											
 											
@@ -833,6 +863,76 @@
 										
 									</div>
 									<div class="card-body p-4">
+										@if(!empty($data_detail_production[0]))
+											<div class="table-responsive">
+												<table id="datatable" class="table table-bordered dt-responsive  nowrap w-100">
+													<thead>
+														<tr>
+														<tr>
+															<th width="20%">Start Time</th>
+															<th width="25%">Finish Time</th>
+															<th width="15%">Barcode</th>
+															<th width="20%">Weight Info</th>
+															<th width="10%">Aksi</th>
+														</tr>
+													</thead>
+													<tbody>
+														@foreach ($data_detail_production as $data_detail)
+														<tr>
+															<td>
+																At : <b>{{ $data_detail->start_time }}</b>
+															</td>
+															<td>
+																Until : <b>{{ $data_detail->finish_time }}</b>
+															</td>
+															<td>{{ $data_detail->barcode }}</td>
+															<?php 
+																if($data_detail->status=="Good"){
+																	$colors = "success";
+																}else if($data_detail->status=="Hold"){
+																	$colors = "warning";
+																}else{
+																	$colors = "danger";
+																}
+															
+															?>
+															<td>
+																Thickness : <b>{{ $data_detail->thickness }}</b> <br>
+																Length : <b>{{ $data_detail->length }}</b> <br>
+																Width : <b>{{ $data_detail->width }}</b> <br>
+																Weight : <b>{{ $data_detail->weight }}</b> <br><br>
+																Status : <b class="text-{{ $colors }}">{{ $data_detail->status }}</b> <br>
+															</td>
+															
+															
+															<td>	
+																<center>
+																	<form action="/production-entry-report-blow-detail-production-result-delete" method="post" class="d-inline" enctype="multipart/form-data">
+																		@csrf		
+																		<input type="hidden" class="form-control" name="token_rb" value="{{ Request::segment(2) }}">
+																		<button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure to delete this item ?')" value="{{ sha1($data_detail->id) }}" name="hapus_detail">
+																			<i class="bx bx-trash-alt" title="Delete" ></i>
+																		</button>
+																	</form>	
+																	<a href="/production-entry-report-blow-detail-production-result-edit/{{ Request::segment(2) }}/{{ sha1($data_detail->id) }}" class="btn btn-info waves-effect waves-light">
+																		<i class="bx bx-edit-alt" title="Edit"></i>
+																	</a>
+																</center>											
+															</td>
+														 
+														</tr>
+														@endforeach
+													</tbody>
+												</table>
+											</div>
+										@else
+											<div class="row">
+												<div class="col-lg-12 text-center">
+													<label>Data Tidak Tersedia</label>
+												</div>
+											</div>
+											
+										@endif
 									</div>
 								</div>
 							</div>
@@ -877,7 +977,7 @@
 										
 									</div>
 									<div class="card-body p-4">
-										<form method="post" action="/production-entry-material-use-detail-add" class="form-material m-t-40" enctype="multipart/form-data">
+										<form method="post" action="/production-entry-report-blow-detail-waste-add" class="form-material m-t-40" enctype="multipart/form-data">
 											@csrf
 											<div class="row mb-4 field-wrapper required-field">
 												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Waste </label>
@@ -898,187 +998,8 @@
 												</div>
 											</div> 											
 											
-											<input id="request_id_original" type="hidden" class="form-control" name="request_id" value="{{ Request::segment(2) }}">
+											<input type="hidden" class="form-control" name="request_id" value="{{ Request::segment(2) }}">
 											
-											
-											
-											
-											
-											<!--
-											<div class="row mb-4 field-wrapper required-field">
-												<label for="horizontal-password-input" class="col-sm-3 col-form-label">Barcode  </label>
-												<div class="col-sm-9">
-													<select class="form-select data-select2" name="id_barcode" id="id_barcode" required>
-														<option value="">** Please Select A Barcode</option>
-														
-													</select>
-													@if($errors->has('id_barcode'))
-														<div class="text-danger"><b>{{ $errors->first('id_barcode') }}</b></div>
-													@endif
-													<input type="hidden" name="token" id="token">
-													<input type="hidden" name="token_rmu" id="token_rmu" class="form-control" value="{{ Request::segment(2) }}">
-													<input type="hidden" name="sisa_ext" id="sisa_ext">
-												</div>
-											</div>	
-											<script>
-												$(document).ready(function(){
-													konten = '<div class="alert alert-dark alert-dismissible alert-label-icon label-arrow fade show" role="alert"><i class="mdi mdi-alert-outline label-icon"></i><font class="text-white">Informasi Tidak Tersedia</font></div>';
-													$( "#div-informasi" ).html( konten );
-													
-													$("#id_barcode").change(function(){
-														konten_remaining = '<div class="alert alert-warning alert-dismissible alert-label-icon label-arrow fade show" role="alert"><i class="mdi mdi-alert-outline label-icon"></i><font class="text-white">Informasi Tidak Tersedia</font></div>';
-														$( "#div-info-remaining" ).html( konten_remaining );
-													
-														document.getElementById('token').value = $('#id_barcode option:selected').attr('data-id');
-														document.getElementById('sisa_ext').value = $('#id_barcode option:selected').attr('data-sisa');
-														document.getElementById('taking').value = '';
-														document.getElementById('usage').value = '';
-														
-														$.ajax({
-															type: "GET",
-															url: "/json_get_material_info",
-															data: { lot_number : $('#id_barcode option:selected').attr('data-lot_number') },
-															
-															dataType: "json",
-															beforeSend: function(e) {
-																if(e && e.overrideMimeType) {
-																	e.overrideMimeType("application/json;charset=UTF-8");
-																}
-															},
-															success: function(response){
-																konten = '<div class="alert alert-dark alert-dismissible alert-label-icon label-arrow fade show" role="alert"><i class="mdi mdi-alert-outline label-icon"></i><strong><font id="sisa_camp">'+response.stok_ext_all+'</font></strong> Kg - <font class="text-white">Sisa material secara keseluruhan</font></div>';
-																$( "#div-informasi" ).html( konten );
-															},
-															error: function (xhr, ajaxOptions, thrownError) {
-																konten = '<div class="alert alert-dark alert-dismissible alert-label-icon label-arrow fade show" role="alert"><i class="mdi mdi-alert-outline label-icon"></i><font class="text-white">Informasi Tidak Tersedia</font></div>';
-																$( "#div-informasi" ).html( konten );
-																alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
-															}
-														});
-														
-													});
-													
-												});
-											</script>
-											<div class="row mb-4 field-wrapper">
-												<label for="horizontal-firstname-input" class="col-sm-3 col-form-label"></label>
-												<div class="col-sm-9">
-													<div id="div-informasi"></div>
-												</div>
-											</div>
-											<div class="row mb-4 field-wrapper required-field">
-												<label for="horizontal-firstname-input" class="col-sm-3 col-form-label">Taking</label>
-												<div class="col-sm-9">
-													<input class="form-control" name="taking" id="taking" type="text">
-													<p class="card-title-desc"><code>.Kg - Catatan : Jumlah taking tidak boleh lebih banyak dari <strong>( Sisa Per EXT )</strong>.</code></p>
-													@if($errors->has('taking'))
-														<div class="text-danger"><b>{{ $errors->first('taking') }}</b></div>
-													@endif
-												</div>
-											</div>
-											<script>
-												$(document).ready(function(){
-													$("#taking").keyup(function() {
-														var n_taking = parseFloat(document.getElementById('taking').value);
-														var n_sisa_ext = parseFloat(document.getElementById('sisa_ext').value);
-
-														if (!isNaN(n_taking) && !isNaN(n_sisa_ext) && n_taking>n_sisa_ext) {
-															document.getElementById('taking').value = n_sisa_ext;
-														}
-													});
-												});
-											</script>
-											<div class="row mb-4 field-wrapper required-field">
-												<label for="horizontal-firstname-input" class="col-sm-3 col-form-label">Usage</label>
-												<div class="col-sm-9">
-													<input type="text" class="form-control" name="usage" id="usage">
-													<p class="card-title-desc"><code>.Kg</code></p>
-													@if($errors->has('usage'))
-														<div class="text-danger"><b>{{ $errors->first('usage') }}</b></div>
-													@endif
-												</div>
-											</div>
-											<script>
-												$(document).ready(function(){
-													$("#usage").keyup(function() {
-														var n_taking = parseFloat(document.getElementById('taking').value);
-														var n_usage = parseFloat(document.getElementById('usage').value);
-
-														if (!isNaN(n_taking) && !isNaN(n_usage) && n_usage > n_taking) {
-															document.getElementById('usage').value = n_taking;
-														}
-													});
-												});
-											</script>
-											<div class="row mb-4 field-wrapper required-field">
-												<label for="horizontal-firstname-input" class="col-sm-3 col-form-label">Sisa Campuran</label>
-												<div class="col-sm-9">
-													<input class="form-control" name="sisa_campuran" id="sisa_campuran" type="text">
-													<p class="card-title-desc"><code>.Kg</code></p>
-													@if($errors->has('sisa_campuran'))
-														<div class="text-danger"><b>{{ $errors->first('sisa_campuran') }}</b></div>
-													@endif
-												</div>
-											</div>
-											<script>
-												$(document).ready(function(){
-													$("#sisa_campuran").keyup(function() {
-														var n_taking = parseFloat(document.getElementById('taking').value);
-														var n_sisa_campuran = parseFloat(document.getElementById('sisa_campuran').value);
-
-														if (!isNaN(n_taking) && !isNaN(n_sisa_campuran) && n_sisa_campuran > n_taking) {
-															document.getElementById('sisa_campuran').value = n_taking;
-														}
-													});
-												});
-											</script>
-											<div class="row mb-4 field-wrapper">
-												<label for="horizontal-firstname-input" class="col-sm-3 col-form-label">Remaining</label>
-												<div class="col-sm-9">
-													<div id="div-info-remaining"></div>
-												</div>
-											</div>
-											<script>
-												$(document).ready(function(){
-													konten = '<div class="alert alert-warning alert-dismissible alert-label-icon label-arrow fade show" role="alert"><i class="mdi mdi-alert-outline label-icon"></i><font class="text-white">Informasi Tidak Tersedia</font></div>';
-													$( "#div-info-remaining" ).html( konten );
-													
-													var usage = document.getElementById('usage');
-													var sisa_campuran = document.getElementById('sisa_campuran');
-													
-													usage.addEventListener('input', function() {
-														var n_taking = parseFloat(document.getElementById('taking').value);
-														var n_usage = parseFloat(document.getElementById('usage').value);
-														var n_sisa_campuran = parseFloat(document.getElementById('sisa_campuran').value);
-														
-														var n_sisa_campuran = !isNaN(n_sisa_campuran)?n_sisa_campuran:0;
-														
-														var n_usage = n_usage > n_taking ? n_taking : n_usage ;
-														var n_sisa_campuran = n_sisa_campuran > n_taking ? n_taking : n_sisa_campuran ;
-														
-														var hasil = ((n_taking-n_usage)+n_sisa_campuran).toFixed(1);
-														konten = '<div class="alert alert-warning alert-dismissible alert-label-icon label-arrow fade show" role="alert"><i class="mdi mdi-alert-outline label-icon"></i><strong><font>'+hasil+'</font></strong> Kg</div>';
-														$( "#div-info-remaining" ).html( konten );
-													});
-													
-													sisa_campuran.addEventListener('input', function() {
-														var n_taking = parseFloat(document.getElementById('taking').value);
-														var n_usage = parseFloat(document.getElementById('usage').value);
-														var n_sisa_campuran = parseFloat(document.getElementById('sisa_campuran').value);
-														
-														var n_sisa_campuran = !isNaN(n_sisa_campuran)?n_sisa_campuran:0;
-														
-														var n_usage = n_usage > n_taking ? n_taking : n_usage ;
-														var n_sisa_campuran = n_sisa_campuran > n_taking ? n_taking : n_sisa_campuran ;
-														
-														var hasil = ((n_taking-n_usage)+n_sisa_campuran).toFixed(1);
-														konten = '<div class="alert alert-warning alert-dismissible alert-label-icon label-arrow fade show" role="alert"><i class="mdi mdi-alert-outline label-icon"></i><strong><font>'+hasil+'</font></strong> Kg</div>';
-														$( "#div-info-remaining" ).html( konten );
-													});											
-													
-												});
-											</script>
-											-->
 											<div class="row justify-content-end">
 												<div class="col-sm-12">
 													<div>
@@ -1098,6 +1019,56 @@
 										
 									</div>
 									<div class="card-body p-4">
+										@if(!empty($data_detail_waste[0]))
+											<div class="table-responsive">
+												<table id="datatable" class="table table-bordered dt-responsive  nowrap w-100">
+													<thead>
+														<tr>
+														<tr>
+															<th width="20%">Waste</th>
+															<th width="60%">Cause Waste</th>
+															<th width="20%">Aksi</th>
+														</tr>
+													</thead>
+													<tbody>
+														@foreach ($data_detail_waste as $data_detail)
+														<tr>
+															<td>
+																{{ $data_detail->waste }}
+															</td>
+															<td>
+																{{ $data_detail->cause_waste }}
+															</td>
+															
+															
+															<td>	
+																<center>
+																	<form action="/production-entry-report-blow-detail-waste-delete" method="post" class="d-inline" enctype="multipart/form-data">
+																		@csrf		
+																		<input type="hidden" class="form-control" name="token_rb" value="{{ Request::segment(2) }}">
+																		<button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure to delete this item ?')" value="{{ sha1($data_detail->id) }}" name="hapus_detail">
+																			<i class="bx bx-trash-alt" title="Delete" ></i>
+																		</button>
+																	</form>	
+																	<a href="/production-entry-report-blow-detail-waste-edit/{{ Request::segment(2) }}/{{ sha1($data_detail->id) }}" class="btn btn-info waves-effect waves-light">
+																		<i class="bx bx-edit-alt" title="Edit"></i>
+																	</a>
+																</center>											
+															</td>
+														 
+														</tr>
+														@endforeach
+													</tbody>
+												</table>
+											</div>
+										@else
+											<div class="row">
+												<div class="col-lg-12 text-center">
+													<label>Data Tidak Tersedia</label>
+												</div>
+											</div>
+											
+										@endif
 									</div>
 								</div>
 							</div>

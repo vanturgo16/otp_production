@@ -9,7 +9,13 @@
                 <i class="mdi mdi-check-all label-icon"></i><strong>Success</strong> - {{ session('pesan') }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
-         @endif
+        @endif
+        @if (session('pesan_danger'))
+            <div class="alert alert-danger alert-dismissible alert-label-icon label-arrow fade show" role="alert">
+                <i class="mdi mdi-alert-octagon-outline label-icon"></i><strong>Dangers</strong> - {{ session('pesan_danger') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
             <div class="row">
                 <div class="col-12">
                     <div class="page-title-box d-sm-flex align-items-center justify-content-between">
@@ -70,6 +76,109 @@
 									});
 								  });
 								</script>
+								
+								<div id="modal_preparation" class="modal fade" tabindex="-1" aria-labelledby="edit_poLabel" aria-hidden="true" data-bs-scroll="true">
+									<div class="modal-dialog">
+										<div class="modal-content">
+											<div class="modal-header">
+												<h4 class="font-size-16">
+													<b>Preparation Check</b>
+												</h4>
+												<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+											</div>
+											<div class="modal-body" id="modal_preparation_body">								
+												
+											</div>
+											<div class="modal-footer">
+											</div>
+										</div>
+									</div>
+								</div>
+								<script>
+									function showPreparation(id)
+									{
+										$.ajax({
+											type: "GET",
+											url: "/production-ent-report-blow-json-preparation",
+											data: "id='"+id+"'",
+											dataType: "html",
+											success: function (response) {
+												$('#modal_preparation_body').empty();
+												$('#modal_preparation_body').append(response);
+											}
+										});
+										
+									}
+								</script>
+								
+								<div id="modal_hygiene" class="modal fade" tabindex="-1" aria-labelledby="edit_poLabel" aria-hidden="true" data-bs-scroll="true">
+									<div class="modal-dialog">
+										<div class="modal-content">
+											<div class="modal-header">
+												<h4 class="font-size-16">
+													<b>Hygiene Check</b>
+												</h4>
+												<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+											</div>
+											<div class="modal-body" id="modal_hygiene_body">								
+												
+											</div>
+											<div class="modal-footer">
+											</div>
+										</div>
+									</div>
+								</div>
+								<script>
+									function showHygiene(id)
+									{
+										$.ajax({
+											type: "GET",
+											url: "/production-ent-report-blow-json-hygiene",
+											data: "id='"+id+"'",
+											dataType: "html",
+											success: function (response) {
+												$('#modal_hygiene_body').empty();
+												$('#modal_hygiene_body').append(response);
+											}
+										});
+										
+									}
+								</script>
+								
+								<div id="modal_update_stock" class="modal fade" tabindex="-1" aria-labelledby="edit_poLabel" aria-hidden="true" data-bs-scroll="true">
+									<div class="modal-dialog">
+										<div class="modal-content">
+											<div class="modal-header">
+												<h4 class="font-size-16">
+													<b>Update Stock</b>
+												</h4>
+												<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+											</div>
+											<div class="modal-body" id="modal_update_stock_body">								
+												
+											</div>
+											<div class="modal-footer">
+											</div>
+										</div>
+									</div>
+								</div>
+								<script>
+									function showUpdateStock(id)
+									{
+										$.ajax({
+											type: "GET",
+											url: "/production-ent-report-blow-json-update-stock",
+											data: "id='"+id+"'",
+											dataType: "html",
+											success: function (response) {
+												$('#modal_update_stock_body').empty();
+												$('#modal_update_stock_body').append(response);
+											}
+										});
+										
+									}
+								</script>
+								
                             </div>
                         </div>
                     </div>
