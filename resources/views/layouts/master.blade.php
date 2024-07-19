@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8" />
-    <title>PPIC | PT. OTP</title>
+    <title>Production | PT. OTP</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <!-- App favicon -->
@@ -39,9 +39,8 @@
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
-    @if (request()->is('ppic/*'))
-        <link rel="stylesheet" href="{{ asset('assets/css/ppic/style.css') }}">
-    @endif
+    <link rel="stylesheet" href="{{ asset('assets/css/production/style.css') }}">
+    
 
     <style>
         div.field-wrapper label {
@@ -167,7 +166,7 @@
                                 <span data-key="t-dashboard">Dashboard</span>
                             </a>
                         </li>
-                        <li>
+                        <!--li>
                             <a href="javascript: void(0);" class="has-arrow">
                                 <i data-feather="briefcase"></i>
                                 <span data-key="t-blog">PPIC</span>
@@ -177,8 +176,22 @@
                                         class="{{ request()->is('ppic/workOrder/*') ? 'active' : '' }}"><i
                                             data-feather="clipboard"></i>Word Order</a></li>
                             </ul>
+                        </li-->
+						<li>
+                            <a href="javascript: void(0);" class="has-arrow">
+								<i data-feather="activity"></i>
+                                <span data-key="t-blog">Production</span>
+                            </a>
+                            <ul class="sub-menu" aria-expanded="false">
+                                <li><a href="/production-req-sparepart-auxiliaries" data-key="t-blog-grid"><i data-feather="arrow-up-right"></i> Req. Sparepart & Aux.</a></li>
+                                <li><a href="/production-ent-material-use" data-key="t-blog-list"><i data-feather="book-open"></i> Entry Material Use</a></li>
+                                <li><a href="/production-ent-report-blow" data-key="t-blog-list"><i data-feather="check-square"></i> Report Blow</a></li>
+                                <li><a href="/production-ent-report-slitting" data-key="t-blog-list"><i data-feather="check-square"></i> Report Slitting</a></li>
+                                <li><a href="/production-ent-report-folding" data-key="t-blog-list"><i data-feather="check-square"></i> Report Folding</a></li>
+                                <li><a href="/production-ent-report-bag-marketing" data-key="t-blog-list"><i data-feather="check-square"></i> Report Bag. Marketing</a></li>
+                                <li><a href="/production-ent-report-production" data-key="t-blog-list"><i data-feather="check-square"></i> Report Production</a></li>
+                            </ul>
                         </li>
-
                         <!--li class="menu-title" data-key="t-menu">Master</li>
                         <li>
                             <a href="{{ route('accounttype.index') }}">
@@ -503,15 +516,13 @@
     <script src="{{ asset('assets/js/pages/form-advanced.init.js') }}"></script>
 
     <script src="https://cdn.jsdelivr.net/jquery.validation/1.16.0/jquery.validate.min.js"></script>
-
-    @if (request()->is('ppic/*'))
-        <script>
-            let baseRoute = '{{ url('') }}';
-        </script>
-        @if (request()->is('ppic/workOrder') || request()->is('ppic/workOrder/*'))
-            <script src="{{ asset('assets/js/ppic/work_order.js') }}"></script>
-        @endif
-    @endif
+	
+	<script>
+		let baseRoute = '{{ url('') }}';
+	</script>
+	<script src="{{ asset('assets/js/production/init.js') }}"></script>
+       
+	   
     <!-- Scripts -->
     @stack('scripts')
 

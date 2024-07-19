@@ -28,7 +28,9 @@ function detail_sparepart_auxiliaries_edit(id) {
           `<option value="` + value.id + `"` + isSelected + `>` + value.description + `</option>`
         )
       });
-
+	  
+	  //var d = document.getElementById("id_master_tool_auxiliaries_pr");
+	  //d.className += " data-select2";
       // Contoh: Lakukan tindakan selanjutnya setelah data berhasil dikirim
       // window.location.href = '/success-page';
     },
@@ -59,7 +61,8 @@ function detail_entry_material_use_edit(id) {
       $('#request_number_pr').val(document.getElementById('request_number_original').value)
 	  
       let produkSelect = response.data.find.id_master_tool_auxiliaries
-
+	  
+	  
       $('#id_master_tool_auxiliaries_pr').empty()
       $('#id_master_tool_auxiliaries_pr').append(` <option>Pilih Produk</option>`)
       $.each(response.data.ms_tool_auxiliaries, function (i, value) {
@@ -69,7 +72,6 @@ function detail_entry_material_use_edit(id) {
           `<option value="` + value.id + `"` + isSelected + `>` + value.description + `</option>`
         )
       });
-
       // Contoh: Lakukan tindakan selanjutnya setelah data berhasil dikirim
       // window.location.href = '/success-page';
     },
