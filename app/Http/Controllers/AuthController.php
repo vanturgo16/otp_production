@@ -11,11 +11,16 @@ use App\Models\User;
 class AuthController extends Controller
 {
     public function login(Request $request){
-        return view('auth.login');
+        if (app()->environment('production')) {
+            return redirect('https://sso.olefinatifaplas.my.id/login');
+        } else {
+            return redirect('http://127.0.0.1:8000/login');
+        }
     }
 
     public function postlogin(Request $request)
     {
+     
         $email=$request->email;
         $password=$request->password;
         $credentials = [
@@ -38,6 +43,10 @@ class AuthController extends Controller
 
     public function logout(Request $request){
         Auth::logout();
-        return redirect()->route('login')->with('success','Success Logout');
+        if (app()->environment('production')) {
+            return redirect('https://sso.olefinatifaplas.my.id/login');
+        } else {
+            return redirect('http://127.0.0.1:8000/login');
+        }
     }
 }
