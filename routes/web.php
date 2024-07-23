@@ -19,8 +19,7 @@ Route::post('auth/login', [AuthController::class, 'postlogin'])->name('postlogin
 //Route Logout
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-Route::middleware(['auth','clear.permission.cache','permission:Produksi'])->group(function () {
-	//Production
+Route::middleware(['auth', 'clear.permission.cache', 'permission:Produksi|Produksi_production-req-sparepart-auxiliaries|Produksi_production-ent-report-slitting|Produksi_production-ent-report-production|Produksi_production-ent-report-folding|Produksi_production-ent-report-blow|Produksi_production-ent-report-bag-marketing|Produksi_production-ent-material-use'])->group(function () {	//Production
 	//START REQUEST SPAREPART AND AUXILIARIES
 	Route::get('/production-req-sparepart-auxiliaries', [ProductionController::class, 'production_req_sparepart_auxiliaries'])->name('production_req_sparepart_auxiliaries');
 	Route::get('/production-req-sparepart-auxiliaries-json', [ProductionController::class, 'production_req_sparepart_auxiliaries_json'])->name('production_req_sparepart_auxiliaries_json');

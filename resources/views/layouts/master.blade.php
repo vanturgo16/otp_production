@@ -173,13 +173,28 @@
                                 <span data-key="t-blog">Production</span>
                             </a>
                             <ul class="sub-menu" aria-expanded="false">
+                                @can('Produksi_production-req-sparepart-auxiliaries')
                                 <li><a href="/production-req-sparepart-auxiliaries" data-key="t-blog-grid"><i data-feather="arrow-up-right"></i> Req. Sparepart & Aux.</a></li>
+                                @endcan
+
+                                @can('Produksi_production-ent-material-use')
                                 <li><a href="/production-ent-material-use" data-key="t-blog-list"><i data-feather="book-open"></i> Entry Material Use</a></li>
+                                @endcan
+                                @can('Produksi_production-ent-report-blow')
                                 <li><a href="/production-ent-report-blow" data-key="t-blog-list"><i data-feather="check-square"></i> Report Blow</a></li>
+                                @endcan
+                                @can('Produksi_production-ent-report-slitting')
                                 <li><a href="/production-ent-report-slitting" data-key="t-blog-list"><i data-feather="check-square"></i> Report Slitting</a></li>
+                                @endcan
+                                @can('Produksi_production-ent-report-folding')
                                 <li><a href="/production-ent-report-folding" data-key="t-blog-list"><i data-feather="check-square"></i> Report Folding</a></li>
+                                @endcan
+                                @can('Produksi_production-ent-report-bag-marketing')
                                 <li><a href="/production-ent-report-bag-marketing" data-key="t-blog-list"><i data-feather="check-square"></i> Report Bag. Marketing</a></li>
+                                @endcan
+                                @can('Produksi_production-ent-report-production')
                                 <li><a href="/production-ent-report-production" data-key="t-blog-list"><i data-feather="check-square"></i> Report Production</a></li>
+                                @endcan
                             </ul>
                         </li>
                        
