@@ -166,17 +166,7 @@
                                 <span data-key="t-dashboard">Dashboard</span>
                             </a>
                         </li>
-                        <!--li>
-                            <a href="javascript: void(0);" class="has-arrow">
-                                <i data-feather="briefcase"></i>
-                                <span data-key="t-blog">PPIC</span>
-                            </a>
-                            <ul class="sub-menu" aria-expanded="false">
-                                <li><a href="{{ route('ppic.workOrder.index') }}"
-                                        class="{{ request()->is('ppic/workOrder/*') ? 'active' : '' }}"><i
-                                            data-feather="clipboard"></i>Word Order</a></li>
-                            </ul>
-                        </li-->
+                       
 						<li>
                             <a href="javascript: void(0);" class="has-arrow">
 								<i data-feather="activity"></i>
@@ -192,70 +182,7 @@
                                 <li><a href="/production-ent-report-production" data-key="t-blog-list"><i data-feather="check-square"></i> Report Production</a></li>
                             </ul>
                         </li>
-                        <!--li class="menu-title" data-key="t-menu">Master</li>
-                        <li>
-                            <a href="{{ route('accounttype.index') }}">
-                                <i class="mdi mdi-format-list-bulleted-type"></i>
-                                <span>Manage Account Type</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{{ route('accountcode.index') }}">
-                                <i class="mdi mdi-barcode-scan"></i>
-                                <span>Manage Account Code</span>
-                            </a>
-                        </li>
-
-                        <li class="menu-title" data-key="t-menu">Accounting</li>
-
-                        <li>
-                            <a href="#">
-                                <i class="mdi mdi-text-box-outline"></i>
-                                <span>Sales Invoice</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{{ route('transdatakas.index') }}">
-                                <i class="mdi mdi-script-text"></i>
-                                <span>Kas Transaction</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{{ route('transdatabank.index') }}">
-                                <i class="mdi mdi-script-text"></i>
-                                <span>Bank Transaction</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#">
-                                <i class="mdi mdi-script-text"></i>
-                                <span>Sale Transaction</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#">
-                                <i class="mdi mdi-script-text"></i>
-                                <span>Purchase Transaction</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#">
-                                <i class="mdi mdi-script-text"></i>
-                                <span>Expor Transaction</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#">
-                                <i class="mdi mdi-script-text"></i>
-                                <span>Impor Transaction</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#">
-                                <i class="mdi mdi-script-text"></i>
-                                <span>Nr Dr Transaction</span>
-                            </a>
-                        </li-->
+                       
 
                     </ul>
                 </div>
