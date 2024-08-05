@@ -76,7 +76,7 @@
           <tbody>
             <tr>
               <td>Hari/Tanggal</td>
-              <td>: 2023-12-27</td>
+              <td>: {{ $data[0]->date }}</td>
             </tr>
             <tr>
               <td>Shift</td>

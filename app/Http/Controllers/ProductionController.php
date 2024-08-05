@@ -24,6 +24,7 @@ use App\Models\ProductionEntryReportBlowHygiene;
 use App\Models\ProductionEntryReportBlowPreparation;
 use App\Models\ProductionEntryReportBlowProductionResult;
 use App\Models\ProductionEntryReportBlowWaste;
+use App\Models\HistoryStock;
 
 //END REQUEST SPAREPART AND AUXILIARIES
 
@@ -508,8 +509,8 @@ class ProductionController extends Controller
         $data_work_center = request()->has('data_work_center')?request()->get('data_work_center'):'-';
 		
 		$datas = DB::table('master_work_centers')
-			//->where('id_master_process_productions', $id_master_process_productions)
-			->where('id_master_process_productions', '2')
+			->where('id_master_process_productions', $id_master_process_productions)
+			//->where('id_master_process_productions', '2')
 			->select('work_center_code','work_center','id')
 			->get();
 			
@@ -1029,12 +1030,12 @@ class ProductionController extends Controller
 				//->leftJoin('report_blows_production_results AS f', 'report_blows.id', '=', 'f.id_report_blows')
                 ->select('report_blows.*', 'b.wo_number', 'c.regu', 'd.work_center', 'e.name')
                 //->selectRaw('SUM(IF(f.status="Good", 1, 0)) AS good')
-                ->orderBy('report_blows.created_at', 'desc')
+                ->orderBy('report_blows.report_number', 'desc')
                 ->get();
 		//print_r($datas);exit;
 		return DataTables::of($datas) 			
 			->addColumn('report_info', function ($data) {			
-				$report_info = '<p>Report Number : '.$data->report_number.'<br><code>Work Order : '.$data->wo_number.'</code><br><footer class="blockquote-footer">Date : <cite>'.$data->date.'</cite></footer></p>';
+				$report_info = '<p>Report Number : <b>'.$data->report_number.'</b><br><code>Work Order : '.$data->wo_number.'</code><br><footer class="blockquote-footer">Date : <cite>'.$data->date.'</cite></footer></p>';
 				return $report_info;
 			})
 			->addColumn('order_info', function ($data) {	
@@ -1063,6 +1064,9 @@ class ProductionController extends Controller
 				return $checklist;
 			})
 			->addColumn('update', function ($data) {	
+				$order_name = explode('|', $data->order_name);	
+				
+				$return_unposted = "return confirm('Are you sure to un posted this item ?')";
 				/*
 				$good = DB::table('report_blow_production_results')
 						->select('id','id_report_blows')
@@ -1084,33 +1088,48 @@ class ProductionController extends Controller
 						<footer class="blockquote-footer">Reject : <cite>20</cite></footer>
 						</p-->';
 				}else{
-					$update = '
-						<a href="#" class="btn btn-info waves-effect btn-label waves-light"><i class="bx bx-info-circle  label-icon"></i>  Stock Updated</a><br>
-						<a href="#" class="btn btn-primary waves-effect btn-label waves-light mt-1"><i class="bx bx-reply label-icon"></i> Un Posted</a>';
+					if(count($order_name)>1){
+						$update = '
+							<a data-bs-toggle="modal" onclick="showUpdateStockInfo('.$id.')" data-bs-target="#modal_update_stock_info" class="btn btn-info waves-effect btn-label waves-light"><i class="bx bx-info-circle  label-icon"></i>  Stock Updated</a><br>						
+							<a onclick="'.$return_unposted.'" href="/production-entry-report-blow-unposted/'.sha1($data->id).'" class="btn btn-primary waves-effect btn-label waves-light mt-1" onclick="return confirm('."'Anda yakin mau menghapus item ini ?'".')">
+								<i class="bx bx-reply label-icon"></i> Un Posted
+							</a>
+						';
+					}else{
+						$update = '
+							<a class="btn btn-dark waves-effect btn-label waves-light"><i class="bx bx-time-five label-icon"></i>  Data Lama</a>
+							</a>
+						';
+					}
 				}
 				
 				return $update;
 			})
 			->addColumn('action', function ($data) {
+				$order_name = explode('|', $data->order_name);	
+				
 				$return_approve = "return confirm('Are you sure to approve this item ?')";
 				$return_hold = "return confirm('Are you sure to hold this item ?')";
 				$return_delete = "return confirm('Are you sure to delete this item ?')";
 				
-				$tombol = '
-					<center>
+				$tombol = '<center>';
+					
+				if(count($order_name)>1){
+					$tombol .= '
 						<a target="_blank" href="/production-ent-report-blow-material-use/'.sha1($data->id_work_orders).'" class="btn btn-outline-dark waves-effect waves-light">
 							<i class="bx bx-file" title="Material Use"></i> Material Used
 						</a>
-				';
-				
+					';
+				}
 				if($data->status=='Un Posted'){
 					$tombol .= '
 							<a target="_blank" href="/production-ent-report-blow-detail/'.sha1($data->id).'" class="btn btn-outline-info waves-effect waves-light">
 								<i class="bx bx-edit-alt" title="Edit"></i> EDIT
 							</a>
-							<a onclick="'.$return_delete.'" href="#" class="btn btn-outline-danger waves-effect waves-light" onclick="return confirm('."'Anda yakin mau menghapus item ini ?'".')">
+							<a onclick="'.$return_delete.'" href="/production-ent-report-blow-delete/'.sha1($data->id).'" class="btn btn-outline-danger waves-effect waves-light" onclick="return confirm('."'Anda yakin mau menghapus item ini ?'".')">
 								<i class="bx bx-trash-alt" title="Delete" ></i> DELETE
 							</a>
+							
 							<a target="_blank" href="/production-ent-report-blow-print/'.sha1($data->id).'" class="btn btn-dark waves-effect waves-light">
 								<i class="bx bx-printer" title="Print"></i> PRINT
 							</a>
@@ -1300,8 +1319,74 @@ class ProductionController extends Controller
 					</div><!-- end row -->
 				</div>
 				<div class="modal-footer">
-					<!--a href="/production-entry-report-blow-update-stock/<?= sha1($data[0]->id_report_blows); ?>" type="submit" class="btn btn-primary btn-lg"><i class="bx bx-save" title="Update"></i> UPDATE</a-->
-					<a href="#" type="submit" class="btn btn-primary btn-lg"><i class="bx bx-save" title="Update"></i> UPDATE</a>
+					<a href="/production-entry-report-blow-update-stock/<?= sha1($data[0]->id_report_blows); ?>" type="submit" class="btn btn-primary btn-lg"><i class="bx bx-save" title="Update"></i> UPDATE</a>
+					<!--a href="#" type="submit" class="btn btn-primary btn-lg"><i class="bx bx-save" title="Update"></i> UPDATE</a-->
+				</div>
+			<!--/form-->
+		<?php
+		}else{
+		?>
+			<div class="card-body">
+				<p class="card-title-desc">Production Result : TIDAK TERSEDIA</b></p>
+			</div>
+		<?php
+		}
+	}	
+	public function production_entry_report_blow_json_update_stock_info(Request $request){
+		
+		/*
+		?>
+		Test
+		<?php
+		*/
+		
+		$id_rb = request()->get('id');
+		
+		$data = ProductionEntryReportBlowProductionResult::select('b.report_number','report_blow_production_results.id_report_blows', 'report_blow_production_results.id')
+				->selectRaw('SUM(IF(report_blow_production_results.status="Good", 1, 0)) AS good')
+				->selectRaw('SUM(IF(report_blow_production_results.status="Hold", 1, 0)) AS hold')
+				->selectRaw('SUM(IF(report_blow_production_results.status="Reject", 1, 0)) AS reject')
+				->rightJoin('report_blows AS b', 'report_blow_production_results.id_report_blows', '=', 'b.id')
+				->whereRaw( "sha1(report_blow_production_results.id_report_blows) = $id_rb")
+				->groupBy('id_report_blows')
+                ->get();
+		//print_r($data);
+		if(!empty($data[0]->id_report_blows)){
+		?>					
+			<!--form method="post" action="/production-entry-report-blow-update-stock" class="form-material m-t-40" enctype="multipart/form-data"-->
+			
+				<div class="card-header">
+					<p class="card-title-desc">
+						Production Result : Report Number <b><?= $data[0]->report_number; ?></b><br>
+						Total Product : <b><?= $data[0]->good+$data[0]->hold+$data[0]->reject; ?></b>
+					</p>
+				</div>
+				<div class="card-body">
+					<div class="row g-4">
+						<div class="col-sm-4">
+							<div class="alert alert-success alert-dismissible fade show px-4 mb-0 text-center" role="alert">
+								<i class="mdi mdi-check-all d-block display-4 mt-2 mb-3 text-success"></i>
+								<h5 class="text-success"><?= $data[0]->good; ?></h5>
+								<p>Good Product</p>
+							</div>
+						</div><!-- end col -->
+
+						<div class="col-sm-4">
+							<div class="alert alert-warning alert-dismissible fade show px-4 mb-0 text-center" role="alert">
+								<i class="mdi mdi-alert-outline d-block display-4 mt-2 mb-3 text-warning"></i>
+								<h5 class="text-warning"><?= $data[0]->hold; ?></h5>
+								<p>Hold Product</p>
+							</div>
+						</div><!-- end col -->
+
+						<div class="col-sm-4">
+							<div class="alert alert-danger alert-dismissible fade show px-4 mb-0 text-center" role="alert">
+								<i class="mdi mdi-block-helper d-block display-4 mt-2 mb-3 text-danger"></i>
+								<h5 class="text-danger"><?= $data[0]->reject; ?></h5>
+								<p>Reject Product</p>
+							</div>
+						</div><!-- end col -->
+					</div><!-- end row -->
 				</div>
 			<!--/form-->
 		<?php
@@ -1399,12 +1484,59 @@ class ProductionController extends Controller
     }
 	public function jsonGetBarcode()
     {
-        $key = request()->get('barcode_number');
+		$where = request()->get('where');
+		$key = request()->get('barcode_number');
         
-		$datas = DB::table('barcode_detail')
-			->select('*')
-			->get();
+		if($where == "BLOW"){
+			$where_query = "a.status IS NULL AND b.id_master_process_productions = '2'";
 			
+			if(!empty($key)){
+				$where_query .= " OR a.barcode_number = '$key'";
+			}
+			
+			$datas = DB::table('barcode_detail as a')
+				->leftJoin('barcodes as b', function($join) {
+					$join->on('a.id_barcode', '=', 'b.id');
+				})
+				->select('a.*')
+				->whereRaw($where_query)
+				->get();				
+		}else if($where == "SLITTING START"){			
+			$datas = DB::table('barcode_detail as a')
+				->leftJoin('barcodes as b', 'a.id_barcode', '=', 'b.id')
+				->leftJoin('report_sf_production_results as c', function($join) {
+					$join->on('a.barcode_number', '=', 'c.barcode_start')
+						 ->whereNotIn('a.barcode_number', function($query) {
+							 $query->select('barcode_start')
+								   ->from('report_sf_production_results');
+						 })
+						 ->where('c.type_result', '=', 'Slitting');
+				})
+				->where('a.status', 'In Stock BLW')
+				->select('a.*')
+				->get();
+		}else if($where == "SLITTING"){
+			$where_query = "a.status IS NULL AND b.id_master_process_productions = '4'";
+			
+			if(!empty($key)){
+				$where_query .= " OR a.barcode_number = '$key'";
+			}
+			
+			$datas = DB::table('barcode_detail as a')
+				->leftJoin('barcodes as b', function($join) {
+					$join->on('a.id_barcode', '=', 'b.id');
+				})
+				->select('a.*')
+				->whereRaw($where_query)
+				->get();	
+		}else{
+			$datas = DB::table('barcode_detail')
+					->select('*')
+					->get();
+		}
+		
+		
+				
 		$lists = "<option value='' disabled='' selected=''>** Please Select A Barcodes</option>";		
 		foreach($datas as $data){
 			$selected = $data->barcode_number==$key?'selected':'';
@@ -1412,9 +1544,8 @@ class ProductionController extends Controller
 		}
 		
 		$callback = array('list_barcode'=>$lists);
-		echo json_encode($callback);			
+		echo json_encode($callback);		
     }
-	
 	public function production_entry_report_blow_save(Request $request){
         if ($request->has('savemore')) {
             return "Tombol Save & Add More diklik.";
@@ -1445,6 +1576,7 @@ class ProductionController extends Controller
 			$validatedData['report_number'] = $this->production_entry_report_blow_create_code();
 			$validatedData['know_by'] = $_POST['id_known_by'];
 			$validatedData['order_name'] = $_POST['id_master_products'];
+			$validatedData['type'] = $_POST['type'];
 			$validatedData['status'] = 'Un Posted';
 			
             $response = ProductionEntryReportBlow::create($validatedData);
@@ -1493,9 +1625,9 @@ class ProductionController extends Controller
 		$data = ProductionEntryReportBlow::select("report_blows.*")
 				->whereRaw( "sha1(report_blows.id) = '$response_id'")
                 ->get();
-		$order_name = explode('|', $data[0]->order_name);
 		
 		if(!empty($data[0])){
+			$order_name = explode('|', $data[0]->order_name);
 			/*
 			$ms_work_orders = DB::table('work_orders')
 							->select('id_master_process_productions','wo_number','id')
@@ -1512,11 +1644,20 @@ class ProductionController extends Controller
 			*/
 			if($data[0]->status=="Un Posted"){
 				if(count($order_name)>1){
+					/*
 					$ms_work_orders = DB::table('work_orders AS a')
 							->leftJoin('sales_orders AS b', 'a.id_sales_orders', '=', 'b.id')
 							->leftJoin('master_customers AS c', 'b.id_master_customers', '=', 'c.id')
 							->select('a.id_master_process_productions','a.wo_number','a.id','c.id AS id_master_customers')
 							->whereRaw( "left(wo_number,5) = 'WOBGM'")
+							->get();
+					*/
+					$ms_work_orders = DB::table('work_orders AS a')
+							->leftJoin('sales_orders AS b', 'a.id_sales_orders', '=', 'b.id')
+							->leftJoin('master_customers AS c', 'b.id_master_customers', '=', 'c.id')
+							->select('a.*','c.id AS id_master_customers')
+							->whereRaw( "left(wo_number,5) = 'WOBLW'")
+							->whereRaw( "a.type_product = 'WIP'")
 							->get();
 					$data_detail_preparation = DB::table('report_blow_preparation_checks')
 							->select('report_blow_preparation_checks.*')
@@ -1797,12 +1938,18 @@ class ProductionController extends Controller
             $response = ProductionEntryReportBlowProductionResult::create($validatedData);
 			
 			if(!empty($response)){
+				$updatedData['status'] = $_POST['status']=="Good"?'In Stock BLW':$_POST['status'];
+				
+				DB::table('barcode_detail')
+				->where('barcode_number', $response->barcode)
+				->update($updatedData);
+			
 				//Audit Log		
 				$username= auth()->user()->email; 
 				$ipAddress=$_SERVER['REMOTE_ADDR'];
 				$location='0';
 				$access_from=Browser::browserName();
-				$activity='Add Production Result Entry Report Blow ID ="'.$response->id.'"';
+				$activity='Add Production Result Entry Report Blow ID ="'.$response->id.'", Barcode ID = "'.$validatedData['barcode'].'"';
 				$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
 				
 				return Redirect::to('/production-ent-report-blow-detail/'.$request_id)->with('pesan', 'Add Successfuly.');
@@ -1899,11 +2046,18 @@ class ProductionController extends Controller
                 ->get();
 						
 		if(!empty($data[0])){
-			
 			$delete = ProductionEntryReportBlowProductionResult::whereRaw( "sha1(id) = '$id'" )->delete();
 			//echo $delete; exit;
 			
 			if($delete){
+				//Jika Barcode Bisa Digunakan Lagi, Sesuaikan status data barcode menjadi NULL
+				$updatedData['status'] = 'Un Used';
+				
+				DB::table('barcode_detail')
+				->where('barcode_number', $data->barcode)
+				->update($updatedData);
+				
+				
 				//Audit Log		
 				$username= auth()->user()->email; 
 				$ipAddress=$_SERVER['REMOTE_ADDR'];
@@ -2095,14 +2249,11 @@ class ProductionController extends Controller
 							->get();
 							
 					$table_product = $order_name[0] == 'WIP' ? 'master_wips' : 'master_product_fgs';
-				    //echo $table_product;exit;
+					
 					$data_product = DB::table($table_product)
 							->select('*')
 							->where('id', $order_name[1])
 							->get();
-							
-					//print_r($data_product );exit;	
-					//echo $data_product[0]->wip_type;exit;	
 					
 					//Audit Log
 					$username= auth()->user()->email; 
@@ -2124,61 +2275,291 @@ class ProductionController extends Controller
 		}
     }
 	public function production_entry_report_blow_update_stock($response_id){
-	//public function production_entry_report_blow_update_stock(Request $request){
-		//echo "disini";exit;
-		//print_r($_POST);exit;
-		//echo $response_id;exit;
+	
 		$id_rb = $response_id;
 		
-		$data_update = ProductionEntryReportBlowProductionResult::select('b.report_number','report_blow_production_results.id_report_blows', 'report_blow_production_results.id')
-				->selectRaw('SUM(IF(report_blow_production_results.status="Good", 1, 0)) AS good')
-				->selectRaw('SUM(IF(report_blow_production_results.status="Hold", 1, 0)) AS hold')
-				->selectRaw('SUM(IF(report_blow_production_results.status="Reject", 1, 0)) AS reject')
-				->rightJoin('report_blows AS b', 'report_blow_production_results.id_report_blows', '=', 'b.id')
-				->whereRaw( "sha1(report_blow_production_results.id_report_blows) = '$id_rb'")
-				->groupBy('id_report_blows')
-                ->get();
-		print_r($data_update);exit;
-		
-		/*
-		$response_id_rb = $_POST['token_rb'];
-		$response_id_rb_w = $_POST['token_rb_w'];
-		
-		$data = DB::table('report_blow_wastes as a')
-			->select('a.*')
-			->whereRaw( "sha1(a.id_report_blows) = '$response_id_rb'")
-			->whereRaw( "sha1(a.id) = '$response_id_rb_w'")
+		$data_update = ProductionEntryReportBlowProductionResult::select('b.report_number','c.type_product','b.order_name','report_blow_production_results.id_report_blows', 'report_blow_production_results.id')
+			->selectRaw('SUM(IF(report_blow_production_results.status="Good", 1, 0)) AS good')
+			->selectRaw('SUM(IF(report_blow_production_results.status="Hold", 1, 0)) AS hold')
+			->selectRaw('SUM(IF(report_blow_production_results.status="Reject", 1, 0)) AS reject')
+			->rightJoin('report_blows AS b', 'report_blow_production_results.id_report_blows', '=', 'b.id')
+			->rightJoin('work_orders AS c', 'b.id_work_orders', '=', 'c.id')
+			->whereRaw( "sha1(report_blow_production_results.id_report_blows) = '$id_rb'")
+			->groupBy('id_report_blows')
 			->get();
-		//print_r($data);exit;
-		if(!empty($data[0])){			
-			$pesan = [
-                'waste.required' => 'Cannot Be Empty',
-                'cause_waste.required' => 'Cannot Be Empty',       
-            ];
-
-            $validatedData = $request->validate([
-                'waste' => 'required',
-                'cause_waste' => 'required',
-
-            ], $pesan);				
+		
+		$order_name = explode('|', $data_update[0]->order_name);		
+		
+		if(!empty($data_update[0])){	
+			$data_product = DB::table('master_wips')
+				->select('*')
+				->whereRaw( "id = '".$order_name[1]."'")
+				->get();
 			
-			ProductionEntryReportBlowWaste::where('id', $data[0]->id)
-				->where('id_report_blows', $data[0]->id_report_blows)
-				->update($validatedData);
-			
-			//Audit Log		
-			$username= auth()->user()->email; 
-			$ipAddress=$_SERVER['REMOTE_ADDR'];
-			$location='0';
-			$access_from=Browser::browserName();
-			$activity='Save Edit Detail Waste Entry Report Blow '.$data[0]->id;
-			$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
-			
-			return Redirect::to('/production-ent-report-blow-detail/'.$response_id_rb)->with('pesan', 'Update Successfuly.');  			
+			if(!empty($data_product[0])){	
+				if($data_update[0]->good>0){
+					$validatedData = ([
+						'id_good_receipt_notes_details' => $data_update[0]->report_number,
+						'type_product' => $data_update[0]->type_product,
+						'id_master_products' => $order_name[1],
+						'qty' => $data_update[0]->good,
+						'type_stock' => 'IN',
+						'date' => date("Y-m-d"),
+					]);	
+					$responseGood = HistoryStock::create($validatedData);
+					
+					
+				}
+				if($data_update[0]->hold>0){
+					$validatedData = ([
+						'id_good_receipt_notes_details' => $data_update[0]->report_number,
+						'type_product' => $data_update[0]->type_product,
+						'id_master_products' => $order_name[1],
+						'qty' => $data_update[0]->hold,
+						'type_stock' => 'HOLD',
+						'date' => date("Y-m-d"),
+					]);	
+					$responseHold = HistoryStock::create($validatedData);
+				}
+				if($data_update[0]->reject>0){
+					$validatedData = ([
+						'id_good_receipt_notes_details' => $data_update[0]->report_number,
+						'type_product' => $data_update[0]->type_product,
+						'id_master_products' => $order_name[1],
+						'qty' => $data_update[0]->reject,
+						'type_stock' => 'REJECT',
+						'date' => date("Y-m-d"),
+					]);	
+					$responseReject = HistoryStock::create($validatedData);
+				}
+				
+				if($responseGood or $responseHold or $responseReject){
+					if($responseGood){					
+						$stock_akhir = $data_product[0]->stock + $data_update[0]->good;				
+						
+						DB::table('master_wips')->where('id', $order_name[1])->update(array('stock' => $stock_akhir)); 						
+					}
+					
+					$validatedData = ([
+						'status' => 'Closed',
+					]);				
+					
+					ProductionEntryReportBlow::where('report_number', $data_update[0]->report_number)
+						->update($validatedData);
+					
+					//Audit Log
+					$username= auth()->user()->email; 
+					$ipAddress=$_SERVER['REMOTE_ADDR'];
+					$location='0';
+					$access_from=Browser::browserName();
+					$activity='Update Histori Stock Report Number ="'.$data_update[0]->report_number.'" (Good : '.$data_update[0]->good.', Hold : '.$data_update[0]->hold.', Reject : '.$data_update[0]->reject.')';
+					$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+						
+					return Redirect::to('/production-ent-report-blow')->with('pesan', 'Update Stock Successfuly.');
+				}else{
+					return Redirect::to('/production-ent-report-blow')->with('pesan_danger', 'There Is An Error.');
+				}
+			}else{
+				return Redirect::to('/production-ent-report-blow')->with('pesan_danger', 'There Is An Error. Data Produk Not Found.');
+			}
 		}else{
-			return Redirect::to('/production-ent-report-blow-detail/'.$response_id_rb)->with('pesan', 'There Is An Error.');
+			return Redirect::to('/production-ent-report-blow')->with('pesan_danger', 'There Is An Error.');
 		}
-		*/
+    }
+	public function production_entry_report_blow_unposted($response_id){
+	
+		$id_rb = $response_id;
+		
+		$data_update = ProductionEntryReportBlowProductionResult::select('b.report_number','c.type_product','b.order_name','report_blow_production_results.id_report_blows', 'report_blow_production_results.id')
+			->selectRaw('SUM(IF(report_blow_production_results.status="Good", 1, 0)) AS good')
+			->selectRaw('SUM(IF(report_blow_production_results.status="Hold", 1, 0)) AS hold')
+			->selectRaw('SUM(IF(report_blow_production_results.status="Reject", 1, 0)) AS reject')
+			->rightJoin('report_blows AS b', 'report_blow_production_results.id_report_blows', '=', 'b.id')
+			->rightJoin('work_orders AS c', 'b.id_work_orders', '=', 'c.id')
+			->whereRaw( "sha1(report_blow_production_results.id_report_blows) = '$id_rb'")
+			->groupBy('id_report_blows')
+			->get();
+		
+		$order_name = explode('|', $data_update[0]->order_name);			
+				
+		if(!empty($data_update[0])){	
+			$data_product = DB::table('master_wips')
+				->select('*')
+				->whereRaw( "id = '".$order_name[1]."'")
+				->get();
+			
+			if(!empty($data_product[0])){	
+				if($data_update[0]->good>0){
+					$validatedData = ([
+						'id_good_receipt_notes_details' => $data_update[0]->report_number,
+						'type_product' => $data_update[0]->type_product,
+						'id_master_products' => $order_name[1],
+						'qty' => $data_update[0]->good,
+						'type_stock' => 'Un Posted',
+						'date' => date("Y-m-d"),
+						'remarks' => 'From GOOD Posted'
+					]);	
+					$responseGood = HistoryStock::create($validatedData);
+					
+					if($responseGood){					
+						$stock_akhir = $data_product[0]->stock - $data_update[0]->good;				
+						
+						DB::table('master_wips')->where('id', $order_name[1])->update(array('stock' => $stock_akhir)); 						
+					}
+				}
+				if($data_update[0]->hold>0){
+					$validatedData = ([
+						'id_good_receipt_notes_details' => $data_update[0]->report_number,
+						'type_product' => $data_update[0]->type_product,
+						'id_master_products' => $order_name[1],
+						'qty' => $data_update[0]->hold,
+						'type_stock' => 'Un Posted',
+						'date' => date("Y-m-d"),
+						'remarks' => 'From HOLD Posted'
+					]);	
+					$responseHold = HistoryStock::create($validatedData);
+				}
+				if($data_update[0]->reject>0){
+					$validatedData = ([
+						'id_good_receipt_notes_details' => $data_update[0]->report_number,
+						'type_product' => $data_update[0]->type_product,
+						'id_master_products' => $order_name[1],
+						'qty' => $data_update[0]->reject,
+						'type_stock' => 'Un Posted',
+						'date' => date("Y-m-d"),
+						'remarks' => 'From REJECT Posted'
+					]);	
+					$responseReject = HistoryStock::create($validatedData);
+				}
+				
+				if($responseGood or $responseHold or $responseReject){
+					
+					$validatedData = ([
+						'status' => 'Un Posted',
+					]);				
+					
+					ProductionEntryReportBlow::where('report_number', $data_update[0]->report_number)
+						->update($validatedData);
+					
+					//Audit Log
+					$username= auth()->user()->email; 
+					$ipAddress=$_SERVER['REMOTE_ADDR'];
+					$location='0';
+					$access_from=Browser::browserName();
+					$activity='Un Posted Histori Stock Report Number ="'.$data_update[0]->report_number.'" (Good : '.$data_update[0]->good.', Hold : '.$data_update[0]->hold.', Reject : '.$data_update[0]->reject.')';
+					$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+						
+					return Redirect::to('/production-ent-report-blow')->with('pesan', 'Update Stock Successfuly.');
+				}else{
+					return Redirect::to('/production-ent-report-blow')->with('pesan_danger', 'There Is An Error.');
+				}
+			}else{
+				return Redirect::to('/production-ent-report-blow')->with('pesan_danger', 'There Is An Error. Data Produk Not Found.');
+			}
+		}else{
+			return Redirect::to('/production-ent-report-blow')->with('pesan_danger', 'There Is An Error.');
+		}
+    }
+	public function production_entry_report_blow_delete($response_id){
+		//echo 'disini';exit;
+		$id_rb = $response_id;
+		
+		$data_update = ProductionEntryReportBlowProductionResult::select('b.report_number','c.type_product','b.order_name','report_blow_production_results.id_report_blows', 'report_blow_production_results.id')
+			->selectRaw('b.id AS id_rb')
+			->selectRaw('SUM(IF(report_blow_production_results.status="Good", 1, 0)) AS good')
+			->selectRaw('SUM(IF(report_blow_production_results.status="Hold", 1, 0)) AS hold')
+			->selectRaw('SUM(IF(report_blow_production_results.status="Reject", 1, 0)) AS reject')
+			->rightJoin('report_blows AS b', 'report_blow_production_results.id_report_blows', '=', 'b.id')
+			->rightJoin('work_orders AS c', 'b.id_work_orders', '=', 'c.id')
+			->whereRaw( "sha1(report_blow_production_results.id_report_blows) = '$id_rb'")
+			->groupBy('id_report_blows')
+			->get();
+		
+		if(!empty($data_update[0])){	
+			$order_name = explode('|', $data_update[0]->order_name);
+			
+			$data_product = DB::table('master_wips')
+				->select('*')
+				->whereRaw( "id = '".$order_name[1]."'")
+				->get();
+			
+			if(!empty($data_product[0])){	
+			
+				$stock_akhir = $data_product[0]->stock - $data_update[0]->good;				
+				$responseUpdate = DB::table('master_wips')->where('id', $order_name[1])->update(array('stock' => $stock_akhir)); 
+				
+				if($responseUpdate){
+					$deleteHistori = HistoryStock::whereRaw( "id_good_receipt_notes_details = '".$data_update[0]->report_number."'" )->delete();
+					$deleteWaste = ProductionEntryReportBlowWaste::whereRaw( "id_report_blows = '".$data_update[0]->id_rb."'" )->delete();
+					$deleteHygiene = ProductionEntryReportBlowHygiene::whereRaw( "id_report_blows = '".$data_update[0]->id_rb."'" )->delete();
+					$deletePreparation = ProductionEntryReportBlowPreparation::whereRaw( "id_report_blows = '".$data_update[0]->id_rb."'" )->delete();
+					$deleteProductionResult = ProductionEntryReportBlowProductionResult::whereRaw( "id_report_blows = '".$data_update[0]->id_rb."'" )->delete();
+					$deleteBlow = ProductionEntryReportBlow::whereRaw( "id = '".$data_update[0]->id_rb."'" )->delete();
+					//echo $delete; exit;
+					
+					if($deleteBlow){
+						/*
+						if($deleteProductionResult){
+							//Jika Barcode Bisa Digunakan Lagi, Sesuaikan status data barcode menjadi NULL
+							$updatedData['status'] = 'Un Used';
+							
+							DB::table('barcode_detail')
+							->where('barcode_number', $data->barcode)
+							->update($updatedData);
+						}
+						*/
+						//Audit Log
+						$username= auth()->user()->email; 
+						$ipAddress=$_SERVER['REMOTE_ADDR'];
+						$location='0';
+						$access_from=Browser::browserName();
+						$activity='Deleted Report Number ="'.$data_update[0]->report_number.'" (Good : '.$data_update[0]->good.', Hold : '.$data_update[0]->hold.', Reject : '.$data_update[0]->reject.')';
+						$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+					
+						return Redirect::to('/production-ent-report-blow')->with('pesan', 'Delete Successfuly.');
+					}else{
+						return Redirect::to('/production-ent-report-blow')->with('pesan_danger', 'There Is An Error.');
+					}						
+				}else{
+					return Redirect::to('/production-ent-report-blow')->with('pesan_danger', 'There Is An Error.');
+				}
+			}else{
+				return Redirect::to('/production-ent-report-blow')->with('pesan_danger', 'There Is An Error. Data Produk Not Found.');
+			}
+		}else{
+			$data_blow = DB::table('report_blows')
+				->selectRaw('id AS id_rb')
+				->selectRaw('report_number')
+				->whereRaw( "sha1(id) = '".$id_rb."'")
+				->get();
+			
+			//print_r($data_blow);exit;
+			if($data_blow){
+				$report_number = $data_blow[0]->report_number;
+				
+				$deleteWaste = ProductionEntryReportBlowWaste::whereRaw( "id_report_blows = '".$data_blow[0]->id_rb."'" )->delete();
+				$deleteHygiene = ProductionEntryReportBlowHygiene::whereRaw( "id_report_blows = '".$data_blow[0]->id_rb."'" )->delete();
+				$deletePreparation = ProductionEntryReportBlowPreparation::whereRaw( "id_report_blows = '".$data_blow[0]->id_rb."'" )->delete();
+				$deleteProductionResult = ProductionEntryReportBlowProductionResult::whereRaw( "id_report_blows = '".$data_blow[0]->id_rb."'" )->delete();
+				$deleteBlow = ProductionEntryReportBlow::whereRaw( "id = '".$data_blow[0]->id_rb."'" )->delete();
+				
+				if($deleteBlow){
+					//Audit Log
+					$username= auth()->user()->email; 
+					$ipAddress=$_SERVER['REMOTE_ADDR'];
+					$location='0';
+					$access_from=Browser::browserName();
+					$activity='Deleted Report Number ="'.$report_number.'" (Good : "-", Hold : "-", Reject : "-")';
+					$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+				
+					return Redirect::to('/production-ent-report-blow')->with('pesan', 'Delete Successfuly.');
+				}else{
+					return Redirect::to('/production-ent-report-blow')->with('pesan_danger', 'There Is An Error.');
+				}	
+			}else{
+				return Redirect::to('/production-ent-report-blow')->with('pesan_danger', 'There Is An Error.');
+			}
+		}
     }
 	//END ENTRY REPORT BLOW
 }

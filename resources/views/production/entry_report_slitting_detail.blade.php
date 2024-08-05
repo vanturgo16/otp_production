@@ -9,12 +9,12 @@
             <div class="col-12">
                 <div class="page-title-box d-sm-flex align-items-center justify-content-between">
                     <!--h4 class="mb-sm-0 font-size-18"> Add Request Sparepart & Auxiliaries</h4-->
-					<a href="/production-ent-report-blow" class="btn btn-dark waves-effect waves-light mb-3"> 
-					<i class="bx bx-list-ul" title="Back"></i> REPORT BLOW</a>
+					<a href="/production-ent-report-slitting" class="btn btn-dark waves-effect waves-light mb-3"> 
+					<i class="bx bx-list-ul" title="Back"></i> REPORT SLITTING</a>
                     <div class="page-title-right">
                         <ol class="breadcrumb m-0">
                             <li class="breadcrumb-item"><a href="javascript: void(0);">Production</a></li>
-                            <li class="breadcrumb-item active"> Add Report Blow</li>
+                            <li class="breadcrumb-item active"> Add Report Slitting</li>
                         </ol>
                     </div>
                 </div>
@@ -38,34 +38,20 @@
             <div class="col-lg-12">
                 <div class="card">
                     <div class="card-header">
-                        <h4 class="card-title">Report Blow</h4>
+                        <h4 class="card-title">Report Slitting</h4>
                         <!--  <p class="card-title-desc"> layout options : from inline, horizontal & custom grid implementations</p> -->
                     </div>
                     <div class="card-body p-4">
 
 						<div class="col-sm-12">
                             <div class="mt-4 mt-lg-0">
-								<form method="post" action="/production-ent-report-blow-update" class="form-material m-t-40" enctype="multipart/form-data">
+								<form method="post" action="/production-ent-report-slitting-update" class="form-material m-t-40" enctype="multipart/form-data">
 								@csrf
 									<input type="hidden" class="form-control" name="request_id" value="{{ Request::segment(2) }}">
 									<div class="row mb-4 field-wrapper required-field">
 										<label for="horizontal-firstname-input" class="col-sm-3 col-form-label">Report Number</label>
 										<div class="col-sm-9">
 											<input type="text" name="report_number" class="form-control" value="{{ $data[0]->report_number }}" readonly>
-										</div>
-									</div>
-									<div class="row mb-4 field-wrapper required-field">
-										<label for="horizontal-password-input" class="col-sm-3 col-form-label">Work Orders </label>
-										<div class="col-sm-9">
-											<select class="form-select data-select2" name="id_work_orders" id="id_work_orders" required>
-												<option value="">** Please Select A Work Orders</option> 
-												@foreach ($ms_work_orders as $data_for)
-													<option value="{{ $data_for->id }}" data-id_master_customers="{{ $data[0]->id_master_customers }}" data-type_product="{{ explode('|', $data[0]->order_name)[0] }}" data-id_master_products="{{ explode('|', $data[0]->order_name)[1] }}" {{ $data_for->id == $data[0]->id_work_orders ? 'selected' : '' }}>{{ $data_for->wo_number }}</option>
-												@endforeach
-											</select>
-											@if($errors->has('id_work_orders'))
-												<div class="text-danger"><b>{{ $errors->first('id_work_orders') }}</b></div>
-											@endif
 										</div>
 									</div>
 									<div class="row mb-4 field-wrapper required-field">
@@ -76,19 +62,7 @@
 												<div class="text-danger"><b>{{ $errors->first('date') }}</b></div>
 											@endif
 										</div>
-									</div>
-									<div class="row mb-4 field-wrapper required-field">
-										<label for="horizontal-firstname-input" class="col-sm-3 col-form-label">Order Name </label>
-										<div class="col-sm-9">
-											<select class="form-select data-select2" name="id_master_products" id="id_master_products">
-												<option value="">** Please Select A Products</option>
-											</select>
-											@if($errors->has('id_master_products'))
-												<div class="text-danger"><b>{{ $errors->first('id_master_products') }}</b></div>
-											@endif
-										</div>
-									</div> 
-									
+									</div>									
 									<div class="row mb-4 field-wrapper required-field">
 										<label for="horizontal-password-input" class="col-sm-3 col-form-label">Customers </label>
 										<div class="col-sm-9">
@@ -97,15 +71,6 @@
 											</select>
 											@if($errors->has('id_master_customers'))
 												<div class="text-danger"><b>{{ $errors->first('id_master_customers') }}</b></div>
-											@endif
-										</div>
-									</div> 
-									<div class="row mb-4 field-wrapper">
-										<label for="horizontal-firstname-input" class="col-sm-3 col-form-label">Type </label>
-										<div class="col-sm-9">
-											<input type="text" class="form-control" name="type" value="{{ $data[0]->type }}">
-											@if($errors->has('type'))
-												<div class="text-danger"><b>{{ $errors->first('type') }}</b></div>
 											@endif
 										</div>
 									</div> 								
@@ -155,29 +120,8 @@
 											
 											$.ajax({
 												type: "GET",
-												url: "/json_get_produk",
-												data: { type_product : {!! "'".explode('|', $data[0]->order_name)[0]."'" !!}, id_master_products : {!! explode('|', $data[0]->order_name)[1] !!} },
-												dataType: "json",
-												beforeSend: function(e) {
-													if(e && e.overrideMimeType) {
-														e.overrideMimeType("application/json;charset=UTF-8");
-													}
-												},
-												success: function(response){
-													$("#id_master_products").html(response.list_products).show();
-													//$('#id_master_regus').prop('selectedIndex', 0);
-													//$('#shift').prop('selectedIndex', 0);
-												},
-												error: function (xhr, ajaxOptions, thrownError) {
-													alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
-												}
-											});	
-											
-											
-											$.ajax({
-												type: "GET",
 												url: "/json_get_customer",
-												data: { id_master_customers : $('#id_work_orders option:selected').attr('data-id_master_customers') },
+												data: { id_master_customers : {!! $data[0]->id_master_customers !!} },
 												dataType: "json",
 												beforeSend: function(e) {
 													if(e && e.overrideMimeType) {
@@ -197,7 +141,7 @@
 											$.ajax({
 												type: "GET",
 												url: "/json_get_work_center",
-												data: { data_work_center : {!! $data[0]->id_master_work_centers !!}, id_master_process_productions : '2' },
+												data: { data_work_center : {!! $data[0]->id_master_work_centers !!}, id_master_process_productions : '4' },
 												dataType: "json",
 												beforeSend: function(e) {
 													if(e && e.overrideMimeType) {
@@ -231,66 +175,6 @@
 												}
 											});
 											
-											$("#id_work_orders").change(function(){		
-												
-												$.ajax({
-													type: "GET",
-													url: "/json_get_produk",
-													data: { type_product : $('#id_work_orders option:selected').attr('data-type_product'), id_master_products : $('#id_work_orders option:selected').attr('data-id_master_products') },
-													dataType: "json",
-													beforeSend: function(e) {
-														if(e && e.overrideMimeType) {
-															e.overrideMimeType("application/json;charset=UTF-8");
-														}
-													},
-													success: function(response){
-														$("#id_master_products").html(response.list_products).show();
-													},
-													error: function (xhr, ajaxOptions, thrownError) {
-														alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
-													}
-												});
-												
-												
-												$.ajax({
-													type: "GET",
-													url: "/json_get_customer",
-													data: { id_master_customers : $('#id_work_orders option:selected').attr('data-id_master_customers') },
-													dataType: "json",
-													beforeSend: function(e) {
-														if(e && e.overrideMimeType) {
-															e.overrideMimeType("application/json;charset=UTF-8");
-														}
-													},
-													success: function(response){
-														$("#id_master_customers").html(response.list_customers).show();
-													},
-													error: function (xhr, ajaxOptions, thrownError) {
-														alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
-													}
-												});
-												
-												$.ajax({
-													type: "GET",
-													url: "/json_get_work_center",
-													data: { id_master_process_productions : $('#id_work_orders option:selected').attr('data-id_master_process_productions') },
-													dataType: "json",
-													beforeSend: function(e) {
-														if(e && e.overrideMimeType) {
-															e.overrideMimeType("application/json;charset=UTF-8");
-														}
-													},
-													success: function(response){
-														$("#id_master_work_centers").html(response.list_work_center).show();
-														$('#id_master_regus').prop('selectedIndex', 0);
-														$('#shift').prop('selectedIndex', 0);
-													},
-													error: function (xhr, ajaxOptions, thrownError) {
-														alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
-													}
-												});
-											});
-											
 											$("#id_master_work_centers").change(function(){										
 												$.ajax({
 													type: "GET",
@@ -318,7 +202,24 @@
 											
 										});
 									</script>
-									
+									<div class="row mb-4 field-wrapper">
+										<label for="horizontal-firstname-input" class="col-sm-3 col-form-label">Engine Shutdown Description </label>
+										<div class="col-sm-9">
+											<textarea rows="5" class="form-control" name="engine_shutdown_description">{{ $data[0]->engine_shutdown_description }}</textarea>
+											@if($errors->has('engine_shutdown_description'))
+												<div class="text-danger"><b>{{ $errors->first('engine_shutdown_description') }}</b></div>
+											@endif
+										</div>
+									</div> 	
+									<div class="row mb-4 field-wrapper">
+										<label for="horizontal-firstname-input" class="col-sm-3 col-form-label">Note </label>
+										<div class="col-sm-9">
+											<textarea rows="5" class="form-control" name="note">{{ $data[0]->note }}</textarea>
+											@if($errors->has('note'))
+												<div class="text-danger"><b>{{ $errors->first('note') }}</b></div>
+											@endif
+										</div>
+									</div> 	
 									<div class="row mb-4 field-wrapper required-field">
 										<label for="horizontal-password-input" class="col-sm-3 col-form-label">Known By </label>
 										<div class="col-sm-9">
@@ -357,7 +258,7 @@
 						<h4 class="card-title"><i data-feather="check-square"></i> Preparation Check</h4>
 					</div>
 					<div class="card-body p-4">
-						<form method="post" action="/production-ent-report-blow-update" class="form-material m-t-40" enctype="multipart/form-data">
+						<form method="post" action="/production-ent-report-slitting-update" class="form-material m-t-40" enctype="multipart/form-data">
 						@csrf
 							<input type="hidden" class="form-control" name="request_id" value="{{ Request::segment(2) }}">
 							<div class="row mb-3 field-wrapper">
@@ -405,68 +306,24 @@
 								</div>
 							</div><hr>
 							<div class="row mb-3 field-wrapper">
-								<label for="horizontal-firstname-input" class="col-sm-6 col-form-label"><i class="mdi mdi-arrow-right text-primary me-1"></i>Ratio Camp Resin <code>*</code></label>
+								<label for="horizontal-firstname-input" class="col-sm-6 col-form-label"><i class="mdi mdi-arrow-right text-primary me-1"></i>Press Roll <code>*</code></label>
 								<div class="col-sm-6">
 									<div class="form-check">
-										<input class="form-check-input" type="radio" name="pc_ratio_camp_resin" value="Ok"
-										{{ $data_detail_preparation[0]->ratio_camp_resin=="Ok"?'checked':''; }} >
+										<input class="form-check-input" type="radio" name="pc_press_roll" value="Ok"
+										{{ $data_detail_preparation[0]->press_roll=="Ok"?'checked':''; }} >
 										<label class="form-check-label">
 											OK
 										</label>
 									</div>
 									<div class="form-check">
-										<input class="form-check-input" type="radio" name="pc_ratio_camp_resin" value="Not Ok"
-										{{ $data_detail_preparation[0]->ratio_camp_resin=="Not Ok"?'checked':''; }} >
+										<input class="form-check-input" type="radio" name="pc_press_roll" value="Not Ok"
+										{{ $data_detail_preparation[0]->press_roll=="Not Ok"?'checked':''; }} >
 										<label>
 											Not OK
 										</label>
 									</div>
-									@if($errors->has('pc_ratio_camp_resin'))
-										<div class="text-danger"><b>{{ $errors->first('pc_ratio_camp_resin') }}</b></div>
-									@endif
-								</div>
-							</div><hr>
-							<div class="row mb-3 field-wrapper">
-								<label for="horizontal-firstname-input" class="col-sm-6 col-form-label"><i class="mdi mdi-arrow-right text-primary me-1"></i>Temp Heater <code>*</code></label>
-								<div class="col-sm-6">
-									<div class="form-check">
-										<input class="form-check-input" type="radio" name="pc_temp_heater" value="Ok"
-										{{ $data_detail_preparation[0]->temp_heater=="Ok"?'checked':''; }} >
-										<label class="form-check-label">
-											OK
-										</label>
-									</div>
-									<div class="form-check">
-										<input class="form-check-input" type="radio" name="pc_temp_heater" value="Not Ok"
-										{{ $data_detail_preparation[0]->temp_heater=="Not Ok"?'checked':''; }} >
-										<label>
-											Not OK
-										</label>
-									</div>
-									@if($errors->has('pc_temp_heater'))
-										<div class="text-danger"><b>{{ $errors->first('pc_temp_heater') }}</b></div>
-									@endif
-								</div>
-							</div><hr>
-							<div class="row mb-3 field-wrapper">
-								<label for="horizontal-firstname-input" class="col-sm-6 col-form-label"><i class="mdi mdi-arrow-right text-primary me-1"></i>Guide Roll <code>*</code></label>
-								<div class="col-sm-6">
-									<div class="form-check">
-										<input class="form-check-input" type="radio" name="pc_guide_roll" value="Ok"
-										{{ $data_detail_preparation[0]->guide_roll=="Ok"?'checked':''; }} >
-										<label class="form-check-label">
-											OK
-										</label>
-									</div>
-									<div class="form-check">
-										<input class="form-check-input" type="radio" name="pc_guide_roll" value="Not Ok"
-										{{ $data_detail_preparation[0]->guide_roll=="Not Ok"?'checked':''; }} >
-										<label>
-											Not OK
-										</label>
-									</div>
-									@if($errors->has('pc_guide_roll'))
-										<div class="text-danger"><b>{{ $errors->first('pc_guide_roll') }}</b></div>
+									@if($errors->has('pc_press_roll'))
+										<div class="text-danger"><b>{{ $errors->first('pc_press_roll') }}</b></div>
 									@endif
 								</div>
 							</div><hr>
@@ -492,28 +349,7 @@
 									@endif
 								</div>
 							</div><hr>
-							<div class="row mb-3 field-wrapper">
-								<label for="horizontal-firstname-input" class="col-sm-6 col-form-label"><i class="mdi mdi-arrow-right text-primary me-1"></i>Saringan Resin <code>*</code></label>
-								<div class="col-sm-6">
-									<div class="form-check">
-										<input class="form-check-input" type="radio" name="pc_saringan_resin" value="Ok"
-										{{ $data_detail_preparation[0]->saringan_resin=="Ok"?'checked':''; }} >
-										<label class="form-check-label">
-											OK
-										</label>
-									</div>
-									<div class="form-check">
-										<input class="form-check-input" type="radio" name="pc_saringan_resin" value="Not Ok"
-										{{ $data_detail_preparation[0]->saringan_resin=="Not Ok"?'checked':''; }} >
-										<label>
-											Not OK
-										</label>
-									</div>
-									@if($errors->has('pc_saringan_resin'))
-										<div class="text-danger"><b>{{ $errors->first('pc_saringan_resin') }}</b></div>
-									@endif
-								</div>
-							</div><hr>
+							
 							<div class="row justify-content-end">
 								<div class="col-sm-3">
 									<div>											
@@ -532,94 +368,28 @@
 						
 					</div>
 					<div class="card-body p-4">
-						<form method="post" action="/production-ent-report-blow-update" class="form-material m-t-40" enctype="multipart/form-data">
+						<form method="post" action="/production-ent-report-slitting-update" class="form-material m-t-40" enctype="multipart/form-data">
 						@csrf
 							<input type="hidden" class="form-control" name="request_id" value="{{ Request::segment(2) }}">
 							<div class="row mb-3 field-wrapper">
-								<label for="horizontal-firstname-input" class="col-sm-6 col-form-label"><i class="mdi mdi-arrow-right text-primary me-1"></i>Guide Rubber Roll <code>*</code></label>
+								<label for="horizontal-firstname-input" class="col-sm-6 col-form-label"><i class="mdi mdi-arrow-right text-primary me-1"></i>Press Rubber Roll <code>*</code></label>
 								<div class="col-sm-6">
 									<div class="form-check">
-										<input class="form-check-input" type="radio" name="hc_guide_rubber_roll" value="Ok"
-										{{ $data_detail_hygiene[0]->guide_rubber_roll=="Ok"?'checked':''; }} >
+										<input class="form-check-input" type="radio" name="hc_press_rubber_roll" value="Ok"
+										{{ $data_detail_hygiene[0]->press_rubber_roll=="Ok"?'checked':''; }} >
 										<label class="form-check-label">
 											OK
 										</label>
 									</div>
 									<div class="form-check">
-										<input class="form-check-input" type="radio" name="hc_guide_rubber_roll" value="Not Ok"
-										{{ $data_detail_hygiene[0]->guide_rubber_roll=="Not Ok"?'checked':''; }} >
+										<input class="form-check-input" type="radio" name="hc_press_rubber_roll" value="Not Ok"
+										{{ $data_detail_hygiene[0]->press_rubber_roll=="Not Ok"?'checked':''; }} >
 										<label>
 											Not OK
 										</label>
 									</div>
-									@if($errors->has('hc_guide_rubber_roll'))
-										<div class="text-danger"><b>{{ $errors->first('hc_guide_rubber_roll') }}</b></div>
-									@endif
-								</div>
-							</div><hr>
-							<div class="row mb-3 field-wrapper">
-								<label for="horizontal-firstname-input" class="col-sm-6 col-form-label"><i class="mdi mdi-arrow-right text-primary me-1"></i>Bak Resin <code>*</code></label>
-								<div class="col-sm-6">
-									<div class="form-check">
-										<input class="form-check-input" type="radio" name="hc_bak_resin" value="Ok"
-										{{ $data_detail_hygiene[0]->bak_resin=="Ok"?'checked':''; }} >
-										<label class="form-check-label">
-											OK
-										</label>
-									</div>
-									<div class="form-check">
-										<input class="form-check-input" type="radio" name="hc_bak_resin" value="Not Ok"
-										{{ $data_detail_hygiene[0]->bak_resin=="Not Ok"?'checked':''; }} >
-										<label>
-											Not OK
-										</label>
-									</div>
-									@if($errors->has('hc_bak_resin'))
-										<div class="text-danger"><b>{{ $errors->first('hc_bak_resin') }}</b></div>
-									@endif
-								</div>
-							</div><hr>
-							<div class="row mb-3 field-wrapper">
-								<label for="horizontal-firstname-input" class="col-sm-6 col-form-label"><i class="mdi mdi-arrow-right text-primary me-1"></i>Mixer Resin <code>*</code></label>
-								<div class="col-sm-6">
-									<div class="form-check">
-										<input class="form-check-input" type="radio" name="hc_mixer_resin" value="Ok"
-										{{ $data_detail_hygiene[0]->mixer_resin=="Ok"?'checked':''; }} >
-										<label class="form-check-label">
-											OK
-										</label>
-									</div>
-									<div class="form-check">
-										<input class="form-check-input" type="radio" name="hc_mixer_resin" value="Not Ok"
-										{{ $data_detail_hygiene[0]->mixer_resin=="Not Ok"?'checked':''; }} >
-										<label>
-											Not OK
-										</label>
-									</div>
-									@if($errors->has('hc_mixer_resin'))
-										<div class="text-danger"><b>{{ $errors->first('hc_mixer_resin') }}</b></div>
-									@endif
-								</div>
-							</div><hr>
-							<div class="row mb-3 field-wrapper">
-								<label for="horizontal-firstname-input" class="col-sm-6 col-form-label"><i class="mdi mdi-arrow-right text-primary me-1"></i>Ember Resin <code>*</code></label>
-								<div class="col-sm-6">
-									<div class="form-check">
-										<input class="form-check-input" type="radio" name="hc_ember_resin" value="Ok"
-										{{ $data_detail_hygiene[0]->ember_resin=="Ok"?'checked':''; }} >
-										<label class="form-check-label">
-											OK
-										</label>
-									</div>
-									<div class="form-check">
-										<input class="form-check-input" type="radio" name="hc_ember_resin" value="Not Ok"
-										{{ $data_detail_hygiene[0]->ember_resin=="Not Ok"?'checked':''; }} >
-										<label>
-											Not OK
-										</label>
-									</div>
-									@if($errors->has('hc_ember_resin'))
-										<div class="text-danger"><b>{{ $errors->first('hc_ember_resin') }}</b></div>
+									@if($errors->has('hc_press_rubber_roll'))
+										<div class="text-danger"><b>{{ $errors->first('hc_press_rubber_roll') }}</b></div>
 									@endif
 								</div>
 							</div><hr>
@@ -667,6 +437,29 @@
 									@endif
 								</div>
 							</div><hr>
+							<div class="row mb-3 field-wrapper">
+								<label for="horizontal-firstname-input" class="col-sm-6 col-form-label"><i class="mdi mdi-arrow-right text-primary me-1"></i>Cutter <code>*</code></label>
+								<div class="col-sm-6">
+									<div class="form-check">
+										<input class="form-check-input" type="radio" name="hc_cutter" value="Ok"
+										{{ $data_detail_hygiene[0]->cutter=="Ok"?'checked':''; }} >
+										<label class="form-check-label">
+											OK
+										</label>
+									</div>
+									<div class="form-check">
+										<input class="form-check-input" type="radio" name="hc_cutter" value="Not Ok"
+										{{ $data_detail_hygiene[0]->cutter=="Not Ok"?'checked':''; }} >
+										<label>
+											Not OK
+										</label>
+									</div>
+									@if($errors->has('hc_cutter'))
+										<div class="text-danger"><b>{{ $errors->first('hc_cutter') }}</b></div>
+									@endif
+								</div>
+							</div><hr>
+							
 							<div class="row justify-content-end">
 								<div class="col-sm-3">
 									<div>											
@@ -695,7 +488,7 @@
 										
 									</div>
 									<div class="card-body p-4">
-										<form method="post" action="/production-entry-report-blow-detail-production-result-add" class="form-material m-t-40" enctype="multipart/form-data">
+										<form method="post" action="/production-entry-report-slitting-detail-production-result-add" class="form-material m-t-40" enctype="multipart/form-data">
 											@csrf
 											<div class="row mb-4 field-wrapper required-field">
 												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Start Time </label>
@@ -740,6 +533,95 @@
 												</div>
 											</div> 
 											<div class="row mb-4 field-wrapper required-field">
+												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Barcode Start</label>
+												<div class="col-sm-8">
+													<select class="form-select data-select2" name="id_master_barcode_start" id="id_master_barcode_start">
+														<option value="">** Please Select A Barcodes</option>
+													</select>
+													@if($errors->has('id_master_barcode_start'))
+														<div class="text-danger"><b>{{ $errors->first('id_master_barcode_start') }}</b></div>
+													@endif
+												</div>
+											</div> 
+											<script>									
+												$(document).ready(function(){
+													//$('#id_work_orders').prop('selectedIndex', 0);
+													//$('#id_master_work_centers').prop('selectedIndex', 0);
+													//$('#id_master_regus').prop('selectedIndex', 0);
+													//$('#shift').prop('selectedIndex', 0);
+													$.ajax({
+														type: "GET",
+														url: "/json_get_barcode",
+														data: { where : 'SLITTING START' },
+														dataType: "json",
+														beforeSend: function(e) {
+															if(e && e.overrideMimeType) {
+																e.overrideMimeType("application/json;charset=UTF-8");
+															}
+														},
+														success: function(response){
+															$("#id_master_barcode_start").html(response.list_barcode).show();
+															//$('#id_master_regus').prop('selectedIndex', 0);
+															//$('#shift').prop('selectedIndex', 0);
+														},
+														error: function (xhr, ajaxOptions, thrownError) {
+															alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
+														}
+													});
+												});
+											</script>												
+											<div class="row mb-4 field-wrapper required-field">
+												<label for="horizontal-password-input" class="col-sm-4 col-form-label">Work Orders </label>
+												<div class="col-sm-8">
+													<select class="form-select data-select2" name="id_work_orders" id="id_work_orders" required>
+														<option value="">** Please Select A Work Orders</option>
+														@foreach ($ms_work_orders as $data)
+															<option value="{{ $data->id }}" data-id_master_customers="{{ $data->id_master_customers }}" data-type_product="{{ $data->type_product }}" data-id_master_products="{{ $data->id_master_products }}">{{ $data->wo_number }}</option>
+														@endforeach
+													</select>
+													@if($errors->has('id_work_orders'))
+														<div class="text-danger"><b>{{ $errors->first('id_work_orders') }}</b></div>
+													@endif
+												</div>
+											</div>
+											<script>									
+												$(document).ready(function(){
+													
+													$("#id_work_orders").change(function(){		
+														
+														$.ajax({
+															type: "GET",
+															url: "/json_get_produk",
+															data: { type_product : $('#id_work_orders option:selected').attr('data-type_product'), id_master_products : $('#id_work_orders option:selected').attr('data-id_master_products') },
+															dataType: "json",
+															beforeSend: function(e) {
+																if(e && e.overrideMimeType) {
+																	e.overrideMimeType("application/json;charset=UTF-8");
+																}
+															},
+															success: function(response){
+																$("#id_master_products").html(response.list_products).show();
+															},
+															error: function (xhr, ajaxOptions, thrownError) {
+																alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
+															}
+														});
+													});
+													
+												});
+											</script>
+											<div class="row mb-4 field-wrapper">
+												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Product Info </label>
+												<div class="col-sm-8">
+													<select class="form-select data-select2" name="id_master_products" id="id_master_products">
+														<option value="">** Please Select A Products</option>
+													</select>
+													@if($errors->has('id_master_products'))
+														<div class="text-danger"><b>{{ $errors->first('id_master_products') }}</b></div>
+													@endif
+												</div>
+											</div> 
+											<div class="row mb-4 field-wrapper required-field">
 												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Barcode </label>
 												<div class="col-sm-8">
 													<select class="form-select data-select2" name="id_master_barcode" id="id_master_barcode">
@@ -759,7 +641,7 @@
 													$.ajax({
 														type: "GET",
 														url: "/json_get_barcode",
-														data: { where : 'BLOW' },
+														data: { where : 'SLITTING' },
 														dataType: "json",
 														beforeSend: function(e) {
 															if(e && e.overrideMimeType) {
@@ -839,7 +721,24 @@
 													@endif
 												</div>
 											</div> 
-											
+											<div class="row mb-4 field-wrapper">
+												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Waste </label>
+												<div class="col-sm-8">
+													<input type="text" class="form-control" name="waste">
+													@if($errors->has('waste'))
+														<div class="text-danger"><b>{{ $errors->first('waste') }}</b></div>
+													@endif
+												</div>
+											</div> 
+											<div class="row mb-4 field-wrapper">
+												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Cause Waste </label>
+												<div class="col-sm-8">
+													<input type="text" class="form-control" name="cause_waste">
+													@if($errors->has('cause_waste'))
+														<div class="text-danger"><b>{{ $errors->first('cause_waste') }}</b></div>
+													@endif
+												</div>
+											</div>
 											<input type="hidden" class="form-control" name="request_id" value="{{ Request::segment(2) }}">
 											
 											
@@ -869,9 +768,8 @@
 													<thead>
 														<tr>
 														<tr>
-															<th width="20%">Start Time</th>
-															<th width="25%">Finish Time</th>
-															<th width="15%">Barcode</th>
+															<th width="20%">Start / Finish</th>
+															<th width="40%">Result Info</th>
 															<th width="20%">Weight Info</th>
 															<th width="10%">Aksi</th>
 														</tr>
@@ -880,12 +778,17 @@
 														@foreach ($data_detail_production as $data_detail)
 														<tr>
 															<td>
-																At : <b>{{ $data_detail->start_time }}</b>
-															</td>
-															<td>
+																At : <b>{{ $data_detail->start_time }}</b> /												
 																Until : <b>{{ $data_detail->finish_time }}</b>
 															</td>
-															<td>{{ $data_detail->barcode }}</td>
+															<?php $product = explode('|', $data_detail->note) ; ?>
+															<td><p>
+																Barcode Start : <b>{{ $data_detail->barcode_start }}</b><br>
+																Barcode : <b>{{ $data_detail->barcode }}</b><br><br>
+																Work Orders : <b>{{ $data_detail->id_work_orders }}</b><br>
+																<code>Type Result : <b>{{ $data_detail->type_result }}</b></code><br>
+																<footer class="blockquote-footer">Product : <cite><b>{{ $product['2'] }}</b></cite></footer></p>
+															</td>
 															<?php 
 																if($data_detail->status=="Good"){
 																	$colors = "success";
@@ -961,128 +864,7 @@
 			</div>
 		</div> 
 		
-		<div class="row">
-			<div class="col-lg-12">
-				<div class="card">
-					<div class="card-header">
-						<h4 class="card-title"><i data-feather="check-square"></i> Waste</h4>
-						
-					</div>
-					<div class="card-body p-4">
-						<div class="row">
-							<div class="col-lg-5">
-								<div class="card">
-									<div class="card-header">
-										<h4 class="card-title">Form</h4>
-										
-									</div>
-									<div class="card-body p-4">
-										<form method="post" action="/production-entry-report-blow-detail-waste-add" class="form-material m-t-40" enctype="multipart/form-data">
-											@csrf
-											<div class="row mb-4 field-wrapper required-field">
-												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Waste </label>
-												<div class="col-sm-8">
-													<input type="text" class="form-control" name="waste">
-													@if($errors->has('waste'))
-														<div class="text-danger"><b>{{ $errors->first('waste') }}</b></div>
-													@endif
-												</div>
-											</div> 
-											<div class="row mb-4 field-wrapper required-field">
-												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Cause Waste </label>
-												<div class="col-sm-8">
-													<input type="text" class="form-control" name="cause_waste">
-													@if($errors->has('cause_waste'))
-														<div class="text-danger"><b>{{ $errors->first('cause_waste') }}</b></div>
-													@endif
-												</div>
-											</div> 											
-											
-											<input type="hidden" class="form-control" name="request_id" value="{{ Request::segment(2) }}">
-											
-											<div class="row justify-content-end">
-												<div class="col-sm-12">
-													<div>
-														<button type="reset" class="btn btn-secondary w-md"><i class="bx bx-refresh" title="Reset"></i> RESET</button>
-														<button type="submit" class="btn btn-primary w-md" name="save"><i class="bx bx-list-plus" title="Add"></i> ADD to TABLE DETAIL</button>
-													</div>
-												</div>
-											</div>
-										</form> 
-									</div>
-								</div>
-							</div>
-							<div class="col-lg-7">
-								<div class="card">
-									<div class="card-header">
-										<h4 class="card-title">Table Detail</h4>
-										
-									</div>
-									<div class="card-body p-4">
-										@if(!empty($data_detail_waste[0]))
-											<div class="table-responsive">
-												<table id="datatable" class="table table-bordered dt-responsive  nowrap w-100">
-													<thead>
-														<tr>
-														<tr>
-															<th width="20%">Waste</th>
-															<th width="60%">Cause Waste</th>
-															<th width="20%">Aksi</th>
-														</tr>
-													</thead>
-													<tbody>
-														@foreach ($data_detail_waste as $data_detail)
-														<tr>
-															<td>
-																{{ $data_detail->waste }}
-															</td>
-															<td>
-																{{ $data_detail->cause_waste }}
-															</td>
-															
-															
-															<td>	
-																<center>
-																	<form action="/production-entry-report-blow-detail-waste-delete" method="post" class="d-inline" enctype="multipart/form-data">
-																		@csrf		
-																		<input type="hidden" class="form-control" name="token_rb" value="{{ Request::segment(2) }}">
-																		<button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure to delete this item ?')" value="{{ sha1($data_detail->id) }}" name="hapus_detail">
-																			<i class="bx bx-trash-alt" title="Delete" ></i>
-																		</button>
-																	</form>	
-																	<a href="/production-entry-report-blow-detail-waste-edit/{{ Request::segment(2) }}/{{ sha1($data_detail->id) }}" class="btn btn-info waves-effect waves-light">
-																		<i class="bx bx-edit-alt" title="Edit"></i>
-																	</a>
-																</center>											
-															</td>
-														 
-														</tr>
-														@endforeach
-													</tbody>
-												</table>
-											</div>
-										@else
-											<div class="row">
-												<div class="col-lg-12 text-center">
-													<label>Data Tidak Tersedia</label>
-												</div>
-											</div>
-											
-										@endif
-									</div>
-								</div>
-							</div>
-						</div>
-						
-						
-                    </div>
-					
-					
-					
-					
-				</div>
-			</div>
-		</div> 
+		
 		
     
                     <!-- end row -->
