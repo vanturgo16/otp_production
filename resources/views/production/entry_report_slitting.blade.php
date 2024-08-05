@@ -19,11 +19,11 @@
             <div class="row">
                 <div class="col-12">
                     <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                        <h4 class="mb-sm-0 font-size-18"> Report Blow</h4>
+                        <h4 class="mb-sm-0 font-size-18"> Report Slitting</h4>
                         <div class="page-title-right">
                             <ol class="breadcrumb m-0">
                                 <li class="breadcrumb-item"><a href="javascript: void(0);">Production</a></li>
-                                <li class="breadcrumb-item active"> Report Blow</li>
+                                <li class="breadcrumb-item active"> Report Slitting</li>
                             </ol>
                         </div>
                     </div>
@@ -35,7 +35,7 @@
                         <div class="card-header">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <a href="/production-ent-report-blow-add" class="btn btn-success waves-effect waves-light">
+                                    <a href="/production-ent-report-slitting-add" class="btn btn-success waves-effect waves-light">
 										<i class="bx bx-plus" title="Add Data" ></i>
 										ADD
 									</a>                                   
@@ -61,7 +61,7 @@
 									var table = $('.datatable-rb-json').DataTable({
 										processing: true,
 										serverSide: true,
-										ajax: '/production-ent-report-blow-json',
+										ajax: '/production-ent-report-slitting-json',
 										columns: [
 											{data: 'report_info', name: 'report_info', orderable: true, searchable: true},
 											{data: 'order_info', name: 'order_info', orderable: true, searchable: true},
@@ -99,7 +99,7 @@
 									{
 										$.ajax({
 											type: "GET",
-											url: "/production-ent-report-blow-json-preparation",
+											url: "/production-ent-report-slitting-json-preparation",
 											data: "id='"+id+"'",
 											dataType: "html",
 											success: function (response) {
@@ -133,7 +133,7 @@
 									{
 										$.ajax({
 											type: "GET",
-											url: "/production-ent-report-blow-json-hygiene",
+											url: "/production-ent-report-slitting-json-hygiene",
 											data: "id='"+id+"'",
 											dataType: "html",
 											success: function (response) {
@@ -173,39 +173,6 @@
 											success: function (response) {
 												$('#modal_update_stock_body').empty();
 												$('#modal_update_stock_body').append(response);
-											}
-										});
-										
-									}
-								</script>
-								<div id="modal_update_stock_info" class="modal fade" tabindex="-1" aria-labelledby="edit_poLabel" aria-hidden="true" data-bs-scroll="true">
-									<div class="modal-dialog">
-										<div class="modal-content">
-											<div class="modal-header">
-												<h4 class="font-size-16">
-													<b>Stock Updated</b>
-												</h4>
-												<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-											</div>
-											<div class="modal-body" id="modal_update_stock_info_body">								
-												
-											</div>
-											<div class="modal-footer">
-											</div>
-										</div>
-									</div>
-								</div>
-								<script>
-									function showUpdateStockInfo(id)
-									{
-										$.ajax({
-											type: "GET",
-											url: "/production-ent-report-blow-json-update-stock-info",
-											data: "id='"+id+"'",
-											dataType: "html",
-											success: function (response) {
-												$('#modal_update_stock_info_body').empty();
-												$('#modal_update_stock_info_body').append(response);
 											}
 										});
 										

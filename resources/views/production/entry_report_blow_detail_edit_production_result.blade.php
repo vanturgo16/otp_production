@@ -132,7 +132,7 @@
 													$.ajax({
 														type: "GET",
 														url: "/json_get_barcode",
-														data: { barcode_number : {!! "'".$data[0]->barcode."'" !!} },
+														data: { where : 'BLOW', barcode_number : {!! "'".$data[0]->barcode."'" !!} },
 														dataType: "json",
 														beforeSend: function(e) {
 															if(e && e.overrideMimeType) {

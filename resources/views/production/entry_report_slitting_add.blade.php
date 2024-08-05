@@ -3,18 +3,18 @@
 @section('konten')
 <div class="page-content">
     <div class="container-fluid">
-    <form method="post" action="/production-ent-report-blow-save" class="form-material m-t-40" enctype="multipart/form-data">
+    <form method="post" action="/production-ent-report-slitting-save" class="form-material m-t-40" enctype="multipart/form-data">
     @csrf
         <div class="row">
             <div class="col-12">
                 <div class="page-title-box d-sm-flex align-items-center justify-content-between">
                     <!--h4 class="mb-sm-0 font-size-18"> Add Request Sparepart & Auxiliaries</h4-->
-					<a href="/production-ent-report-blow" class="btn btn-dark waves-effect waves-light mb-3"> 
-					<i class="bx bx-list-ul" title="Back"></i> REPORT BLOW</a>
+					<a href="/production-ent-report-slitting" class="btn btn-dark waves-effect waves-light mb-3"> 
+					<i class="bx bx-list-ul" title="Back"></i> REPORT SLITTING</a>
                     <div class="page-title-right">
                         <ol class="breadcrumb m-0">
                             <li class="breadcrumb-item"><a href="javascript: void(0);">Production</a></li>
-                            <li class="breadcrumb-item active"> Add Report Blow</li>
+                            <li class="breadcrumb-item active"> Add Report Slitting</li>
                         </ol>
                     </div>
                 </div>
@@ -25,7 +25,7 @@
             <div class="col-lg-12">
                 <div class="card">
                     <div class="card-header">
-                        <h4 class="card-title">Add Report Blow</h4>
+                        <h4 class="card-title">Add Report Slitting</h4>
                         <!--  <p class="card-title-desc"> layout options : from inline, horizontal & custom grid implementations</p> -->
                     </div>
                     <div class="card-body p-4">
@@ -37,21 +37,6 @@
 									<label for="horizontal-firstname-input" class="col-sm-3 col-form-label">Report Number</label>
 									<div class="col-sm-9">
 										<input type="text" name="request_number" class="form-control" value="{{ $formattedCode }}" readonly>
-										<input type="hidden" id="html" name="type" value="RM">
-									</div>
-								</div>
-								<div class="row mb-4 field-wrapper required-field">
-									<label for="horizontal-password-input" class="col-sm-3 col-form-label">Work Orders </label>
-									<div class="col-sm-9">
-										<select class="form-select data-select2" name="id_work_orders" id="id_work_orders" required>
-											<option value="">** Please Select A Work Orders</option>
-											@foreach ($ms_work_orders as $data)
-												<option value="{{ $data->id }}" data-id_master_customers="{{ $data->id_master_customers }}" data-type_product="{{ $data->type_product }}" data-id_master_products="{{ $data->id_master_products }}">{{ $data->wo_number }}</option>
-											@endforeach
-										</select>
-										@if($errors->has('id_work_orders'))
-											<div class="text-danger"><b>{{ $errors->first('id_work_orders') }}</b></div>
-										@endif
 									</div>
 								</div>
 								<div class="row mb-4 field-wrapper required-field">
@@ -64,17 +49,6 @@
 									</div>
 								</div>
 								<div class="row mb-4 field-wrapper required-field">
-									<label for="horizontal-firstname-input" class="col-sm-3 col-form-label">Order Name </label>
-									<div class="col-sm-9">										
-										<select class="form-select data-select2" name="id_master_products" id="id_master_products">
-											<option value="">** Please Select A Products</option>
-										</select>
-										@if($errors->has('id_master_products'))
-											<div class="text-danger"><b>{{ $errors->first('id_master_products') }}</b></div>
-										@endif
-									</div>
-								</div> 
-								<div class="row mb-4 field-wrapper required-field">
 									<label for="horizontal-password-input" class="col-sm-3 col-form-label">Customers </label>
 									<div class="col-sm-9">
 										<select class="form-select data-select2" name="id_master_customers" id="id_master_customers">
@@ -84,16 +58,7 @@
 											<div class="text-danger"><b>{{ $errors->first('id_master_customers') }}</b></div>
 										@endif
 									</div>
-								</div> 
-								<div class="row mb-4 field-wrapper">
-									<label for="horizontal-firstname-input" class="col-sm-3 col-form-label">Type </label>
-									<div class="col-sm-9">
-										<input type="text" class="form-control" name="type">
-										@if($errors->has('type'))
-											<div class="text-danger"><b>{{ $errors->first('type') }}</b></div>
-										@endif
-									</div>
-								</div> 								
+								</div>  								
 								<div class="row mb-4 field-wrapper required-field">
 									<label for="horizontal-password-input" class="col-sm-3 col-form-label">Work Centers </label>
 									<div class="col-sm-9">
@@ -130,6 +95,24 @@
 										@endif
 									</div>
 								</div>	
+								<div class="row mb-4 field-wrapper">
+									<label for="horizontal-firstname-input" class="col-sm-3 col-form-label">Engine Shutdown Description </label>
+									<div class="col-sm-9">
+										<textarea rows="5" class="form-control" name="engine_shutdown_description"></textarea>
+										@if($errors->has('engine_shutdown_description'))
+											<div class="text-danger"><b>{{ $errors->first('engine_shutdown_description') }}</b></div>
+										@endif
+									</div>
+								</div> 	
+								<div class="row mb-4 field-wrapper">
+									<label for="horizontal-firstname-input" class="col-sm-3 col-form-label">Note </label>
+									<div class="col-sm-9">
+										<textarea rows="5" class="form-control" name="note"></textarea>
+										@if($errors->has('note'))
+											<div class="text-danger"><b>{{ $errors->first('note') }}</b></div>
+										@endif
+									</div>
+								</div> 	
 								<div class="row mb-4 field-wrapper required-field">
 									<label for="horizontal-password-input" class="col-sm-3 col-form-label">Known By </label>
 									<div class="col-sm-9">
@@ -146,71 +129,50 @@
 								</div>	
 								<script>									
 									$(document).ready(function(){
-										$('#id_work_orders').prop('selectedIndex', 0);
+										//$('#id_work_orders').prop('selectedIndex', 0);
+										$('#id_master_customers').prop('selectedIndex', 0);
 										$('#id_master_work_centers').prop('selectedIndex', 0);
 										$('#id_master_regus').prop('selectedIndex', 0);
 										$('#shift').prop('selectedIndex', 0);
 										
-										$("#id_work_orders").change(function(){				
-											$.ajax({
-												type: "GET",
-												url: "/json_get_produk",
-												data: { type_product : $('#id_work_orders option:selected').attr('data-type_product'), id_master_products : $('#id_work_orders option:selected').attr('data-id_master_products') },
-												dataType: "json",
-												beforeSend: function(e) {
-													if(e && e.overrideMimeType) {
-														e.overrideMimeType("application/json;charset=UTF-8");
-													}
-												},
-												success: function(response){
-													$("#id_master_products").html(response.list_products).show();
-													//$('#id_master_regus').prop('selectedIndex', 0);
-													//$('#shift').prop('selectedIndex', 0);
-												},
-												error: function (xhr, ajaxOptions, thrownError) {
-													alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
+										$.ajax({
+											type: "GET",
+											url: "/json_get_customer",
+											//data: { id_master_customers : $('#id_work_orders option:selected').attr('data-id_master_customers') },
+											dataType: "json",
+											beforeSend: function(e) {
+												if(e && e.overrideMimeType) {
+													e.overrideMimeType("application/json;charset=UTF-8");
 												}
-											});			
-											
-											$.ajax({
-												type: "GET",
-												url: "/json_get_customer",
-												data: { id_master_customers : $('#id_work_orders option:selected').attr('data-id_master_customers') },
-												dataType: "json",
-												beforeSend: function(e) {
-													if(e && e.overrideMimeType) {
-														e.overrideMimeType("application/json;charset=UTF-8");
-													}
-												},
-												success: function(response){
-													$("#id_master_customers").html(response.list_customers).show();
-													//$('#id_master_regus').prop('selectedIndex', 0);
-													//$('#shift').prop('selectedIndex', 0);
-												},
-												error: function (xhr, ajaxOptions, thrownError) {
-													alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
+											},
+											success: function(response){
+												$("#id_master_customers").html(response.list_customers).show();
+												//$('#id_master_regus').prop('selectedIndex', 0);
+												//$('#shift').prop('selectedIndex', 0);
+											},
+											error: function (xhr, ajaxOptions, thrownError) {
+												alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
+											}
+										});
+										
+										$.ajax({
+											type: "GET",
+											url: "/json_get_work_center",
+											data: { id_master_process_productions : '4' },
+											dataType: "json",
+											beforeSend: function(e) {
+												if(e && e.overrideMimeType) {
+													e.overrideMimeType("application/json;charset=UTF-8");
 												}
-											});
-											
-											$.ajax({
-												type: "GET",
-												url: "/json_get_work_center",
-												data: { id_master_process_productions : '2' },
-												dataType: "json",
-												beforeSend: function(e) {
-													if(e && e.overrideMimeType) {
-														e.overrideMimeType("application/json;charset=UTF-8");
-													}
-												},
-												success: function(response){
-													$("#id_master_work_centers").html(response.list_work_center).show();
-													$('#id_master_regus').prop('selectedIndex', 0);
-													$('#shift').prop('selectedIndex', 0);
-												},
-												error: function (xhr, ajaxOptions, thrownError) {
-													alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
-												}
-											});
+											},
+											success: function(response){
+												$("#id_master_work_centers").html(response.list_work_center).show();
+												//$('#id_master_regus').prop('selectedIndex', 0);
+												//$('#shift').prop('selectedIndex', 0);
+											},
+											error: function (xhr, ajaxOptions, thrownError) {
+												alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
+											}
 										});
 										
 										$("#id_master_work_centers").change(function(){										
@@ -243,7 +205,7 @@
 								<div class="row justify-content-end">
 									<div class="col-sm-9">
 										<div>
-											<a href="/production-ent-report-blow" class="btn btn-danger waves-effect waves-light"><i class="bx bx-chevron-left" title="Back"></i> BACK</a>
+											<a href="/production-ent-report-slitting" class="btn btn-danger waves-effect waves-light"><i class="bx bx-chevron-left" title="Back"></i> BACK</a>
 											
 											<button type="submit" class="btn btn-success w-md" name="save"><i class="bx bx-save" title="Back"></i> SAVE</button>
 										</div>
