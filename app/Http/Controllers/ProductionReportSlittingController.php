@@ -9,7 +9,8 @@ use Illuminate\Support\Facades\Redirect;
 use RealRashid\SweetAlert\Facades\Alert;
 use Browser;
 use Illuminate\Support\Facades\Crypt;
-use Yajra\DataTables\Facades\Datatables;
+//use Yajra\DataTables\Facades\Datatables;
+use DataTables;//test test test test 
 
 // Model
 //START REQUEST SPAREPART AND AUXILIARIES
