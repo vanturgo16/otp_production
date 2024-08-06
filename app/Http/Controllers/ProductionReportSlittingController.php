@@ -35,7 +35,7 @@ class ProductionReportSlittingController extends Controller
 	//START ENTRY REPORT BLOW
 	public function production_entry_report_slitting()
     {
-		/*
+		/*TEST
         $datas = ProductionEntryReportSF::leftJoin('work_orders AS b', 'report_sfs.id_work_orders', '=', 'b.id')
                 ->select('report_sfs.*', 'b.wo_number')
                 ->orderBy('report_sfs.created_at', 'desc')
