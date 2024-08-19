@@ -769,7 +769,7 @@
 														<tr>
 														<tr>
 															<th width="20%">Start / Finish</th>
-															<th width="40%">Result Info</th>
+															<th width="40%">Product Info</th>
 															<th width="20%">Weight Info</th>
 															<th width="10%">Aksi</th>
 														</tr>
@@ -785,7 +785,7 @@
 															<td><p>
 																Barcode Start : <b>{{ $data_detail->barcode_start }}</b><br>
 																Barcode : <b>{{ $data_detail->barcode }}</b><br><br>
-																Work Orders : <b>{{ $data_detail->id_work_orders }}</b><br>
+																Work Orders : <b>{{ $data_detail->wo_number }}</b><br>
 																<code>Type Result : <b>{{ $data_detail->type_result }}</b></code><br>
 																<footer class="blockquote-footer">Product : <cite><b>{{ $product['2'] }}</b></cite></footer></p>
 															</td>
@@ -810,14 +810,14 @@
 															
 															<td>	
 																<center>
-																	<form action="/production-entry-report-blow-detail-production-result-delete" method="post" class="d-inline" enctype="multipart/form-data">
+																	<form action="/production-entry-report-slitting-detail-production-result-delete" method="post" class="d-inline" enctype="multipart/form-data">
 																		@csrf		
-																		<input type="hidden" class="form-control" name="token_rb" value="{{ Request::segment(2) }}">
+																		<input type="hidden" class="form-control" name="token_rs" value="{{ Request::segment(2) }}">
 																		<button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure to delete this item ?')" value="{{ sha1($data_detail->id) }}" name="hapus_detail">
 																			<i class="bx bx-trash-alt" title="Delete" ></i>
 																		</button>
 																	</form>	
-																	<a href="/production-entry-report-blow-detail-production-result-edit/{{ Request::segment(2) }}/{{ sha1($data_detail->id) }}" class="btn btn-info waves-effect waves-light">
+																	<a href="/production-entry-report-slitting-detail-production-result-edit/{{ Request::segment(2) }}/{{ sha1($data_detail->id) }}" class="btn btn-info waves-effect waves-light">
 																		<i class="bx bx-edit-alt" title="Edit"></i>
 																	</a>
 																</center>											
