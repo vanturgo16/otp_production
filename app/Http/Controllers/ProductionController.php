@@ -1452,14 +1452,16 @@ class ProductionController extends Controller
 		$table = $type_product=='FG'?'master_product_fgs':'master_wips';
 		
 		$datas = DB::table($table)
-			->select('description','id')
+			->select('*')
 			->whereRaw( "id = '$id_master_products'")
 			->get();
 			
 		$lists = "<option value='' disabled='' selected=''>** Please Select A Product</option>";		
 		foreach($datas as $data){
+			$ukuran = $type_product=="FG"?$data->thickness." x "."$data->width"." x ".$data->height:$data->thickness." x "."$data->width"." x ".$data->length;
 			$selected = $data->id==$id_master_products?'selected':'';
-			$lists .= "<option value='".$type_product.'|'.$data->id.'|'.$data->description."' ".$selected.">".$data->description."</option>";
+			$lists .= "<option value='".$type_product.'|'.$data->id.'|'.$data->description.'|'.$ukuran."' ".$selected.">".$data->description."</option>";
+			//HARUS DIPERBAIKI TAMBAHKAN SIZE UNTUK DISPLAY UKURAN DI REPORT SLITTING
 		}
 		
 		$callback = array('list_products'=>$lists);
@@ -2017,19 +2019,39 @@ class ProductionController extends Controller
 			unset($validatedData["finish"]);
 			unset($validatedData["id_master_barcode"]);		
 			
-			ProductionEntryReportBlowProductionResult::where('id', $data[0]->id)
+			$response = ProductionEntryReportBlowProductionResult::where('id', $data[0]->id)
 				->where('id_report_blows', $data[0]->id_report_blows)
 				->update($validatedData);
 			
-			//Audit Log		
-			$username= auth()->user()->email; 
-			$ipAddress=$_SERVER['REMOTE_ADDR'];
-			$location='0';
-			$access_from=Browser::browserName();
-			$activity='Save Edit Detail Production Result Entry Report Blow '.$data[0]->id;
-			$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+			if($response){
+				$updatedData['status'] = $_POST['status']=="Good"?'In Stock BLW':$_POST['status'];
 			
-			return Redirect::to('/production-ent-report-blow-detail/'.$response_id_rb)->with('pesan', 'Update Successfuly.');  			
+				$response_barcode = DB::table('barcode_detail')
+					->where('barcode_number', $validatedData['barcode'])
+					->update($updatedData);
+					
+				if($validatedData['barcode'] <> $data[0]->barcode){
+					
+					DB::table('barcode_detail')
+					->where('barcode_number', $data[0]->barcode)
+					//->update(['status' => 'Un Used']);
+					//Jika Barcode Bisa Digunakan Lagi, Sesuaikan status data barcode menjadi NULL
+					->update(['status' => null]);
+					
+				}
+				
+				//Audit Log		
+				$username= auth()->user()->email; 
+				$ipAddress=$_SERVER['REMOTE_ADDR'];
+				$location='0';
+				$access_from=Browser::browserName();
+				$activity='Save Edit Detail Production Result Entry Report Blow '.$data[0]->id;
+				$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+				
+				return Redirect::to('/production-ent-report-blow-detail/'.$response_id_rb)->with('pesan', 'Update Successfuly.');  	
+			}else{
+				return Redirect::to('/production-ent-report-blow-detail/'.$response_id_rb)->with('pesan', 'There Is An Error.');
+			}
 		}else{
 			return Redirect::to('/production-ent-report-blow-detail/'.$response_id_rb)->with('pesan', 'There Is An Error.');
 		}
@@ -2051,10 +2073,12 @@ class ProductionController extends Controller
 			
 			if($delete){
 				//Jika Barcode Bisa Digunakan Lagi, Sesuaikan status data barcode menjadi NULL
-				$updatedData['status'] = 'Un Used';
+				$updatedData['status'] = null;
+				
+				//$updatedData['status'] = 'Un Used';
 				
 				DB::table('barcode_detail')
-				->where('barcode_number', $data->barcode)
+				->where('barcode_number', $data[0]->barcode)
 				->update($updatedData);
 				
 				

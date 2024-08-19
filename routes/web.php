@@ -110,6 +110,13 @@ Route::middleware(['auth', 'clear.permission.cache', 'permission:Produksi|Produk
 	Route::get('/production-ent-report-slitting-json-hygiene', [ProductionReportSlittingController::class, 'production_entry_report_slitting_json_hygiene'])->name('production_entry_report_blow_json_hygiene');
 	
 	Route::post('/production-entry-report-slitting-detail-production-result-add', [ProductionReportSlittingController::class, 'production_entry_report_slitting_detail_production_result_add'])->name('production_entry_report_slitting_detail_production_result_add');
+	Route::get('/production-entry-report-slitting-detail-production-result-edit/{id_rb}/{id_rb_pr}', [ProductionReportSlittingController::class, 'production_entry_report_slitting_detail_production_result_edit'])->name('production_entry_report_slitting_detail_production_result_edit');
+	Route::post('/production-entry-report-slitting-detail-production-result-edit-save', [ProductionReportSlittingController::class, 'production_entry_report_slitting_detail_production_result_edit_save'])->name('production_entry_report_slitting_detail_production_result_edit_save');
+	Route::post('/production-entry-report-slitting-detail-production-result-delete', [ProductionReportSlittingController::class, 'production_entry_report_slitting_detail_production_result_delete'])->name('production_entry_report_slitting_detail_production_result_delete');
+	
+	
+	
+	Route::get('/production-ent-report-slitting-print/{id}', [ProductionReportSlittingController::class, 'production_entry_report_slitting_print'])->name('production_entry_report_slitting_print');	
 	//END REPORT SLITTING
 	
     //Dashboard
