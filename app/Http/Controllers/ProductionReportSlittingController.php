@@ -24,6 +24,7 @@ use App\Models\ProductionEntryReportSF;
 use App\Models\ProductionEntryReportSFHygiene;
 use App\Models\ProductionEntryReportSFPreparation;
 use App\Models\ProductionEntryReportSFProductionResult;
+use App\Models\HistoryStock;
 
 use App\Models\ProductionEntryReportBlowProductionResult;
 
@@ -106,6 +107,7 @@ class ProductionReportSlittingController extends Controller
 						->get()->count();
 				*/
 				$id = "'".sha1($data->id)."'";
+				$return_unposted = "return confirm('Are you sure to un posted this item ?')";
 				
 				if($data->status=='Un Posted'){
 					$update = '
@@ -119,8 +121,10 @@ class ProductionReportSlittingController extends Controller
 						</p-->';
 				}else{
 					$update = '
-						<a href="#" class="btn btn-info waves-effect btn-label waves-light"><i class="bx bx-info-circle  label-icon"></i>  Stock Updated</a><br>
-						<a href="#" class="btn btn-primary waves-effect btn-label waves-light mt-1"><i class="bx bx-reply label-icon"></i> Un Posted</a>';
+						<a data-bs-toggle="modal" onclick="showUpdateStockInfo('.$id.')" data-bs-target="#modal_update_stock_info" class="btn btn-info waves-effect btn-label waves-light"><i class="bx bx-info-circle  label-icon"></i>  Stock Updated</a><br>						
+						<a onclick="'.$return_unposted.'" href="/production-entry-report-slitting-unposted/'.sha1($data->id).'" class="btn btn-primary waves-effect btn-label waves-light mt-1" onclick="return confirm('."'Anda yakin unposted data ?'".')">
+							<i class="bx bx-reply label-icon"></i> Un Posted
+						</a>';
 				}
 				
 				return $update;
@@ -139,7 +143,7 @@ class ProductionReportSlittingController extends Controller
 							<a target="_blank" href="/production-ent-report-slitting-detail/'.sha1($data->id).'" class="btn btn-outline-info waves-effect waves-light">
 								<i class="bx bx-edit-alt" title="Edit"></i> EDIT
 							</a>
-							<a onclick="'.$return_delete.'" href="#" class="btn btn-outline-danger waves-effect waves-light" onclick="return confirm('."'Anda yakin mau menghapus item ini ?'".')">
+							<a onclick="'.$return_delete.'" href="/production-ent-report-slitting-delete/'.sha1($data->id).'" class="btn btn-outline-danger waves-effect waves-light" onclick="return confirm('."'Anda yakin mau menghapus item ini ?'".')">
 								<i class="bx bx-trash-alt" title="Delete" ></i> DELETE
 							</a>
 							<a target="_blank" href="/production-ent-report-slitting-print/'.sha1($data->id).'" class="btn btn-dark waves-effect waves-light">
@@ -250,7 +254,7 @@ class ProductionReportSlittingController extends Controller
 		
 		<?php
 	}	
-	public function production_entry_report_blow_json_update_stock(Request $request){
+	public function production_entry_report_slitting_json_update_stock(Request $request){
 		
 		/*
 		?>
@@ -258,18 +262,18 @@ class ProductionReportSlittingController extends Controller
 		<?php
 		*/
 		
-		$id_rb = request()->get('id');
+		$id_rs = request()->get('id');
 		
-		$data = ProductionEntryReportBlowProductionResult::select('b.report_number','report_blow_production_results.id_report_blows', 'report_blow_production_results.id')
-				->selectRaw('SUM(IF(report_blow_production_results.status="Good", 1, 0)) AS good')
-				->selectRaw('SUM(IF(report_blow_production_results.status="Hold", 1, 0)) AS hold')
-				->selectRaw('SUM(IF(report_blow_production_results.status="Reject", 1, 0)) AS reject')
-				->rightJoin('report_blows AS b', 'report_blow_production_results.id_report_blows', '=', 'b.id')
-				->whereRaw( "sha1(report_blow_production_results.id_report_blows) = $id_rb")
+		$data = ProductionEntryReportSFProductionResult::select('b.report_number','report_sf_production_results.id_report_sfs', 'report_sf_production_results.id')
+				->selectRaw('SUM(IF(report_sf_production_results.status="Good", 1, 0)) AS good')
+				->selectRaw('SUM(IF(report_sf_production_results.status="Hold", 1, 0)) AS hold')
+				->selectRaw('SUM(IF(report_sf_production_results.status="Reject", 1, 0)) AS reject')
+				->rightJoin('report_sfs AS b', 'report_sf_production_results.id_report_sfs', '=', 'b.id')
+				->whereRaw( "sha1(report_sf_production_results.id_report_sfs) = $id_rs")
 				->groupBy('id_report_blows')
                 ->get();
 		//print_r($data);
-		if(!empty($data[0]->id_report_blows)){
+		if(!empty($data[0]->id_report_sfs)){
 		?>					
 			<!--form method="post" action="/production-entry-report-blow-update-stock" class="form-material m-t-40" enctype="multipart/form-data"-->
 			
@@ -307,8 +311,8 @@ class ProductionReportSlittingController extends Controller
 					</div><!-- end row -->
 				</div>
 				<div class="modal-footer">
-					<!--a href="/production-entry-report-blow-update-stock/<?= sha1($data[0]->id_report_blows); ?>" type="submit" class="btn btn-primary btn-lg"><i class="bx bx-save" title="Update"></i> UPDATE</a-->
-					<a href="#" type="submit" class="btn btn-primary btn-lg"><i class="bx bx-save" title="Update"></i> UPDATE</a>
+					<a href="/production-entry-report-slitting-update-stock/<?= sha1($data[0]->id_report_sfs); ?>" type="submit" class="btn btn-primary btn-lg"><i class="bx bx-save" title="Update"></i> UPDATE</a>
+					<!--a href="#" type="submit" class="btn btn-primary btn-lg"><i class="bx bx-save" title="Update"></i> UPDATE</a-->
 				</div>
 			<!--/form-->
 		<?php
@@ -320,6 +324,73 @@ class ProductionReportSlittingController extends Controller
 		<?php
 		}
 	}	
+	public function production_entry_report_slitting_json_update_stock_info(Request $request){
+		
+		/*
+		?>
+		Test
+		<?php
+		*/
+		
+		$id_rs = request()->get('id');
+		
+		$data = ProductionEntryReportSFProductionResult::select('b.report_number','report_sf_production_results.id_report_sfs', 'report_sf_production_results.id')
+				->selectRaw('SUM(IF(report_sf_production_results.status="Good", 1, 0)) AS good')
+				->selectRaw('SUM(IF(report_sf_production_results.status="Hold", 1, 0)) AS hold')
+				->selectRaw('SUM(IF(report_sf_production_results.status="Reject", 1, 0)) AS reject')
+				->rightJoin('report_sfs AS b', 'report_sf_production_results.id_report_sfs', '=', 'b.id')
+				->whereRaw( "sha1(report_sf_production_results.id_report_sfs) = $id_rs")
+				->groupBy('id_report_blows')
+                ->get();
+		//print_r($data);
+		if(!empty($data[0]->id_report_sfs)){
+		?>					
+			<!--form method="post" action="/production-entry-report-blow-update-stock" class="form-material m-t-40" enctype="multipart/form-data"-->
+			
+				<div class="card-header">
+					<p class="card-title-desc">
+						Production Result : Report Number <b><?= $data[0]->report_number; ?></b><br>
+						Total Product : <b><?= $data[0]->good+$data[0]->hold+$data[0]->reject; ?></b>
+					</p>
+				</div>
+				<div class="card-body">
+					<div class="row g-4">
+						<div class="col-sm-4">
+							<div class="alert alert-success alert-dismissible fade show px-4 mb-0 text-center" role="alert">
+								<i class="mdi mdi-check-all d-block display-4 mt-2 mb-3 text-success"></i>
+								<h5 class="text-success"><?= $data[0]->good; ?></h5>
+								<p>Good Product</p>
+							</div>
+						</div><!-- end col -->
+
+						<div class="col-sm-4">
+							<div class="alert alert-warning alert-dismissible fade show px-4 mb-0 text-center" role="alert">
+								<i class="mdi mdi-alert-outline d-block display-4 mt-2 mb-3 text-warning"></i>
+								<h5 class="text-warning"><?= $data[0]->hold; ?></h5>
+								<p>Hold Product</p>
+							</div>
+						</div><!-- end col -->
+
+						<div class="col-sm-4">
+							<div class="alert alert-danger alert-dismissible fade show px-4 mb-0 text-center" role="alert">
+								<i class="mdi mdi-block-helper d-block display-4 mt-2 mb-3 text-danger"></i>
+								<h5 class="text-danger"><?= $data[0]->reject; ?></h5>
+								<p>Reject Product</p>
+							</div>
+						</div><!-- end col -->
+					</div><!-- end row -->
+				</div>
+			<!--/form-->
+		<?php
+		}else{
+		?>
+			<div class="card-body">
+				<p class="card-title-desc">Production Result : TIDAK TERSEDIA</b></p>
+			</div>
+		<?php
+		}
+	}
+	
 	public function production_entry_report_slitting_add(Request $request){
 		$ms_departements = DB::table('master_departements')
                         ->select('name','id')
@@ -447,14 +518,35 @@ class ProductionReportSlittingController extends Controller
 		//print_r($data);exit;
 		if(!empty($data[0])){
 			if($data[0]->status=="Un Posted"){
-				
-				$ms_work_orders = DB::table('work_orders AS a')
+				$data_detail_production = DB::table('report_sf_production_results AS a')
+						->leftJoin('work_orders AS b', 'a.id_work_orders', '=', 'b.id')
+						->select('a.*','b.wo_number')
+						->whereRaw( "sha1(a.id_report_sfs) = '$response_id'")
+						->get();
+				// Tinggal tambahkan query where nya jika detail sudah ada, wo yg tampil tidak boleh berbeda	
+				//echo empty($data_detail_production[0])?"kosong":"isi";exit;
+				//print_r($data_detail_production);exit;
+				//echo $data_detail_production[0]->id_work_orders;exit;	
+					
+				if(!empty($data_detail_production[0])){
+					$ms_work_orders = DB::table('work_orders AS a')
+						->leftJoin('sales_orders AS b', 'a.id_sales_orders', '=', 'b.id')
+						->leftJoin('master_customers AS c', 'b.id_master_customers', '=', 'c.id')
+						->select('a.*','c.id AS id_master_customers')
+						->whereRaw( "left(wo_number,5) = 'WOSLT'")
+						->whereRaw( "a.id = '".$data_detail_production[0]->id_work_orders."'")
+						->get();
+				}else{
+					$ms_work_orders = DB::table('work_orders AS a')
 						->leftJoin('sales_orders AS b', 'a.id_sales_orders', '=', 'b.id')
 						->leftJoin('master_customers AS c', 'b.id_master_customers', '=', 'c.id')
 						->select('a.*','c.id AS id_master_customers')
 						->whereRaw( "left(wo_number,5) = 'WOSLT'")
 						//->whereRaw( "a.type_product = 'WIP'")
 						->get();
+				}
+				
+				
 				$data_detail_preparation = DB::table('report_sf_preparation_checks')
 						->select('report_sf_preparation_checks.*')
 						->whereRaw( "sha1(id_report_sfs) = '$response_id'")
@@ -463,11 +555,7 @@ class ProductionReportSlittingController extends Controller
 						->select('report_sf_hygiene_checks.*')
 						->whereRaw( "sha1(id_report_sfs) = '$response_id'")
 						->get();
-				$data_detail_production = DB::table('report_sf_production_results AS a')
-						->leftJoin('work_orders AS b', 'a.id_work_orders', '=', 'b.id')
-						->select('a.*','b.wo_number')
-						->whereRaw( "sha1(a.id_report_sfs) = '$response_id'")
-						->get();
+				
 				$ms_known_by = DB::table('master_employees')
 						->select('id','name')
 						->whereRaw( "id_master_bagians IN('3','4')")
@@ -915,88 +1003,85 @@ class ProductionReportSlittingController extends Controller
 				->leftJoin('master_employees AS e', 'report_sfs.know_by', '=', 'e.id')
 				->whereRaw( "sha1(report_sfs.id) = '$response_id'")
                 ->get();
-		//$order_name = explode('|', $data[0]->note);
-		//print_r($data);exit;
+		
 		if(!empty($data[0])){
-			if($data[0]->status=="Un Posted"){
-				//if(count($order_name)>1){
-					/*
-					$ms_work_orders = DB::table('work_orders AS a')
-							->leftJoin('sales_orders AS b', 'a.id_sales_orders', '=', 'b.id')
-							->leftJoin('master_customers AS c', 'b.id_master_customers', '=', 'c.id')
-							->select('a.id_master_process_productions','a.wo_number','a.id','c.id AS id_master_customers')
-							->whereRaw( "left(wo_number,5) = 'WOBGM'")
-							->get();     
-					$ms_known_by = DB::table('master_employees')
-							->select('id','name')
-							->whereRaw( "id_master_bagians IN('3','4')")
-							->get();
-					*/
-					$data_detail_preparation = DB::table('report_sf_preparation_checks')
-							->select('report_sf_preparation_checks.*')
-							->whereRaw( "sha1(id_report_sfs) = '$response_id'")
-							->get();
-					$data_detail_hygiene = DB::table('report_sf_hygiene_checks')
-							->select('report_sf_hygiene_checks.*')
-							->whereRaw( "sha1(id_report_sfs) = '$response_id'")
-							->get();
-					//$data_detail_waste = DB::table('report_blow_wastes')
-					//		->select('report_blow_wastes.*')
-					//		->whereRaw( "sha1(id_report_blows) = '$response_id'")
-					//		->get();      
-					$data_detail_production = DB::table('report_sf_production_results')
-							->select('report_sf_production_results.*')
-							->whereRaw( "sha1(id_report_sfs) = '$response_id'")
-							->get();//PERBAIKI QUERY DETAIL UNTUK GET WO DAN PRODUCT
-					/*		
-					$table_product = $order_name[0] == 'WIP' ? 'master_wips' : 'master_product_fgs';
-					
-					$data_product = DB::table($table_product)
-							->select('*')
-							->where('id', $order_name[1])
-							->get();
-					*/
-					//Audit Log
-					$username= auth()->user()->email; 
-					$ipAddress=$_SERVER['REMOTE_ADDR'];
-					$location='0';
-					$access_from=Browser::browserName();
-					$activity='Print Entry Report Slitting ID="'.$data[0]->id.'"';
-					$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+			
+			$data_detail_preparation = DB::table('report_sf_preparation_checks')
+					->select('report_sf_preparation_checks.*')
+					->whereRaw( "sha1(id_report_sfs) = '$response_id'")
+					->get();
+			$data_detail_hygiene = DB::table('report_sf_hygiene_checks')
+					->select('report_sf_hygiene_checks.*')
+					->whereRaw( "sha1(id_report_sfs) = '$response_id'")
+					->get();
+			//$data_detail_waste = DB::table('report_blow_wastes')
+			//		->select('report_blow_wastes.*')
+			//		->whereRaw( "sha1(id_report_blows) = '$response_id'")
+			//		->get();      
+			$data_detail_production = DB::table('report_sf_production_results as a')
+					->leftJoin('report_blow_production_results as b', 'a.barcode_start', '=', 'b.barcode')
+					->leftJoin('report_blows as c', 'b.id_report_blows', '=', 'c.id')
+					->leftJoin('work_orders as d', 'a.id_work_orders', '=', 'd.id')
+					->whereRaw( "sha1(id_report_sfs) = '$response_id'")
+					->select('c.order_name as order_name_blow', 'b.weight as weight_blow', 'd.wo_number', 'a.*')
+					->get();//PERBAIKI QUERY DETAIL UNTUK GET WO DAN PRODUCT
+			/*		
+			$table_product = $order_name[0] == 'WIP' ? 'master_wips' : 'master_product_fgs';
+			
+			$data_product = DB::table($table_product)
+					->select('*')
+					->where('id', $order_name[1])
+					->get();
+			*/
+			
+			$order_name = explode('|', $data_detail_production[0]->note);
+			
+			if(count($order_name)>1){
+			//Audit Log
+				$username= auth()->user()->email; 
+				$ipAddress=$_SERVER['REMOTE_ADDR'];
+				$location='0';
+				$access_from=Browser::browserName();
+				$activity='Print Entry Report Slitting ID="'.$data[0]->id.'"';
+				$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
 
-					return view('production.entry_report_slitting_print',compact('data','data_detail_preparation','data_detail_hygiene','data_detail_production'));
-				//}else{
-				//	return Redirect::to('/production-ent-report-blow')->with('pesan_danger', 'Data Report Blow Versi Aplikasi Sebelumnya Tidak Bisa Menampilkan Detail');
-				//}
+				return view('production.entry_report_slitting_print',compact('data','data_detail_preparation','data_detail_hygiene','data_detail_production'));
 			}else{
-				return Redirect::to('/production-ent-report-slitting')->with('pesan_danger', 'There Is An Error.');
+				return Redirect::to('/production-ent-report-slitting')->with('pesan_danger', 'Data Report Slitting Versi Aplikasi Sebelumnya Tidak Bisa Di Print');
 			}
 		}else{
-			return Redirect::to('/production-ent-report-slitting');
+			return Redirect::to('/production-ent-report-slitting')->with('pesan_danger', 'There Is An Error.');
 		}
     }
-	public function production_entry_report_blow_update_stock($response_id){
-	
-		$id_rb = $response_id;
+	public function production_entry_report_slitting_update_stock($response_id){
+		//echo $response_id;exit;
+		//print_r($_POST);exit;
 		
-		$data_update = ProductionEntryReportBlowProductionResult::select('b.report_number','c.type_product','b.order_name','report_blow_production_results.id_report_blows', 'report_blow_production_results.id')
-			->selectRaw('SUM(IF(report_blow_production_results.status="Good", 1, 0)) AS good')
-			->selectRaw('SUM(IF(report_blow_production_results.status="Hold", 1, 0)) AS hold')
-			->selectRaw('SUM(IF(report_blow_production_results.status="Reject", 1, 0)) AS reject')
-			->rightJoin('report_blows AS b', 'report_blow_production_results.id_report_blows', '=', 'b.id')
-			->rightJoin('work_orders AS c', 'b.id_work_orders', '=', 'c.id')
-			->whereRaw( "sha1(report_blow_production_results.id_report_blows) = '$id_rb'")
-			->groupBy('id_report_blows')
+		$id_rs = $response_id;
+		
+		$data_update = ProductionEntryReportSFProductionResult::select('b.report_number','c.type_product','b.order_name','report_sf_production_results.id_report_sfs', 'report_sf_production_results.id', 'report_sf_production_results.note')
+			->selectRaw('SUM(IF(report_sf_production_results.status="Good", 1, 0)) AS good')
+			->selectRaw('SUM(IF(report_sf_production_results.status="Hold", 1, 0)) AS hold')
+			->selectRaw('SUM(IF(report_sf_production_results.status="Reject", 1, 0)) AS reject')
+			->rightJoin('report_sfs AS b', 'report_sf_production_results.id_report_sfs', '=', 'b.id')
+			->rightJoin('work_orders AS c', 'report_sf_production_results.id_work_orders', '=', 'c.id')
+			->whereRaw( "sha1(report_sf_production_results.id_report_sfs) = '$id_rs'")
+			->groupBy('report_sf_production_results.id_report_sfs')
 			->get();
+			
+		//echo $data_update[0]->type_product;exit;
+		//echo $data_update->count();exit;
+		//print_r($data_update[0]);exit;
 		
-		$order_name = explode('|', $data_update[0]->order_name);		
+		$order_name = explode('|', $data_update[0]->note);			
+		$master_table = $data_update[0]->type_product=="WIP"?'master_wips':'master_product_fgs';
 		
 		if(!empty($data_update[0])){	
-			$data_product = DB::table('master_wips')
+			$data_product = DB::table($master_table)
 				->select('*')
 				->whereRaw( "id = '".$order_name[1]."'")
 				->get();
-			
+			//print_r($data_product);exit;
 			if(!empty($data_product[0])){	
 				if($data_update[0]->good>0){
 					$validatedData = ([
@@ -1038,14 +1123,14 @@ class ProductionReportSlittingController extends Controller
 					if($responseGood){					
 						$stock_akhir = $data_product[0]->stock + $data_update[0]->good;				
 						
-						DB::table('master_wips')->where('id', $order_name[1])->update(array('stock' => $stock_akhir)); 						
+						DB::table($master_table)->where('id', $order_name[1])->update(array('stock' => $stock_akhir)); 						
 					}
 					
 					$validatedData = ([
 						'status' => 'Closed',
 					]);				
 					
-					ProductionEntryReportBlow::where('report_number', $data_update[0]->report_number)
+					ProductionEntryReportSF::where('report_number', $data_update[0]->report_number)
 						->update($validatedData);
 					
 					//Audit Log
@@ -1053,38 +1138,39 @@ class ProductionReportSlittingController extends Controller
 					$ipAddress=$_SERVER['REMOTE_ADDR'];
 					$location='0';
 					$access_from=Browser::browserName();
-					$activity='Update Histori Stock Report Number ="'.$data_update[0]->report_number.'" (Good : '.$data_update[0]->good.', Hold : '.$data_update[0]->hold.', Reject : '.$data_update[0]->reject.')';
+					$activity='Update Histori Stock Slitting Report Number ="'.$data_update[0]->report_number.'" (Good : '.$data_update[0]->good.', Hold : '.$data_update[0]->hold.', Reject : '.$data_update[0]->reject.')';
 					$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
 						
-					return Redirect::to('/production-ent-report-blow')->with('pesan', 'Update Stock Successfuly.');
+					return Redirect::to('/production-ent-report-slitting')->with('pesan', 'Update Stock Successfuly.');
 				}else{
-					return Redirect::to('/production-ent-report-blow')->with('pesan_danger', 'There Is An Error.');
+					return Redirect::to('/production-ent-report-slitting')->with('pesan_danger', 'There Is An Error.');
 				}
 			}else{
-				return Redirect::to('/production-ent-report-blow')->with('pesan_danger', 'There Is An Error. Data Produk Not Found.');
+				return Redirect::to('/production-ent-report-slitting')->with('pesan_danger', 'There Is An Error. Data Produk Not Found.');
 			}
 		}else{
-			return Redirect::to('/production-ent-report-blow')->with('pesan_danger', 'There Is An Error.');
+			return Redirect::to('/production-ent-report-slitting')->with('pesan_danger', 'There Is An Error.');
 		}
     }
-	public function production_entry_report_blow_unposted($response_id){
+	public function production_entry_report_slitting_unposted($response_id){
 	
-		$id_rb = $response_id;
+		$id_rs = $response_id;
 		
-		$data_update = ProductionEntryReportBlowProductionResult::select('b.report_number','c.type_product','b.order_name','report_blow_production_results.id_report_blows', 'report_blow_production_results.id')
-			->selectRaw('SUM(IF(report_blow_production_results.status="Good", 1, 0)) AS good')
-			->selectRaw('SUM(IF(report_blow_production_results.status="Hold", 1, 0)) AS hold')
-			->selectRaw('SUM(IF(report_blow_production_results.status="Reject", 1, 0)) AS reject')
-			->rightJoin('report_blows AS b', 'report_blow_production_results.id_report_blows', '=', 'b.id')
-			->rightJoin('work_orders AS c', 'b.id_work_orders', '=', 'c.id')
-			->whereRaw( "sha1(report_blow_production_results.id_report_blows) = '$id_rb'")
-			->groupBy('id_report_blows')
+		$data_update = ProductionEntryReportSFProductionResult::select('b.report_number','c.type_product','b.order_name','report_sf_production_results.id_report_sfs', 'report_sf_production_results.id', 'report_sf_production_results.note')
+			->selectRaw('SUM(IF(report_sf_production_results.status="Good", 1, 0)) AS good')
+			->selectRaw('SUM(IF(report_sf_production_results.status="Hold", 1, 0)) AS hold')
+			->selectRaw('SUM(IF(report_sf_production_results.status="Reject", 1, 0)) AS reject')
+			->rightJoin('report_sfs AS b', 'report_sf_production_results.id_report_sfs', '=', 'b.id')
+			->rightJoin('work_orders AS c', 'report_sf_production_results.id_work_orders', '=', 'c.id')
+			->whereRaw( "sha1(report_sf_production_results.id_report_sfs) = '$id_rs'")
+			->groupBy('report_sf_production_results.id_report_sfs')
 			->get();
 		
-		$order_name = explode('|', $data_update[0]->order_name);			
-				
+		$order_name = explode('|', $data_update[0]->note);			
+		$master_table = $data_update[0]->type_product=="WIP"?'master_wips':'master_product_fgs';
+		
 		if(!empty($data_update[0])){	
-			$data_product = DB::table('master_wips')
+			$data_product = DB::table($master_table)
 				->select('*')
 				->whereRaw( "id = '".$order_name[1]."'")
 				->get();
@@ -1105,7 +1191,7 @@ class ProductionReportSlittingController extends Controller
 					if($responseGood){					
 						$stock_akhir = $data_product[0]->stock - $data_update[0]->good;				
 						
-						DB::table('master_wips')->where('id', $order_name[1])->update(array('stock' => $stock_akhir)); 						
+						DB::table($master_table)->where('id', $order_name[1])->update(array('stock' => $stock_akhir)); 						
 					}
 				}
 				if($data_update[0]->hold>0){
@@ -1139,7 +1225,7 @@ class ProductionReportSlittingController extends Controller
 						'status' => 'Un Posted',
 					]);				
 					
-					ProductionEntryReportBlow::where('report_number', $data_update[0]->report_number)
+					ProductionEntryReportSF::where('report_number', $data_update[0]->report_number)
 						->update($validatedData);
 					
 					//Audit Log
@@ -1147,118 +1233,116 @@ class ProductionReportSlittingController extends Controller
 					$ipAddress=$_SERVER['REMOTE_ADDR'];
 					$location='0';
 					$access_from=Browser::browserName();
-					$activity='Un Posted Histori Stock Report Number ="'.$data_update[0]->report_number.'" (Good : '.$data_update[0]->good.', Hold : '.$data_update[0]->hold.', Reject : '.$data_update[0]->reject.')';
+					$activity='Un Posted Histori Stock Slitting Report Number ="'.$data_update[0]->report_number.'" (Good : '.$data_update[0]->good.', Hold : '.$data_update[0]->hold.', Reject : '.$data_update[0]->reject.')';
 					$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
 						
-					return Redirect::to('/production-ent-report-blow')->with('pesan', 'Update Stock Successfuly.');
+					return Redirect::to('/production-ent-report-slitting')->with('pesan', 'Update Stock Successfuly.');
 				}else{
-					return Redirect::to('/production-ent-report-blow')->with('pesan_danger', 'There Is An Error.');
+					return Redirect::to('/production-ent-report-slitting')->with('pesan_danger', 'There Is An Error.');
 				}
 			}else{
-				return Redirect::to('/production-ent-report-blow')->with('pesan_danger', 'There Is An Error. Data Produk Not Found.');
+				return Redirect::to('/production-ent-report-slitting')->with('pesan_danger', 'There Is An Error. Data Produk Not Found.');
 			}
 		}else{
-			return Redirect::to('/production-ent-report-blow')->with('pesan_danger', 'There Is An Error.');
+			return Redirect::to('/production-ent-report-slitting')->with('pesan_danger', 'There Is An Error.');
 		}
     }
-	public function production_entry_report_blow_delete($response_id){
-		//echo 'disini';exit;
-		$id_rb = $response_id;
+	public function production_entry_report_slitting_delete($response_id){
+		$id_rs = $response_id;
 		
-		$data_update = ProductionEntryReportBlowProductionResult::select('b.report_number','c.type_product','b.order_name','report_blow_production_results.id_report_blows', 'report_blow_production_results.id')
-			->selectRaw('b.id AS id_rb')
-			->selectRaw('SUM(IF(report_blow_production_results.status="Good", 1, 0)) AS good')
-			->selectRaw('SUM(IF(report_blow_production_results.status="Hold", 1, 0)) AS hold')
-			->selectRaw('SUM(IF(report_blow_production_results.status="Reject", 1, 0)) AS reject')
-			->rightJoin('report_blows AS b', 'report_blow_production_results.id_report_blows', '=', 'b.id')
-			->rightJoin('work_orders AS c', 'b.id_work_orders', '=', 'c.id')
-			->whereRaw( "sha1(report_blow_production_results.id_report_blows) = '$id_rb'")
-			->groupBy('id_report_blows')
-			->get();
+		$data_update = ProductionEntryReportSFProductionResult::select('b.report_number','c.type_product','b.order_name','report_sf_production_results.id_report_sfs', 'report_sf_production_results.id', 'report_sf_production_results.note')
+			->selectRaw('SUM(IF(report_sf_production_results.status="Good", 1, 0)) AS good')
+			->selectRaw('SUM(IF(report_sf_production_results.status="Hold", 1, 0)) AS hold')
+			->selectRaw('SUM(IF(report_sf_production_results.status="Reject", 1, 0)) AS reject')
+			->selectRaw('b.id AS id_rs')
+			->rightJoin('report_sfs AS b', 'report_sf_production_results.id_report_sfs', '=', 'b.id')
+			->rightJoin('work_orders AS c', 'report_sf_production_results.id_work_orders', '=', 'c.id')
+			->whereRaw( "sha1(report_sf_production_results.id_report_sfs) = '$id_rs'")
+			->groupBy('report_sf_production_results.id_report_sfs')
+			->get();		
 		
 		if(!empty($data_update[0])){	
-			$order_name = explode('|', $data_update[0]->order_name);
 			
-			$data_product = DB::table('master_wips')
+			
+			$order_name = explode('|', $data_update[0]->note);			
+			$master_table = $data_update[0]->type_product=="WIP"?'master_wips':'master_product_fgs';
+			
+			$data_product = DB::table($master_table)
 				->select('*')
 				->whereRaw( "id = '".$order_name[1]."'")
 				->get();
 			
 			if(!empty($data_product[0])){	
-			
-				$stock_akhir = $data_product[0]->stock - $data_update[0]->good;				
-				$responseUpdate = DB::table('master_wips')->where('id', $order_name[1])->update(array('stock' => $stock_akhir)); 
-				
-				if($responseUpdate){
-					$deleteHistori = HistoryStock::whereRaw( "id_good_receipt_notes_details = '".$data_update[0]->report_number."'" )->delete();
-					$deleteWaste = ProductionEntryReportBlowWaste::whereRaw( "id_report_blows = '".$data_update[0]->id_rb."'" )->delete();
-					$deleteHygiene = ProductionEntryReportBlowHygiene::whereRaw( "id_report_blows = '".$data_update[0]->id_rb."'" )->delete();
-					$deletePreparation = ProductionEntryReportBlowPreparation::whereRaw( "id_report_blows = '".$data_update[0]->id_rb."'" )->delete();
-					$deleteProductionResult = ProductionEntryReportBlowProductionResult::whereRaw( "id_report_blows = '".$data_update[0]->id_rb."'" )->delete();
-					$deleteBlow = ProductionEntryReportBlow::whereRaw( "id = '".$data_update[0]->id_rb."'" )->delete();
-					//echo $delete; exit;
+				$data_detail = ProductionEntryReportSFProductionResult::select('*')
+					->whereRaw( "sha1(report_sf_production_results.id_report_sfs) = '$id_rs'")
+					->get();
 					
-					if($deleteBlow){
-						/*
-						if($deleteProductionResult){
-							//Jika Barcode Bisa Digunakan Lagi, Sesuaikan status data barcode menjadi NULL
-							$updatedData['status'] = 'Un Used';
-							
+				if($data_detail){
+					$deleteHistori = HistoryStock::whereRaw( "id_good_receipt_notes_details = '".$data_update[0]->report_number."'" )->delete();
+					
+					$deleteHygiene = ProductionEntryReportSFHygiene::whereRaw( "id_report_sfs = '".$data_update[0]->id_rs."'" )->delete();
+					$deletePreparation = ProductionEntryReportSFPreparation::whereRaw( "id_report_sfs = '".$data_update[0]->id_rs."'" )->delete();
+					$deleteProductionResult = ProductionEntryReportSFProductionResult::whereRaw( "id_report_sfs = '".$data_update[0]->id_rs."'" )->delete();
+					$deleteSlitting = ProductionEntryReportSF::whereRaw( "id = '".$data_update[0]->id_rs."'" )->delete();
+					
+					if($deleteSlitting){
+						$updatedData['status'] = null;	
+						
+						foreach($data_detail as $data){
 							DB::table('barcode_detail')
-							->where('barcode_number', $data->barcode)
-							->update($updatedData);
-						}
-						*/
+								->where('barcode_number', $data->barcode)
+								->update($updatedData);
+						}			
+						
 						//Audit Log
 						$username= auth()->user()->email; 
 						$ipAddress=$_SERVER['REMOTE_ADDR'];
 						$location='0';
 						$access_from=Browser::browserName();
-						$activity='Deleted Report Number ="'.$data_update[0]->report_number.'" (Good : '.$data_update[0]->good.', Hold : '.$data_update[0]->hold.', Reject : '.$data_update[0]->reject.')';
+						$activity='Deleted Slitting Report Number ="'.$data_update[0]->report_number.'" (Good : '.$data_update[0]->good.', Hold : '.$data_update[0]->hold.', Reject : '.$data_update[0]->reject.')';
 						$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
 					
-						return Redirect::to('/production-ent-report-blow')->with('pesan', 'Delete Successfuly.');
+						return Redirect::to('/production-ent-report-slitting')->with('pesan', 'Delete Successfuly.');
 					}else{
-						return Redirect::to('/production-ent-report-blow')->with('pesan_danger', 'There Is An Error.');
+						return Redirect::to('/production-ent-report-slitting')->with('pesan_danger', 'There Is An Error.');
 					}						
 				}else{
-					return Redirect::to('/production-ent-report-blow')->with('pesan_danger', 'There Is An Error.');
+					return Redirect::to('/production-ent-report-slitting')->with('pesan_danger', 'There Is An Error.');
 				}
 			}else{
-				return Redirect::to('/production-ent-report-blow')->with('pesan_danger', 'There Is An Error. Data Produk Not Found.');
+				return Redirect::to('/production-ent-report-slitting')->with('pesan_danger', 'There Is An Error. Data Produk Not Found.');
 			}
 		}else{
-			$data_blow = DB::table('report_blows')
-				->selectRaw('id AS id_rb')
+			$data_slitting = DB::table('report_sfs')
+				->selectRaw('id AS id_rs')
 				->selectRaw('report_number')
-				->whereRaw( "sha1(id) = '".$id_rb."'")
+				->whereRaw( "sha1(id) = '".$id_rs."'")
 				->get();
 			
 			//print_r($data_blow);exit;
-			if($data_blow){
-				$report_number = $data_blow[0]->report_number;
+			if($data_slitting){
+				$report_number = $data_slitting[0]->report_number;
 				
-				$deleteWaste = ProductionEntryReportBlowWaste::whereRaw( "id_report_blows = '".$data_blow[0]->id_rb."'" )->delete();
-				$deleteHygiene = ProductionEntryReportBlowHygiene::whereRaw( "id_report_blows = '".$data_blow[0]->id_rb."'" )->delete();
-				$deletePreparation = ProductionEntryReportBlowPreparation::whereRaw( "id_report_blows = '".$data_blow[0]->id_rb."'" )->delete();
-				$deleteProductionResult = ProductionEntryReportBlowProductionResult::whereRaw( "id_report_blows = '".$data_blow[0]->id_rb."'" )->delete();
-				$deleteBlow = ProductionEntryReportBlow::whereRaw( "id = '".$data_blow[0]->id_rb."'" )->delete();
+				$deleteHygiene = ProductionEntryReportSFHygiene::whereRaw( "id_report_sfs = '".$data_slitting[0]->id_rs."'" )->delete();
+				$deletePreparation = ProductionEntryReportSFPreparation::whereRaw( "id_report_sfs = '".$data_slitting[0]->id_rs."'" )->delete();
+				$deleteProductionResult = ProductionEntryReportSFProductionResult::whereRaw( "id_report_sfs = '".$data_slitting[0]->id_rs."'" )->delete();
+				$deleteSlitting = ProductionEntryReportSF::whereRaw( "id = '".$data_slitting[0]->id_rs."'" )->delete();
 				
-				if($deleteBlow){
+				if($deleteSlitting){
 					//Audit Log
 					$username= auth()->user()->email; 
 					$ipAddress=$_SERVER['REMOTE_ADDR'];
 					$location='0';
 					$access_from=Browser::browserName();
-					$activity='Deleted Report Number ="'.$report_number.'" (Good : "-", Hold : "-", Reject : "-")';
+					$activity='Deleted Slitting Report Number ="'.$report_number.'" (Good : "-", Hold : "-", Reject : "-")';
 					$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
 				
-					return Redirect::to('/production-ent-report-blow')->with('pesan', 'Delete Successfuly.');
+					return Redirect::to('/production-ent-report-slitting')->with('pesan', 'Delete Successfuly.');
 				}else{
-					return Redirect::to('/production-ent-report-blow')->with('pesan_danger', 'There Is An Error.');
+					return Redirect::to('/production-ent-report-slitting')->with('pesan_danger', 'There Is An Error.');
 				}	
 			}else{
-				return Redirect::to('/production-ent-report-blow')->with('pesan_danger', 'There Is An Error.');
+				return Redirect::to('/production-ent-report-slitting')->with('pesan_danger', 'There Is An Error.');
 			}
 		}
     }
