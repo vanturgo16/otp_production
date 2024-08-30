@@ -182,7 +182,7 @@
           </tbody></table>
         </div>
       </div>
-
+	  
       <div class="row mt-3">
         <div class="col-md-12" style="font-size: 13px;">
           <table border="1" cellpadding="0" cellspacing="0" style="table-layout: auto;width: 100%">
@@ -208,52 +208,41 @@
               <th class="text-center">Kg</th>
               <th class="text-center">Penyebab Waste</th>
             </tr>
+			
+			<?php if(!empty($data_detail_production[0])){ ?>
+				@foreach ($data_detail_production as $data_detail)
+				<?php $order_name = explode('|', $data_detail->order_name_blow) ?>
+				<?php $note = explode('|', $data_detail->note) ?>
+				<tr>
+				</tr>
+				<tr class="text-center">
+					<td class="pl-2">{{ $data_detail->start_time }}</td>
+					<td class="pl-2">{{ $data_detail->finish_time }}</td>
+					<td class="pl-2">{{ $order_name[3] }}</td>
+					<td class="pl-2">{{ $data_detail->weight_blow }}</td>
+					<td class="pl-2">{{ $data_detail->barcode_start }}</td>
+					<td class="pl-2">{{ $note[3] }}</td>
+					<td class="pl-2">{{ $data_detail->weight }}</td>
+					
+					<td class="text-center"> {{ $data_detail->status=="Good"?'✓':''; }} </td>
+					<td class="text-center"> {{ $data_detail->status=="Hold"?'✓':''; }} </td>
+					<td class="text-center"> {{ $data_detail->status=="Reject"?'✓':''; }} </td>
+				  
+					<td class="pl-2">{{ $data_detail->barcode }}</td>
+					<td class="pl-2">{{ $data_detail->wo_number }}</td>
+					<td class="pl-2">{{ $data_detail->waste }}</td>
+					<td class="pl-2">{{ $data_detail->cause_waste }}</td>
+				</tr>
+
+				@endforeach
+			<?php }else{ ?>
+				<tr>
+					<td class="pt-3 pb-3" colspan="14" align="center">Belum Ada Data Detail Yang Ditambahkan</td>
+				</tr>
+			<?php }; ?>
+			
+
             <tr>
-                                                  </tr><tr class="text-center">
-                <td class="pl-2">23.00</td>
-                <td class="pl-2">06.00</td>
-                <td class="pl-2">
-                  15 x 2200 x 
-
-                                      5380
-                  
-                </td>
-                <td class="pl-2">293</td>
-                <td class="pl-2">240113361FP</td>
-                <td class="pl-2">ukuran</td>
-                <td class="pl-2">112.85</td>
-                <td class="pl-2"> ✓ </td>
-                <td class="pl-2"></td>
-                <td class="pl-2"></td>
-                <td class="pl-2">240174785FS</td>
-                <td class="pl-2">WOSLT02281</td>
-                <td class="pl-2"></td>
-                <td class="pl-2"></td>
-              </tr>
-
-                                                    <tr class="text-center">
-                <td class="pl-2">23.00</td>
-                <td class="pl-2">06.00</td>
-                <td class="pl-2">
-                  15 x 2200 x 
-
-                                      5380
-                  
-                </td>
-                <td class="pl-2">293</td>
-                <td class="pl-2">240113361FP</td>
-                <td class="pl-2">ukuran</td>
-                <td class="pl-2">150.45</td>
-                <td class="pl-2"> ✓ </td>
-                <td class="pl-2"></td>
-                <td class="pl-2"></td>
-                <td class="pl-2">240174784FS</td>
-                <td class="pl-2">WOSLT02281</td>
-                <td class="pl-2"></td>
-                <td class="pl-2"></td>
-              </tr>
-
-                                      <tr>
               <th colspan="2" rowspan="3" class="text-center">Jumlah</th>
               <th rowspan="3"></th>
               <td rowspan="3" class="text-center"><strong>Kg</strong></td>

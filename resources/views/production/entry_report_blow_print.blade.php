@@ -286,37 +286,42 @@
               <!--th class="text-center">Berat Standar (Kg)</th-->
               <th class="text-center">Keterangan</th>
             </tr>
-            <tr>
-            </tr>
-			@foreach ($data_detail_production as $data_detail)
-            <tr>
-			  <td class="pl-2">{{ $data_detail->start_time }}</td>
-              <td class="pl-2">{{ $data_detail->finish_time }}</td>
-              <td></td>
-              <td class="pl-2"></td>
-              <td class="pl-2">
-				Ukuran Standar : <b>{{ $data_product[0]->thickness }}</b><br>
-				Hasil Produksi : <b>{{ $data_detail->thickness }}</b>
-			  </td>
-              <td class="pl-2">
-				Ukuran Standar : <b>{{ $data_product[0]->length }}</b><br>
-				Hasil Produksi : <b>{{ $data_detail->length }}</b>
-			  </td>
-              <td class="pl-2">
-				Ukuran Standar : <b>{{ $data_product[0]->width }}</b><br>
-				Hasil Produksi : <b>{{ $data_detail->width }}</b>
-			  </td>
-              <td class="pl-2">
-				Ukuran Standar : <b>{{ $data_product[0]->weight }}</b><br>
-				Hasil Produksi : <b>{{ $data_detail->weight }}</b>
-			  </td>
-              <td class="pl-2">{{ $data_detail->barcode }}</td>
-              <!--td class="pl-2 text-danger">301.76</td-->
-              <td class="pl-2"></td>
-			  
-            </tr>
-			@endforeach
-			
+			<?php if(!empty($data_detail_production[0])){ ?>
+				<tr>
+				</tr>
+				@foreach ($data_detail_production as $data_detail)
+				<tr>
+				  <td class="pl-2">{{ $data_detail->start_time }}</td>
+				  <td class="pl-2">{{ $data_detail->finish_time }}</td>
+				  <td></td>
+				  <td class="pl-2"></td>
+				  <td class="pl-2">
+					Ukuran Standar : <b>{{ $data_product[0]->thickness }}</b><br>
+					Hasil Produksi : <b>{{ $data_detail->thickness }}</b>
+				  </td>
+				  <td class="pl-2">
+					Ukuran Standar : <b>{{ $data_product[0]->length }}</b><br>
+					Hasil Produksi : <b>{{ $data_detail->length }}</b>
+				  </td>
+				  <td class="pl-2">
+					Ukuran Standar : <b>{{ $data_product[0]->width }}</b><br>
+					Hasil Produksi : <b>{{ $data_detail->width }}</b>
+				  </td>
+				  <td class="pl-2">
+					Ukuran Standar : <b>{{ $data_product[0]->weight }}</b><br>
+					Hasil Produksi : <b>{{ $data_detail->weight }}</b>
+				  </td>
+				  <td class="pl-2">{{ $data_detail->barcode }}</td>
+				  <!--td class="pl-2 text-danger">301.76</td-->
+				  <td class="pl-2"></td>
+				  
+				</tr>
+				@endforeach
+			<?php }else{ ?>
+				<tr>
+					<td class="pt-3 pb-3" colspan="10" align="center">Belum Ada Data Detail Yang Ditambahkan</td>
+				</tr>
+			<?php }; ?>
           </tbody>
         </table>
       </div>

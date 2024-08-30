@@ -108,6 +108,11 @@ Route::middleware(['auth', 'clear.permission.cache', 'permission:Produksi|Produk
 	
 	Route::get('/production-ent-report-slitting-json-preparation', [ProductionReportSlittingController::class, 'production_entry_report_slitting_json_preparation'])->name('production_entry_report_blow_json_preparation');
 	Route::get('/production-ent-report-slitting-json-hygiene', [ProductionReportSlittingController::class, 'production_entry_report_slitting_json_hygiene'])->name('production_entry_report_blow_json_hygiene');
+	Route::get('/production-ent-report-slitting-json-update-stock', [ProductionReportSlittingController::class, 'production_entry_report_slitting_json_update_stock'])->name('production_entry_report_slitting_json_update_stock');
+	Route::get('/production-ent-report-slitting-json-update-stock-info', [ProductionReportSlittingController::class, 'production_entry_report_slitting_json_update_stock_info'])->name('production_entry_report_slitting_json_update_stock_info');
+	Route::get('/production-entry-report-slitting-update-stock/{id}', [ProductionReportSlittingController::class, 'production_entry_report_slitting_update_stock'])->name('production_entry_report_slitting_update_stock');	
+	Route::get('/production-entry-report-slitting-unposted/{id}', [ProductionReportSlittingController::class, 'production_entry_report_slitting_unposted'])->name('production_entry_report_slitting_unposted');
+	Route::get('/production-ent-report-slitting-delete/{id}', [ProductionReportSlittingController::class, 'production_entry_report_slitting_delete'])->name('production_entry_report_slitting_delete');
 	
 	Route::post('/production-entry-report-slitting-detail-production-result-add', [ProductionReportSlittingController::class, 'production_entry_report_slitting_detail_production_result_add'])->name('production_entry_report_slitting_detail_production_result_add');
 	Route::get('/production-entry-report-slitting-detail-production-result-edit/{id_rb}/{id_rb_pr}', [ProductionReportSlittingController::class, 'production_entry_report_slitting_detail_production_result_edit'])->name('production_entry_report_slitting_detail_production_result_edit');

@@ -1091,7 +1091,7 @@ class ProductionController extends Controller
 					if(count($order_name)>1){
 						$update = '
 							<a data-bs-toggle="modal" onclick="showUpdateStockInfo('.$id.')" data-bs-target="#modal_update_stock_info" class="btn btn-info waves-effect btn-label waves-light"><i class="bx bx-info-circle  label-icon"></i>  Stock Updated</a><br>						
-							<a onclick="'.$return_unposted.'" href="/production-entry-report-blow-unposted/'.sha1($data->id).'" class="btn btn-primary waves-effect btn-label waves-light mt-1" onclick="return confirm('."'Anda yakin mau menghapus item ini ?'".')">
+							<a onclick="'.$return_unposted.'" href="/production-entry-report-blow-unposted/'.sha1($data->id).'" class="btn btn-primary waves-effect btn-label waves-light mt-1" onclick="return confirm('."'Anda yakin unposted data ?'".')">
 								<i class="bx bx-reply label-icon"></i> Un Posted
 							</a>
 						';
@@ -1514,6 +1514,11 @@ class ProductionController extends Controller
 						 })
 						 ->where('c.type_result', '=', 'Slitting');
 				})
+				//Cek Status Report BLW START
+				->leftJoin('report_blow_production_results as d', 'a.barcode_number', '=', 'd.barcode')
+				->leftJoin('report_blows as e', 'd.id_report_blows', '=', 'e.id')
+				->where('e.status', 'Closed')
+				//Cek Status Report BLW END
 				->where('a.status', 'In Stock BLW')
 				->select('a.*')
 				->get();
@@ -2241,7 +2246,7 @@ class ProductionController extends Controller
 		$order_name = explode('|', $data[0]->order_name);
 		
 		if(!empty($data[0])){
-			if($data[0]->status=="Un Posted"){
+			//if($data[0]->status=="Un Posted"){
 				if(count($order_name)>1){
 					/*
 					$ms_work_orders = DB::table('work_orders AS a')
@@ -2289,11 +2294,13 @@ class ProductionController extends Controller
 
 					return view('production.entry_report_blow_print',compact('data','data_product','data_detail_preparation','data_detail_hygiene','data_detail_production','data_detail_waste'));
 				}else{
-					return Redirect::to('/production-ent-report-blow')->with('pesan_danger', 'Data Report Blow Versi Aplikasi Sebelumnya Tidak Bisa Menampilkan Detail');
+					return Redirect::to('/production-ent-report-blow')->with('pesan_danger', 'Data Report Blow Versi Aplikasi Sebelumnya Tidak Bisa Di Print');
 				}
+			/*
 			}else{
 				return Redirect::to('/production-ent-report-blow')->with('pesan_danger', 'There Is An Error.');
 			}
+			*/
 		}else{
 			return Redirect::to('/production-ent-report-blow');
 		}
@@ -2376,7 +2383,7 @@ class ProductionController extends Controller
 					$ipAddress=$_SERVER['REMOTE_ADDR'];
 					$location='0';
 					$access_from=Browser::browserName();
-					$activity='Update Histori Stock Report Number ="'.$data_update[0]->report_number.'" (Good : '.$data_update[0]->good.', Hold : '.$data_update[0]->hold.', Reject : '.$data_update[0]->reject.')';
+					$activity='Update Histori Stock Blow Report Number ="'.$data_update[0]->report_number.'" (Good : '.$data_update[0]->good.', Hold : '.$data_update[0]->hold.', Reject : '.$data_update[0]->reject.')';
 					$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
 						
 					return Redirect::to('/production-ent-report-blow')->with('pesan', 'Update Stock Successfuly.');
@@ -2470,7 +2477,7 @@ class ProductionController extends Controller
 					$ipAddress=$_SERVER['REMOTE_ADDR'];
 					$location='0';
 					$access_from=Browser::browserName();
-					$activity='Un Posted Histori Stock Report Number ="'.$data_update[0]->report_number.'" (Good : '.$data_update[0]->good.', Hold : '.$data_update[0]->hold.', Reject : '.$data_update[0]->reject.')';
+					$activity='Un Posted Histori Stock Blow Report Number ="'.$data_update[0]->report_number.'" (Good : '.$data_update[0]->good.', Hold : '.$data_update[0]->hold.', Reject : '.$data_update[0]->reject.')';
 					$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
 						
 					return Redirect::to('/production-ent-report-blow')->with('pesan', 'Update Stock Successfuly.');
@@ -2496,7 +2503,7 @@ class ProductionController extends Controller
 			->rightJoin('report_blows AS b', 'report_blow_production_results.id_report_blows', '=', 'b.id')
 			->rightJoin('work_orders AS c', 'b.id_work_orders', '=', 'c.id')
 			->whereRaw( "sha1(report_blow_production_results.id_report_blows) = '$id_rb'")
-			->groupBy('id_report_blows')
+			->groupBy('report_blow_production_results.id_report_blows')
 			->get();
 		
 		if(!empty($data_update[0])){	
@@ -2509,11 +2516,13 @@ class ProductionController extends Controller
 			
 			if(!empty($data_product[0])){	
 			
-				$stock_akhir = $data_product[0]->stock - $data_update[0]->good;				
-				$responseUpdate = DB::table('master_wips')->where('id', $order_name[1])->update(array('stock' => $stock_akhir)); 
+				$data_detail = ProductionEntryReportBlowProductionResult::select('*')
+					->whereRaw( "sha1(report_blow_production_results.id_report_blows) = '$id_rb'")
+					->get();
 				
-				if($responseUpdate){
+				if($data_detail){
 					$deleteHistori = HistoryStock::whereRaw( "id_good_receipt_notes_details = '".$data_update[0]->report_number."'" )->delete();
+					
 					$deleteWaste = ProductionEntryReportBlowWaste::whereRaw( "id_report_blows = '".$data_update[0]->id_rb."'" )->delete();
 					$deleteHygiene = ProductionEntryReportBlowHygiene::whereRaw( "id_report_blows = '".$data_update[0]->id_rb."'" )->delete();
 					$deletePreparation = ProductionEntryReportBlowPreparation::whereRaw( "id_report_blows = '".$data_update[0]->id_rb."'" )->delete();
@@ -2522,22 +2531,20 @@ class ProductionController extends Controller
 					//echo $delete; exit;
 					
 					if($deleteBlow){
-						/*
-						if($deleteProductionResult){
-							//Jika Barcode Bisa Digunakan Lagi, Sesuaikan status data barcode menjadi NULL
-							$updatedData['status'] = 'Un Used';
-							
+						$updatedData['status'] = null;	
+						
+						foreach($data_detail as $data){
 							DB::table('barcode_detail')
-							->where('barcode_number', $data->barcode)
-							->update($updatedData);
-						}
-						*/
+								->where('barcode_number', $data->barcode)
+								->update($updatedData);
+						}	
+						
 						//Audit Log
 						$username= auth()->user()->email; 
 						$ipAddress=$_SERVER['REMOTE_ADDR'];
 						$location='0';
 						$access_from=Browser::browserName();
-						$activity='Deleted Report Number ="'.$data_update[0]->report_number.'" (Good : '.$data_update[0]->good.', Hold : '.$data_update[0]->hold.', Reject : '.$data_update[0]->reject.')';
+						$activity='Deleted Blow Report Number ="'.$data_update[0]->report_number.'" (Good : '.$data_update[0]->good.', Hold : '.$data_update[0]->hold.', Reject : '.$data_update[0]->reject.')';
 						$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
 					
 						return Redirect::to('/production-ent-report-blow')->with('pesan', 'Delete Successfuly.');
@@ -2573,7 +2580,7 @@ class ProductionController extends Controller
 					$ipAddress=$_SERVER['REMOTE_ADDR'];
 					$location='0';
 					$access_from=Browser::browserName();
-					$activity='Deleted Report Number ="'.$report_number.'" (Good : "-", Hold : "-", Reject : "-")';
+					$activity='Deleted Blow Report Number ="'.$report_number.'" (Good : "-", Hold : "-", Reject : "-")';
 					$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
 				
 					return Redirect::to('/production-ent-report-blow')->with('pesan', 'Delete Successfuly.');
