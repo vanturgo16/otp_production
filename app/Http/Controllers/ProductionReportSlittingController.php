@@ -1272,6 +1272,7 @@ class ProductionReportSlittingController extends Controller
 				->whereRaw( "id = '".$order_name[1]."'")
 				->get();
 			
+			
 			if(!empty($data_product[0])){	
 				$data_detail = ProductionEntryReportSFProductionResult::select('*')
 					->whereRaw( "sha1(report_sf_production_results.id_report_sfs) = '$id_rs'")
