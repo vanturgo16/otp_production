@@ -72,6 +72,39 @@
 									});
 								  });
 								</script>
+								<div id="modal_approve" class="modal fade" tabindex="-1" aria-labelledby="edit_poLabel" aria-hidden="true" data-bs-scroll="true">
+									<div class="modal-dialog">
+										<div class="modal-content">
+											<div class="modal-header">
+												<h4 class="font-size-16">
+													<b>Informasi</b>
+												</h4>
+												<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+											</div>
+											<div class="modal-body" id="modal_approve_body">								
+												
+											</div>
+											<div class="modal-footer">
+											</div>
+										</div>
+									</div>
+								</div>
+								<script>
+									function showApprove(id)
+									{
+										$.ajax({
+											type: "GET",
+											url: "/production-ent-report-material-use-json-approve",
+											data: "id='"+id+"'",
+											dataType: "html",
+											success: function (response) {
+												$('#modal_approve_body').empty();
+												$('#modal_approve_body').append(response);
+											}
+										});
+										
+									}
+								</script>
 							</div>							
                         </div>
                     </div>
