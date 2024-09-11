@@ -773,7 +773,7 @@ class ProductionController extends Controller
 		<?php
 		}
 	}	
-	public function production_entry_material_use_approve_new($response_id){		
+	public function production_entry_material_use_approve($response_id){		
 		//QUERY UNTUK UPDATE REPORT MATERIAL USES
 		$data = ProductionEntryMaterialUse::leftJoin('work_orders AS b', 'report_material_uses.id_work_orders', '=', 'b.id')
 				->select("report_material_uses.*","b.id_master_process_productions")
@@ -806,69 +806,94 @@ class ProductionController extends Controller
 						$stock_akhir = $data_master[0]->stock - $datas->taking;							
 						DB::table('master_raw_materials')->where('id', $datas->id_master_products)->update(array('stock' => $stock_akhir)); 
 					}
+					
+					//QUERY UNTUK INSERT HISTORY STOCK
+					$data_insert_history = ProductionEntryMaterialUseDetail::select('report_material_use_details.id', 'report_material_use_details.id_report_material_uses', 'report_material_use_details.id_master_products', 'report_material_use_details.id_good_receipt_note_details', 'report_material_use_details.id_detail_good_receipt_note_details')
+						->selectRaw('SUM(sisa_camp) AS sisa_camp')
+						->selectRaw('SUM(taking) AS taking')
+						->selectRaw('SUM(`usage`) AS `usage`')
+						->selectRaw('SUM(remaining) AS remaining')//TAMBAHKAN KE FIELD REMARK "Id Material Used | Id Detail Material Used | Id Detail GRN Detail | Remaining"
+						->whereRaw( "sha1(report_material_use_details.id_report_material_uses) = '$response_id'")
+						->groupBy('report_material_use_details.id')
+						->groupBy('report_material_use_details.id_report_material_uses')
+						->groupBy('report_material_use_details.id_master_products')
+						->get();
+					
+					if(!empty($data_insert_history)){//UPDATE INSERT HISTORY
+						foreach($data_insert_history as $datas){					
+							if($datas->sisa_camp>0){
+								$validatedData = ([
+									'id_good_receipt_notes_details' => $datas->id_good_receipt_note_details,
+									'type_product' => 'RM',
+									'id_master_products' => $datas->id_master_products,
+									'qty' => $datas->sisa_camp,
+									'type_stock' => 'SISA_CAMP',
+									'date' => date("Y-m-d"),
+									'remarks' => $datas->id_report_material_uses.'|'. $datas->id.'|'.$datas->id_detail_good_receipt_note_details.'|Sisa Camp'
+									//TAMBAHKAN KE FIELD REMARK "Id Material Used | Id Detail Material Used | Id Detail GRN Detail | Sisa Camp"
+								]);	
+								$responseTaking = HistoryStock::create($validatedData);
+							}					
+							if($datas->taking>0){
+								$validatedData = ([
+									'id_good_receipt_notes_details' => $datas->id_good_receipt_note_details,
+									'type_product' => 'RM',
+									'id_master_products' => $datas->id_master_products,
+									'qty' => $datas->taking,
+									'type_stock' => 'OUT',
+									'date' => date("Y-m-d"),
+									'remarks' => $datas->id_report_material_uses.'|'. $datas->id.'|'.$datas->id_detail_good_receipt_note_details.'|Taking'
+									//TAMBAHKAN KE FIELD REMARK "Id Material Used | Id Detail Material Used | Id Detail GRN Detail | Taking"
+								]);	
+								$responseTaking = HistoryStock::create($validatedData);
+							}				
+							if($datas->usage>0){
+								$validatedData = ([
+									'id_good_receipt_notes_details' => $datas->id_good_receipt_note_details,
+									'type_product' => 'RM',
+									'id_master_products' => $datas->id_master_products,
+									'qty' => $datas->usage,
+									'type_stock' => 'USAGE',
+									'date' => date("Y-m-d"),
+									'remarks' => $datas->id_report_material_uses.'|'. $datas->id.'|'.$datas->id_detail_good_receipt_note_details.'|Usage'
+									//TAMBAHKAN KE FIELD REMARK "Id Material Used | Id Detail Material Used | Id Detail GRN Detail | Usage"
+								]);	
+								$responseTaking = HistoryStock::create($validatedData);
+							}
+							if($datas->remaining>0){
+								$validatedData = ([
+									'id_good_receipt_notes_details' => $datas->id_good_receipt_note_details,
+									'type_product' => 'RM',
+									'id_master_products' => $datas->id_master_products,
+									'qty' => $datas->remaining,
+									'type_stock' => 'REMAINING',
+									'date' => date("Y-m-d"),
+									'remarks' => $datas->id_report_material_uses.'|'. $datas->id.'|'.$datas->id_detail_good_receipt_note_details.'|Remaining|0'
+									//TAMBAHKAN KE FIELD REMARK "Id Material Used | Id Detail Material Used | Id Detail GRN Detail | Remaining"
+									//0 Digunakan sebagai parameter penyesuaian stock opname / move stock proins
+								]);	
+								$responseRemaining = HistoryStock::create($validatedData);
+							}
+						}
+							
+						//Audit Log		
+						$username= auth()->user()->email; 
+						$ipAddress=$_SERVER['REMOTE_ADDR'];
+						$location='0';
+						$access_from=Browser::browserName();
+						$activity='Approve Entry Report Material Use ID="'.$data[0]->id.'"';
+						$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+						
+						return Redirect::to('/production-ent-material-use')->with('pesan', 'Approve Successfuly.');						
+					}else{
+						return Redirect::to('/production-ent-material-use')->with('pesan', 'There Is An Error.');
+					}
+					
+				}else{
+					return Redirect::to('/production-ent-material-use')->with('pesan', 'There Is An Error.');
 				}
 					
-				//QUERY UNTUK INSERT HISTORY STOCK
-				$data_insert_history = ProductionEntryMaterialUseDetail::select('report_material_use_details.id', 'report_material_use_details.id_report_material_uses', 'report_material_use_details.id_master_products', 'report_material_use_details.id_good_receipt_note_details', 'report_material_use_details.id_detail_good_receipt_note_details')
-					->selectRaw('SUM(taking) AS taking')
-					->selectRaw('SUM(`usage`) AS `usage`')
-					->selectRaw('SUM(remaining) AS remaining')//TAMBAHKAN KE FIELD REMARK "Id Material Used | Id Detail Material Used | Id Detail GRN Detail | Remaining"
-					->whereRaw( "sha1(report_material_use_details.id_report_material_uses) = '$response_id'")
-					->groupBy('report_material_use_details.id')
-					->groupBy('report_material_use_details.id_report_material_uses')
-					->groupBy('report_material_use_details.id_master_products')
-					->get();
 				
-				if(!empty($data_insert_history)){//UPDATE INSERT HISTORY
-					foreach($data_insert_history as $datas){					
-						if($datas->taking>0){
-							$validatedData = ([
-								'id_good_receipt_notes_details' => $datas->id_good_receipt_note_details,
-								'type_product' => 'RM',
-								'id_master_products' => $datas->id_master_products,
-								'qty' => $datas->taking,
-								'type_stock' => 'OUT',
-								'date' => date("Y-m-d"),
-								'remarks' => $datas->id_report_material_uses.'|'. $datas->id.'|'.$datas->id_detail_good_receipt_note_details.'|Taking'
-							]);	
-							$responseTaking = HistoryStock::create($validatedData);
-						}				
-						if($datas->usage>0){
-							$validatedData = ([
-								'id_good_receipt_notes_details' => $datas->id_good_receipt_note_details,
-								'type_product' => 'RM',
-								'id_master_products' => $datas->id_master_products,
-								'qty' => $datas->usage,
-								'type_stock' => 'USAGE',
-								'date' => date("Y-m-d"),
-								'remarks' => $datas->id_report_material_uses.'|'. $datas->id.'|'.$datas->id_detail_good_receipt_note_details.'|Usage'
-							]);	
-							$responseTaking = HistoryStock::create($validatedData);
-						}
-						if($datas->remaining>0){
-							$validatedData = ([
-								'id_good_receipt_notes_details' => $datas->id_good_receipt_note_details,
-								'type_product' => 'RM',
-								'id_master_products' => $datas->id_master_products,
-								'qty' => $datas->remaining,
-								'type_stock' => 'REMAINING',
-								'date' => date("Y-m-d"),
-								'remarks' => $datas->id_report_material_uses.'|'. $datas->id.'|'.$datas->id_detail_good_receipt_note_details.'|Remaining|0'//0 Digunakan sebagai parameter penyesuaian stock opname / move stock proins
-							]);	
-							$responseRemaining = HistoryStock::create($validatedData);
-						}
-					}
-				}
-				
-				//Audit Log		
-				$username= auth()->user()->email; 
-				$ipAddress=$_SERVER['REMOTE_ADDR'];
-				$location='0';
-				$access_from=Browser::browserName();
-				$activity='Approve Entry Report Material Use ID="'.$data[0]->id.'"';
-				$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
-				
-				return Redirect::to('/production-ent-material-use')->with('pesan', 'Approve Successfuly.');
 			}else{
 				return Redirect::to('/production-ent-material-use')->with('pesan', 'There Is An Error.');
 			}
@@ -877,14 +902,21 @@ class ProductionController extends Controller
 			return Redirect::to('/production-ent-material-use')->with('pesan', 'There Is An Error.');
 		}
 	}
-	public function production_entry_material_use_hold_new($response_id){	
+	public function production_entry_material_use_hold($response_id){
 		//TINGGAL DELETED HISTORY NYA SAJA. 
 		//QUERY UNTUK UPDATE REPORT MATERIAL USES
 		$data = ProductionEntryMaterialUse::leftJoin('work_orders AS b', 'report_material_uses.id_work_orders', '=', 'b.id')
 				->select("report_material_uses.*","b.id_master_process_productions")
 				->whereRaw( "sha1(report_material_uses.id) = '$response_id'")
                 ->get();
-		
+		/*		
+		$get_history = HistoryStock::select('history_stocks.remarks')
+					->whereRaw( "SUBSTRING_INDEX(remarks, '|', '1') = '".$data[0]->id."'")
+					->get();
+		echo "<pre>";
+		print_r($get_history);
+		echo "</pre>";exit;
+		*/
 		if(!empty($data[0])){
 			$validatedData['status'] = 'Hold';			
 			
@@ -896,7 +928,7 @@ class ProductionController extends Controller
 		
 				//QUERY UNTUK UPDATE MASTER RM
 				$data_update_master = ProductionEntryMaterialUseDetail::select('report_material_use_details.id','report_material_use_details.id_master_products')
-					->selectRaw('SUM(taking) AS taking')//MENGURANGI STOCK DI TABLE MASTER
+					->selectRaw('SUM(taking) AS taking')//TAMBAH STOCK DI TABLE MASTER KARENA TIDAK JADI DI APPROVE
 					->whereRaw( "sha1(report_material_use_details.id_report_material_uses) = '$response_id'")
 					->groupBy('report_material_use_details.id_master_products')
 					->get();
@@ -911,69 +943,29 @@ class ProductionController extends Controller
 						$stock_akhir = $data_master[0]->stock + $datas->taking;							
 						DB::table('master_raw_materials')->where('id', $datas->id_master_products)->update(array('stock' => $stock_akhir)); 
 					}
-				}
+					//QUERY UNTUK DELETE HISTORY STOCK
+					$get_history = HistoryStock::select('history_stocks.remarks')
+						->whereRaw( "SUBSTRING_INDEX(remarks, '|', '1') = '".$data[0]->id."'")
+						->get();
 					
-				//QUERY UNTUK INSERT HISTORY STOCK
-				$data_insert_history = ProductionEntryMaterialUseDetail::select('report_material_use_details.id', 'report_material_use_details.id_report_material_uses', 'report_material_use_details.id_master_products', 'report_material_use_details.id_good_receipt_note_details', 'report_material_use_details.id_detail_good_receipt_note_details')
-					->selectRaw('SUM(taking) AS taking')
-					->selectRaw('SUM(`usage`) AS `usage`')
-					->selectRaw('SUM(remaining) AS remaining')//TAMBAHKAN KE FIELD REMARK "Id Material Used | Id Detail Material Used | Id Detail GRN Detail | Remaining"
-					->whereRaw( "sha1(report_material_use_details.id_report_material_uses) = '$response_id'")
-					->groupBy('report_material_use_details.id')
-					->groupBy('report_material_use_details.id_report_material_uses')
-					->groupBy('report_material_use_details.id_master_products')
-					->get();
-				
-				if(!empty($data_insert_history)){//UPDATE INSERT HISTORY
-					foreach($data_insert_history as $datas){					
-						if($datas->taking>0){
-							$validatedData = ([
-								'id_good_receipt_notes_details' => $datas->id_good_receipt_note_details,
-								'type_product' => 'RM',
-								'id_master_products' => $datas->id_master_products,
-								'qty' => $datas->taking,
-								'type_stock' => 'OUT',
-								'date' => date("Y-m-d"),
-								'remarks' => $datas->id_report_material_uses.'|'. $datas->id.'|'.$datas->id_detail_good_receipt_note_details.'|Taking'
-							]);	
-							$responseTaking = HistoryStock::create($validatedData);
-						}				
-						if($datas->usage>0){
-							$validatedData = ([
-								'id_good_receipt_notes_details' => $datas->id_good_receipt_note_details,
-								'type_product' => 'RM',
-								'id_master_products' => $datas->id_master_products,
-								'qty' => $datas->usage,
-								'type_stock' => 'USAGE',
-								'date' => date("Y-m-d"),
-								'remarks' => $datas->id_report_material_uses.'|'. $datas->id.'|'.$datas->id_detail_good_receipt_note_details.'|Usage'
-							]);	
-							$responseTaking = HistoryStock::create($validatedData);
-						}
-						if($datas->remaining>0){
-							$validatedData = ([
-								'id_good_receipt_notes_details' => $datas->id_good_receipt_note_details,
-								'type_product' => 'RM',
-								'id_master_products' => $datas->id_master_products,
-								'qty' => $datas->remaining,
-								'type_stock' => 'REMAINING',
-								'date' => date("Y-m-d"),
-								'remarks' => $datas->id_report_material_uses.'|'. $datas->id.'|'.$datas->id_detail_good_receipt_note_details.'|Remaining|0'//0 Digunakan sebagai parameter penyesuaian stock opname / move stock proins
-							]);	
-							$responseRemaining = HistoryStock::create($validatedData);
-						}
-					}
-				}
-				
-				//Audit Log		
-				$username= auth()->user()->email; 
-				$ipAddress=$_SERVER['REMOTE_ADDR'];
-				$location='0';
-				$access_from=Browser::browserName();
-				$activity='Approve Entry Report Material Use ID="'.$data[0]->id.'"';
-				$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
-				
-				return Redirect::to('/production-ent-material-use')->with('pesan', 'Approve Successfuly.');
+					if(!empty($get_history)){//UPDATE INSERT HISTORY
+						HistoryStock::whereRaw( "SUBSTRING_INDEX(remarks, '|', '1') = '".$data[0]->id."'" )->delete();
+						
+						//Audit Log		
+						$username= auth()->user()->email; 
+						$ipAddress=$_SERVER['REMOTE_ADDR'];
+						$location='0';
+						$access_from=Browser::browserName();
+						$activity='Approve Entry Report Material Use ID="'.$data[0]->id.'"';
+						$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+						
+						return Redirect::to('/production-ent-material-use')->with('pesan', 'Approve Successfuly.');
+					}else{
+						return Redirect::to('/production-ent-material-use')->with('pesan', 'There Is An Error.');
+					}				
+				}else{
+					return Redirect::to('/production-ent-material-use')->with('pesan', 'There Is An Error.');
+				}			
 			}else{
 				return Redirect::to('/production-ent-material-use')->with('pesan', 'There Is An Error.');
 			}
@@ -982,7 +974,52 @@ class ProductionController extends Controller
 			return Redirect::to('/production-ent-material-use')->with('pesan', 'There Is An Error.');
 		}
 	}
-	public function production_entry_material_use_approve($response_id){		
+	public function production_entry_material_use_delete($response_id){
+		$data = ProductionEntryMaterialUse::leftJoin('work_orders AS b', 'report_material_uses.id_work_orders', '=', 'b.id')
+				->select("report_material_uses.*","b.id_master_process_productions")
+				->whereRaw( "sha1(report_material_uses.id) = '$response_id'")
+                ->get();
+		
+		if(!empty($data[0])){
+			//QUERY UNTUK UPDATE MASTER RM
+			$data_update_master = ProductionEntryMaterialUseDetail::select('report_material_use_details.id','report_material_use_details.id_master_products')
+				->selectRaw('SUM(taking) AS taking')//TAMBAH STOCK DI TABLE MASTER KARENA TIDAK JADI DI APPROVE
+				->whereRaw( "sha1(report_material_use_details.id_report_material_uses) = '$response_id'")
+				->groupBy('report_material_use_details.id_master_products')
+				->get();
+			
+			if(!empty($data_update_master)){//UPDATE STOCK MASTER
+				foreach($data_update_master as $datas){					
+					$data_master = DB::table('master_raw_materials')
+						->select('*')
+						->whereRaw( "id = '".$datas->id_master_products."'")
+						->get();
+						
+					$stock_akhir = $data_master[0]->stock + $datas->taking;							
+					//DB::table('master_raw_materials')->where('id', $datas->id_master_products)->update(array('stock' => $stock_akhir)); 
+				}
+				ProductionEntryMaterialUse::whereRaw( "sha1(id) = '$response_id'" )->delete();
+				ProductionEntryMaterialUseDetail::whereRaw( "sha1(id_report_material_uses) = '$response_id'" )->delete();
+			
+				//Audit Log		
+				$username= auth()->user()->email; 
+				$ipAddress=$_SERVER['REMOTE_ADDR'];
+				$location='0';
+				$access_from=Browser::browserName();
+				$activity='Delete Entry Report Material Use ID="'.$data[0]->id.'"';
+				$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+				
+				return Redirect::to('/production-ent-material-use')->with('pesan', 'Delete Successfuly.');				
+			}else{
+				return Redirect::to('/production-ent-material-use')->with('pesan', 'There Is An Error.');
+			}	
+			
+		}else{
+			return Redirect::to('/production-ent-material-use')->with('pesan', 'There Is An Error.');
+		}
+	}
+	/*
+	public function production_entry_material_use_approve_old($response_id){		
 		$data = ProductionEntryMaterialUse::leftJoin('work_orders AS b', 'report_material_uses.id_work_orders', '=', 'b.id')
 				->select("report_material_uses.*","b.id_master_process_productions")
 				->whereRaw( "sha1(report_material_uses.id) = '$response_id'")
@@ -1007,7 +1044,7 @@ class ProductionController extends Controller
 			return Redirect::to('/production-ent-material-use')->with('pesan', 'There Is An Error.');
 		}
 	}
-	public function production_entry_material_use_hold($response_id){		
+	public function production_entry_material_use_hold_old($response_id){		
 		$data = ProductionEntryMaterialUse::leftJoin('work_orders AS b', 'report_material_uses.id_work_orders', '=', 'b.id')
 				->select("report_material_uses.*","b.id_master_process_productions")
 				->whereRaw( "sha1(report_material_uses.id) = '$response_id'")
@@ -1032,7 +1069,6 @@ class ProductionController extends Controller
 			return Redirect::to('/production-ent-material-use')->with('pesan', 'There Is An Error.');
 		}
 	}
-	
 	public function production_entry_material_use_delete($response_id){
 		$data = ProductionEntryMaterialUse::leftJoin('work_orders AS b', 'report_material_uses.id_work_orders', '=', 'b.id')
 				->select("report_material_uses.*","b.id_master_process_productions")
@@ -1057,6 +1093,8 @@ class ProductionController extends Controller
 			return Redirect::to('/production-ent-material-use')->with('pesan', 'There Is An Error.');
 		}
 	}
+	*/
+	
 	public function production_entry_material_use_print($response_id)
     {
         $data = ProductionEntryMaterialUse::leftJoin('work_orders AS b', 'report_material_uses.id_work_orders', '=', 'b.id')
@@ -1199,6 +1237,8 @@ class ProductionController extends Controller
 			
 			$validatedData['remaining'] = $data[0]->taking-$_POST['usage']+$_POST['sisa_campuran'];			
 			$validatedData['sisa_camp'] = $_POST['sisa_campuran'];			
+			
+			unset($validatedData["sisa_campuran"]);
 			
 			ProductionEntryMaterialUseDetail::where('id', $data[0]->id)
 				->update($validatedData);
