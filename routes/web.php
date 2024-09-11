@@ -48,6 +48,7 @@ Route::middleware(['auth', 'clear.permission.cache', 'permission:Produksi|Produk
 	
 	Route::get('/production-ent-material-use-approve/{id}', [ProductionController::class, 'production_entry_material_use_approve'])->name('production_entry_material_use_approve');
 	Route::get('/production-ent-material-use-hold/{id}', [ProductionController::class, 'production_entry_material_use_hold'])->name('production_entry_material_use_hold');
+	
 	Route::get('/production-ent-material-use-delete/{id}', [ProductionController::class, 'production_entry_material_use_delete'])->name('production_entry_material_use_delete');
 	Route::get('/production-ent-material-use-print/{id}', [ProductionController::class, 'production_entry_material_use_print'])->name('production_entry_material_use_print');
 	Route::get('/production-ent-material-use-detail/{id}', [ProductionController::class, 'production_entry_material_use_detail'])->name('production_entry_material_use_detail');
