@@ -45,6 +45,7 @@ Route::middleware(['auth', 'clear.permission.cache', 'permission:Produksi|Produk
 	Route::post('/production-ent-material-use-update', [ProductionController::class, 'production_entry_material_use_update'])->name('production_entry_material_use_update');
 	
 	Route::get('/production-ent-report-material-use-json-approve', [ProductionController::class, 'production_entry_report_material_use_json_approve'])->name('production_entry_report_material_use_json_approve');
+	Route::get('/production-ent-report-material-use-json-hold', [ProductionController::class, 'production_entry_report_material_use_json_hold'])->name('production_entry_report_material_use_json_hold');
 	
 	Route::get('/production-ent-material-use-approve/{id}', [ProductionController::class, 'production_entry_material_use_approve'])->name('production_entry_material_use_approve');
 	Route::get('/production-ent-material-use-hold/{id}', [ProductionController::class, 'production_entry_material_use_hold'])->name('production_entry_material_use_hold');

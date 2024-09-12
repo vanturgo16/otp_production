@@ -105,6 +105,39 @@
 										
 									}
 								</script>
+								<div id="modal_hold" class="modal fade" tabindex="-1" aria-labelledby="edit_poLabel" aria-hidden="true" data-bs-scroll="true">
+									<div class="modal-dialog">
+										<div class="modal-content">
+											<div class="modal-header">
+												<h4 class="font-size-16">
+													<b>Informasi</b>
+												</h4>
+												<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+											</div>
+											<div class="modal-body" id="modal_hold_body">								
+												
+											</div>
+											<div class="modal-footer">
+											</div>
+										</div>
+									</div>
+								</div>
+								<script>
+									function showHold(id)
+									{
+										$.ajax({
+											type: "GET",
+											url: "/production-ent-report-material-use-json-hold",
+											data: "id='"+id+"'",
+											dataType: "html",
+											success: function (response) {
+												$('#modal_hold_body').empty();
+												$('#modal_hold_body').append(response);
+											}
+										});
+										
+									}
+								</script>
 							</div>							
                         </div>
                     </div>

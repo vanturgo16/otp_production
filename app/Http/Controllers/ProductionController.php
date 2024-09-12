@@ -468,7 +468,11 @@ class ProductionController extends Controller
 						<center>
 							<a onclick="'.$return_hold.'" href="/production-ent-material-use-hold/'.sha1($data->id).'" class="btn btn-warning waves-effect waves-light">
 								<i class="bx bx-block" title="Hold"></i> HOLD
-							</a>						
+							</a>		
+							
+							<!--a data-bs-toggle="modal" onclick="showHold('.$id.')" data-bs-target="#modal_hold" class="btn btn-warning waves-effect waves-light">
+								<i class="bx bx-block" title="Hold"></i>  HOLD
+							</a-->
 					';
 				}
 				$tombol .= '
@@ -773,6 +777,7 @@ class ProductionController extends Controller
 		<?php
 		}
 	}	
+	
 	public function production_entry_material_use_approve($response_id){		
 		//QUERY UNTUK UPDATE REPORT MATERIAL USES
 		$data = ProductionEntryMaterialUse::leftJoin('work_orders AS b', 'report_material_uses.id_work_orders', '=', 'b.id')
@@ -902,6 +907,61 @@ class ProductionController extends Controller
 			return Redirect::to('/production-ent-material-use')->with('pesan', 'There Is An Error.');
 		}
 	}
+	
+	public function production_entry_report_material_use_json_hold(Request $request){
+		
+		/*
+		?>
+		Test
+		<?php
+		*/
+		
+		$id_rm = request()->get('id');
+		//echo $id_rm;exit;
+		$data = ProductionEntryMaterialUseDetail::select('id_report_material_uses')
+				->selectRaw('COUNT(report_material_use_details.id) AS jumlah_detail')
+				->whereRaw( "sha1(report_material_use_details.id_report_material_uses) = $id_rm")
+				//->groupBy('id_report_material_uses')
+                ->get();
+		print_r($data);exit;
+		if(!empty($data[0]->id_report_material_uses)){
+		?>					
+			<!--form method="post" action="/production-entry-report-blow-update-stock" class="form-material m-t-40" enctype="multipart/form-data"-->
+				
+				<div class="card-body">
+					<div class="row g-4">
+						<div class="col-sm-12">
+							<div class="alert alert-success alert-dismissible fade show px-4 mb-0 text-center" role="alert">
+								<i class="mdi mdi-check-all d-block display-4 mt-2 mb-3 text-success"></i>
+								<h5 class="text-success"><b><?= $data[0]->jumlah_detail; ?></b></h5>
+								<p>Data Detail Yang Akan Di APPROVE</p>
+							</div>
+						</div>
+					</div><!-- end row -->
+				</div>
+				<div class="modal-footer">
+					<a href="/production-ent-material-use-approve/<?= sha1($data[0]->id_report_material_uses); ?>" type="submit" class="btn btn-primary btn-lg"><i class="bx bx-save" title="Approve"></i> APPROVE</a>
+					<!--a href="#" type="submit" class="btn btn-primary btn-lg"><i class="bx bx-save" title="Update"></i> UPDATE</a-->
+				</div>
+			<!--/form-->
+		<?php
+		}else{
+		?>
+			<div class="card-body">
+				<div class="row g-4">
+					<div class="col-sm-12">
+						<div class="alert alert-danger alert-dismissible fade show px-4 mb-0 text-center" role="alert">
+							<i class="mdi mdi-block-helper d-block display-4 mt-2 mb-3 text-danger"></i>
+							<!--h5 class="text-danger">Tidak Ada Detail Yang Dapat Di APPROVE</h5-->
+							<p>Tidak Ada Detail Yang Dapat Di APPROVE</p>
+						</div>
+					</div><!-- end col -->
+				</div><!-- end row -->
+			</div>
+		<?php
+		}
+	}	
+	
 	public function production_entry_material_use_hold($response_id){
 		//TINGGAL DELETED HISTORY NYA SAJA. 
 		//QUERY UNTUK UPDATE REPORT MATERIAL USES
