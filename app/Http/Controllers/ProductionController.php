@@ -968,12 +968,12 @@ class ProductionController extends Controller
 		//QUERY UNTUK UPDATE REPORT MATERIAL USES
 		$data = ProductionEntryMaterialUse::leftJoin('work_orders AS b', 'report_material_uses.id_work_orders', '=', 'b.id')
 				->select("report_material_uses.*","b.id_master_process_productions")
-				->whereRaw( "sha1(report_material_uses.id) = '$response_id'")
+				->whereRaw( "sha1(report_material_uses.id) = $response_id")
                 ->get();
 				
 		$data_remaining = DB::table('history_stocks')
 					->select('*')
-					->whereRaw( "SHA1(SUBSTRING_INDEX(remarks, '|', '1'))='$response_id'")
+					->whereRaw( "SHA1(SUBSTRING_INDEX(remarks, '|', '1'))=$response_id")
 					->whereRaw( "type_stock='REMAINING'")
 					->whereRaw( "SUBSTRING_INDEX(remarks, '|', '-1')='1'")
 					->get();
@@ -982,7 +982,7 @@ class ProductionController extends Controller
 			if(!empty($data[0])){
 				$validatedData['status'] = 'Hold';			
 				
-				$response_material_uses = ProductionEntryMaterialUse::whereRaw( "sha1(id) = '$response_id'" )
+				$response_material_uses = ProductionEntryMaterialUse::whereRaw( "sha1(id) = $response_id" )
 											->update($validatedData);
 				
 				if($response_material_uses){
@@ -991,7 +991,7 @@ class ProductionController extends Controller
 					//QUERY UNTUK UPDATE MASTER RM
 					$data_update_master = ProductionEntryMaterialUseDetail::select('report_material_use_details.id','report_material_use_details.id_master_products')
 						->selectRaw('SUM(taking) AS taking')//TAMBAH STOCK DI TABLE MASTER KARENA TIDAK JADI DI APPROVE
-						->whereRaw( "sha1(report_material_use_details.id_report_material_uses) = '$response_id'")
+						->whereRaw( "sha1(report_material_use_details.id_report_material_uses) = $response_id")
 						->groupBy('report_material_use_details.id_master_products')
 						->get();
 					
@@ -1021,7 +1021,7 @@ class ProductionController extends Controller
 							$activity='Approve Entry Report Material Use ID="'.$data[0]->id.'"';
 							$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
 							
-							return Redirect::to('/production-ent-material-use')->with('pesan', 'Approve Successfuly.');
+							return Redirect::to('/production-ent-material-use')->with('pesan', 'Hold Successfuly.');
 						}else{
 							return Redirect::to('/production-ent-material-use')->with('pesan_danger', 'There Is An Error.');
 						}				
