@@ -1239,7 +1239,7 @@ class ProductionReportSlittingController extends Controller
 						$activity='Un Posted Histori Stock Slitting Report Number ="'.$data_update[0]->report_number.'" (Good : '.$data_update[0]->good.', Hold : '.$data_update[0]->hold.', Reject : '.$data_update[0]->reject.')';
 						$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
 							
-						return Redirect::to('/production-ent-report-slitting')->with('pesan', 'Update Stock Successfuly.');
+						return Redirect::to('/production-ent-report-slitting')->with('pesan', 'Unposted Successfuly.');
 					}else{
 						return Redirect::to('/production-ent-report-slitting')->with('pesan_danger', 'There Is An Error.');
 					}
