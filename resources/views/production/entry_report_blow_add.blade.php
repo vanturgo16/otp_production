@@ -154,7 +154,7 @@
 										$("#id_work_orders").change(function(){				
 											$.ajax({
 												type: "GET",
-												url : '{{ route("jsonGetProduk") }}', 
+												url : '/json_get_produk', 
 												data: { type_product : $('#id_work_orders option:selected').attr('data-type_product'), id_master_products : $('#id_work_orders option:selected').attr('data-id_master_products') },
 												dataType: "json",
 												beforeSend: function(e) {
