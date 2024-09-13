@@ -1053,7 +1053,7 @@ class ProductionController extends Controller
 				->groupBy('report_material_use_details.id_master_products')
 				->get();
 			
-			if(!empty($data_update_master)){//UPDATE STOCK MASTER
+			if(!empty($data_update_master)){//UPDATE MASTER PENYESUAIAN STOK
 				foreach($data_update_master as $datas){					
 					$data_master = DB::table('master_raw_materials')
 						->select('*')
