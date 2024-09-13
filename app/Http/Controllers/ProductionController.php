@@ -197,7 +197,7 @@ class ProductionController extends Controller
 			
 			return Redirect::to('/production-req-sparepart-auxiliaries')->with('pesan', 'Hold Successfuly.');
 		}else{
-			return Redirect::to('/production-req-sparepart-auxiliaries')->with('pesan', 'There Is An Error.');
+			return Redirect::to('/production-req-sparepart-auxiliaries')->with('pesan_danger', 'There Is An Error.');
 		}
 	}
 	public function production_req_sparepart_auxiliaries_approve($response_id){
@@ -224,7 +224,7 @@ class ProductionController extends Controller
 			
 			return Redirect::to('/production-req-sparepart-auxiliaries')->with('pesan', 'Approve Successfuly.');
 		}else{
-			return Redirect::to('/production-req-sparepart-auxiliaries')->with('pesan', 'There Is An Error.');
+			return Redirect::to('/production-req-sparepart-auxiliaries')->with('pesan_danger', 'There Is An Error.');
 		}
 	}
 	public function production_req_sparepart_auxiliaries_delete($response_id){
@@ -249,7 +249,7 @@ class ProductionController extends Controller
 			
 			return Redirect::to('/production-req-sparepart-auxiliaries')->with('pesan', 'Delete Successfuly.');
 		}else{
-			return Redirect::to('/production-req-sparepart-auxiliaries')->with('pesan', 'There Is An Error.');
+			return Redirect::to('/production-req-sparepart-auxiliaries')->with('pesan_danger', 'There Is An Error.');
 		}
 	}
 	public function production_req_sparepart_auxiliaries_detail($request_number){
@@ -466,13 +466,13 @@ class ProductionController extends Controller
 				}elseif($data->status=='Approve'){
 					$tombol = '
 						<center>
-							<a onclick="'.$return_hold.'" href="/production-ent-material-use-hold/'.sha1($data->id).'" class="btn btn-warning waves-effect waves-light">
+							<!--a onclick="'.$return_hold.'" href="/production-ent-material-use-hold/'.sha1($data->id).'" class="btn btn-warning waves-effect waves-light">
 								<i class="bx bx-block" title="Hold"></i> HOLD
-							</a>		
+							</a-->		
 							
-							<!--a data-bs-toggle="modal" onclick="showHold('.$id.')" data-bs-target="#modal_hold" class="btn btn-warning waves-effect waves-light">
+							<a data-bs-toggle="modal" onclick="showHold('.$id.')" data-bs-target="#modal_hold" class="btn btn-warning waves-effect waves-light">
 								<i class="bx bx-block" title="Hold"></i>  HOLD
-							</a-->
+							</a>
 					';
 				}
 				$tombol .= '
@@ -891,20 +891,20 @@ class ProductionController extends Controller
 						
 						return Redirect::to('/production-ent-material-use')->with('pesan', 'Approve Successfuly.');						
 					}else{
-						return Redirect::to('/production-ent-material-use')->with('pesan', 'There Is An Error.');
+						return Redirect::to('/production-ent-material-use')->with('pesan_danger', 'There Is An Error.');
 					}
 					
 				}else{
-					return Redirect::to('/production-ent-material-use')->with('pesan', 'There Is An Error.');
+					return Redirect::to('/production-ent-material-use')->with('pesan_danger', 'There Is An Error.');
 				}
 					
 				
 			}else{
-				return Redirect::to('/production-ent-material-use')->with('pesan', 'There Is An Error.');
+				return Redirect::to('/production-ent-material-use')->with('pesan_danger', 'There Is An Error.');
 			}
 			
 		}else{
-			return Redirect::to('/production-ent-material-use')->with('pesan', 'There Is An Error.');
+			return Redirect::to('/production-ent-material-use')->with('pesan_danger', 'There Is An Error.');
 		}
 	}
 	
@@ -917,14 +917,15 @@ class ProductionController extends Controller
 		*/
 		
 		$id_rm = request()->get('id');
-		//echo $id_rm;exit;
-		$data = ProductionEntryMaterialUseDetail::select('id_report_material_uses')
-				->selectRaw('COUNT(report_material_use_details.id) AS jumlah_detail')
-				->whereRaw( "sha1(report_material_use_details.id_report_material_uses) = $id_rm")
-				//->groupBy('id_report_material_uses')
-                ->get();
-		print_r($data);exit;
-		if(!empty($data[0]->id_report_material_uses)){
+		
+		$data_remaining = DB::table('history_stocks')
+					->select('*')
+					->whereRaw( "SHA1(SUBSTRING_INDEX(remarks, '|', '1'))=$id_rm")
+					->whereRaw( "type_stock='REMAINING'")
+					->whereRaw( "SUBSTRING_INDEX(remarks, '|', '-1')='1'")
+					->get();
+					
+		if(count($data_remaining)<1){//Jika tidak terdapat data remaining yang sudah di sesuaikan ke dalam data stok RM
 		?>					
 			<!--form method="post" action="/production-entry-report-blow-update-stock" class="form-material m-t-40" enctype="multipart/form-data"-->
 				
@@ -933,14 +934,13 @@ class ProductionController extends Controller
 						<div class="col-sm-12">
 							<div class="alert alert-success alert-dismissible fade show px-4 mb-0 text-center" role="alert">
 								<i class="mdi mdi-check-all d-block display-4 mt-2 mb-3 text-success"></i>
-								<h5 class="text-success"><b><?= $data[0]->jumlah_detail; ?></b></h5>
-								<p>Data Detail Yang Akan Di APPROVE</p>
+								<p>Belum terdapat data remaining yang di proses sebagai stok. <br><b>Klik HOLD untuk melanjutkan.</b></p>
 							</div>
 						</div>
 					</div><!-- end row -->
 				</div>
 				<div class="modal-footer">
-					<a href="/production-ent-material-use-approve/<?= sha1($data[0]->id_report_material_uses); ?>" type="submit" class="btn btn-primary btn-lg"><i class="bx bx-save" title="Approve"></i> APPROVE</a>
+					<a href="/production-ent-material-use-hold/<?= $id_rm; ?>" type="submit" class="btn btn-warning btn-lg"><i class="bx bx-block" title="Hold"></i> HOLD</a>
 					<!--a href="#" type="submit" class="btn btn-primary btn-lg"><i class="bx bx-save" title="Update"></i> UPDATE</a-->
 				</div>
 			<!--/form-->
@@ -953,13 +953,14 @@ class ProductionController extends Controller
 						<div class="alert alert-danger alert-dismissible fade show px-4 mb-0 text-center" role="alert">
 							<i class="mdi mdi-block-helper d-block display-4 mt-2 mb-3 text-danger"></i>
 							<!--h5 class="text-danger">Tidak Ada Detail Yang Dapat Di APPROVE</h5-->
-							<p>Tidak Ada Detail Yang Dapat Di APPROVE</p>
+							<p><b>Tidak diperkenankan HOLD data. </b><br>Terdapat data remaining yang sudah di proses sebagai stok.</p>
 						</div>
 					</div><!-- end col -->
 				</div><!-- end row -->
 			</div>
 		<?php
 		}
+		
 	}	
 	
 	public function production_entry_material_use_hold($response_id){
@@ -969,69 +970,73 @@ class ProductionController extends Controller
 				->select("report_material_uses.*","b.id_master_process_productions")
 				->whereRaw( "sha1(report_material_uses.id) = '$response_id'")
                 ->get();
-		/*		
-		$get_history = HistoryStock::select('history_stocks.remarks')
-					->whereRaw( "SUBSTRING_INDEX(remarks, '|', '1') = '".$data[0]->id."'")
-					->get();
-		echo "<pre>";
-		print_r($get_history);
-		echo "</pre>";exit;
-		*/
-		if(!empty($data[0])){
-			$validatedData['status'] = 'Hold';			
-			
-			$response_material_uses = ProductionEntryMaterialUse::whereRaw( "sha1(id) = '$response_id'" )
-										->update($validatedData);
-			
-			if($response_material_uses){
 				
-		
-				//QUERY UNTUK UPDATE MASTER RM
-				$data_update_master = ProductionEntryMaterialUseDetail::select('report_material_use_details.id','report_material_use_details.id_master_products')
-					->selectRaw('SUM(taking) AS taking')//TAMBAH STOCK DI TABLE MASTER KARENA TIDAK JADI DI APPROVE
-					->whereRaw( "sha1(report_material_use_details.id_report_material_uses) = '$response_id'")
-					->groupBy('report_material_use_details.id_master_products')
+		$data_remaining = DB::table('history_stocks')
+					->select('*')
+					->whereRaw( "SHA1(SUBSTRING_INDEX(remarks, '|', '1'))='$response_id'")
+					->whereRaw( "type_stock='REMAINING'")
+					->whereRaw( "SUBSTRING_INDEX(remarks, '|', '-1')='1'")
 					->get();
+					
+		if(count($data_remaining)<1){
+			if(!empty($data[0])){
+				$validatedData['status'] = 'Hold';			
 				
-				if(!empty($data_update_master)){//UPDATE STOCK MASTER
-					foreach($data_update_master as $datas){					
-						$data_master = DB::table('master_raw_materials')
-							->select('*')
-							->whereRaw( "id = '".$datas->id_master_products."'")
-							->get();
-							
-						$stock_akhir = $data_master[0]->stock + $datas->taking;							
-						DB::table('master_raw_materials')->where('id', $datas->id_master_products)->update(array('stock' => $stock_akhir)); 
-					}
-					//QUERY UNTUK DELETE HISTORY STOCK
-					$get_history = HistoryStock::select('history_stocks.remarks')
-						->whereRaw( "SUBSTRING_INDEX(remarks, '|', '1') = '".$data[0]->id."'")
+				$response_material_uses = ProductionEntryMaterialUse::whereRaw( "sha1(id) = '$response_id'" )
+											->update($validatedData);
+				
+				if($response_material_uses){
+					
+			
+					//QUERY UNTUK UPDATE MASTER RM
+					$data_update_master = ProductionEntryMaterialUseDetail::select('report_material_use_details.id','report_material_use_details.id_master_products')
+						->selectRaw('SUM(taking) AS taking')//TAMBAH STOCK DI TABLE MASTER KARENA TIDAK JADI DI APPROVE
+						->whereRaw( "sha1(report_material_use_details.id_report_material_uses) = '$response_id'")
+						->groupBy('report_material_use_details.id_master_products')
 						->get();
 					
-					if(!empty($get_history)){//UPDATE INSERT HISTORY
-						HistoryStock::whereRaw( "SUBSTRING_INDEX(remarks, '|', '1') = '".$data[0]->id."'" )->delete();
+					if(!empty($data_update_master)){//UPDATE STOCK MASTER
+						foreach($data_update_master as $datas){					
+							$data_master = DB::table('master_raw_materials')
+								->select('*')
+								->whereRaw( "id = '".$datas->id_master_products."'")
+								->get();
+								
+							$stock_akhir = $data_master[0]->stock + $datas->taking;							
+							DB::table('master_raw_materials')->where('id', $datas->id_master_products)->update(array('stock' => $stock_akhir)); 
+						}
+						//QUERY UNTUK DELETE HISTORY STOCK
+						$get_history = HistoryStock::select('history_stocks.remarks')
+							->whereRaw( "SUBSTRING_INDEX(remarks, '|', '1') = '".$data[0]->id."'")
+							->get();
 						
-						//Audit Log		
-						$username= auth()->user()->email; 
-						$ipAddress=$_SERVER['REMOTE_ADDR'];
-						$location='0';
-						$access_from=Browser::browserName();
-						$activity='Approve Entry Report Material Use ID="'.$data[0]->id.'"';
-						$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
-						
-						return Redirect::to('/production-ent-material-use')->with('pesan', 'Approve Successfuly.');
+						if(!empty($get_history)){//UPDATE INSERT HISTORY
+							HistoryStock::whereRaw( "SUBSTRING_INDEX(remarks, '|', '1') = '".$data[0]->id."'" )->delete();
+							
+							//Audit Log		
+							$username= auth()->user()->email; 
+							$ipAddress=$_SERVER['REMOTE_ADDR'];
+							$location='0';
+							$access_from=Browser::browserName();
+							$activity='Approve Entry Report Material Use ID="'.$data[0]->id.'"';
+							$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+							
+							return Redirect::to('/production-ent-material-use')->with('pesan', 'Approve Successfuly.');
+						}else{
+							return Redirect::to('/production-ent-material-use')->with('pesan_danger', 'There Is An Error.');
+						}				
 					}else{
-						return Redirect::to('/production-ent-material-use')->with('pesan', 'There Is An Error.');
-					}				
+						return Redirect::to('/production-ent-material-use')->with('pesan_danger', 'There Is An Error.');
+					}			
 				}else{
-					return Redirect::to('/production-ent-material-use')->with('pesan', 'There Is An Error.');
-				}			
+					return Redirect::to('/production-ent-material-use')->with('pesan_danger', 'There Is An Error.');
+				}
+				
 			}else{
-				return Redirect::to('/production-ent-material-use')->with('pesan', 'There Is An Error.');
+				return Redirect::to('/production-ent-material-use')->with('pesan_danger', 'There Is An Error.');
 			}
-			
 		}else{
-			return Redirect::to('/production-ent-material-use')->with('pesan', 'There Is An Error.');
+			return Redirect::to('/production-ent-material-use')->with('pesan_danger', 'Tidak diperkenankan HOLD data. Terdapat data remaining yang sudah di proses sebagai stok.');
 		}
 	}
 	public function production_entry_material_use_delete($response_id){
@@ -1071,11 +1076,11 @@ class ProductionController extends Controller
 				
 				return Redirect::to('/production-ent-material-use')->with('pesan', 'Delete Successfuly.');				
 			}else{
-				return Redirect::to('/production-ent-material-use')->with('pesan', 'There Is An Error.');
+				return Redirect::to('/production-ent-material-use')->with('pesan_danger', 'There Is An Error.');
 			}	
 			
 		}else{
-			return Redirect::to('/production-ent-material-use')->with('pesan', 'There Is An Error.');
+			return Redirect::to('/production-ent-material-use')->with('pesan_danger', 'There Is An Error.');
 		}
 	}
 	/*
@@ -1101,7 +1106,7 @@ class ProductionController extends Controller
 			
 			return Redirect::to('/production-ent-material-use')->with('pesan', 'Approve Successfuly.');
 		}else{
-			return Redirect::to('/production-ent-material-use')->with('pesan', 'There Is An Error.');
+			return Redirect::to('/production-ent-material-use')->with('pesan_danger', 'There Is An Error.');
 		}
 	}
 	public function production_entry_material_use_hold_old($response_id){		
@@ -1126,7 +1131,7 @@ class ProductionController extends Controller
 			
 			return Redirect::to('/production-ent-material-use')->with('pesan', 'Hold Successfuly.');
 		}else{
-			return Redirect::to('/production-ent-material-use')->with('pesan', 'There Is An Error.');
+			return Redirect::to('/production-ent-material-use')->with('pesan_danger', 'There Is An Error.');
 		}
 	}
 	public function production_entry_material_use_delete($response_id){
@@ -1150,7 +1155,7 @@ class ProductionController extends Controller
 			
 			return Redirect::to('/production-ent-material-use')->with('pesan', 'Delete Successfuly.');
 		}else{
-			return Redirect::to('/production-ent-material-use')->with('pesan', 'There Is An Error.');
+			return Redirect::to('/production-ent-material-use')->with('pesan_danger', 'There Is An Error.');
 		}
 	}
 	*/
@@ -1172,7 +1177,7 @@ class ProductionController extends Controller
                 ->get();
 			return view('production.entry_material_use_print',compact('data','data_detail'));
 		}else{
-			return Redirect::to('/production-ent-material-use')->with('pesan', 'There Is An Error.');
+			return Redirect::to('/production-ent-material-use')->with('pesan_danger', 'There Is An Error.');
 		}
 		
     }
@@ -1313,7 +1318,7 @@ class ProductionController extends Controller
 			
 			return Redirect::to('/production-ent-material-use-detail/'.$response_id_rm)->with('pesan', 'Edit Detail Successfuly.');  			
 		}else{
-			return Redirect::to('/production-ent-material-use-detail/'.$response_id_rm)->with('pesan', 'There Is An Error.');
+			return Redirect::to('/production-ent-material-use-detail/'.$response_id_rm)->with('pesan_danger', 'There Is An Error.');
 		}
     }
 	
@@ -1358,11 +1363,11 @@ class ProductionController extends Controller
 				
 				return Redirect::to('/production-ent-material-use-detail/'.$id_rmu)->with('pesan', 'Delete Successfuly.');
 			}else{
-				return Redirect::to('/production-ent-material-use-detail/'.$id_rmu)->with('pesan', 'There Is An Error.');
+				return Redirect::to('/production-ent-material-use-detail/'.$id_rmu)->with('pesan_danger', 'There Is An Error.');
 			}
 			
 		}else{
-			return Redirect::to('/production-ent-material-use-detail/'.$id_rmu)->with('pesan', 'There Is An Error.');
+			return Redirect::to('/production-ent-material-use-detail/'.$id_rmu)->with('pesan_danger', 'There Is An Error.');
 		}
 	}	
 	//END ENTRY MATERIAL USE
@@ -2419,10 +2424,10 @@ class ProductionController extends Controller
 				
 				return Redirect::to('/production-ent-report-blow-detail/'.$response_id_rb)->with('pesan', 'Update Successfuly.');  	
 			}else{
-				return Redirect::to('/production-ent-report-blow-detail/'.$response_id_rb)->with('pesan', 'There Is An Error.');
+				return Redirect::to('/production-ent-report-blow-detail/'.$response_id_rb)->with('pesan_danger', 'There Is An Error.');
 			}
 		}else{
-			return Redirect::to('/production-ent-report-blow-detail/'.$response_id_rb)->with('pesan', 'There Is An Error.');
+			return Redirect::to('/production-ent-report-blow-detail/'.$response_id_rb)->with('pesan_danger', 'There Is An Error.');
 		}
 		
     }
@@ -2562,7 +2567,7 @@ class ProductionController extends Controller
 			
 			return Redirect::to('/production-ent-report-blow-detail/'.$response_id_rb)->with('pesan', 'Update Successfuly.');  			
 		}else{
-			return Redirect::to('/production-ent-report-blow-detail/'.$response_id_rb)->with('pesan', 'There Is An Error.');
+			return Redirect::to('/production-ent-report-blow-detail/'.$response_id_rb)->with('pesan_danger', 'There Is An Error.');
 		}
 		
     }
