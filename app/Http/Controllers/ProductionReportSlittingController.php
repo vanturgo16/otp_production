@@ -1165,86 +1165,92 @@ class ProductionReportSlittingController extends Controller
 			->whereRaw( "sha1(report_sf_production_results.id_report_sfs) = '$id_rs'")
 			->groupBy('report_sf_production_results.id_report_sfs')
 			->get();
-		
-		$order_name = explode('|', $data_update[0]->note);			
-		$master_table = $data_update[0]->type_product=="WIP"?'master_wips':'master_product_fgs';
-		
-		if(!empty($data_update[0])){	
-			$data_product = DB::table($master_table)
-				->select('*')
-				->whereRaw( "id = '".$order_name[1]."'")
-				->get();
-			
-			if(!empty($data_product[0])){	
-				if($data_update[0]->good>0){
-					$validatedData = ([
-						'id_good_receipt_notes_details' => $data_update[0]->report_number,
-						'type_product' => $data_update[0]->type_product,
-						'id_master_products' => $order_name[1],
-						'qty' => $data_update[0]->good,
-						'type_stock' => 'Un Posted',
-						'date' => date("Y-m-d"),
-						'remarks' => 'From GOOD Posted'
-					]);	
-					$responseGood = HistoryStock::create($validatedData);
-					
-					if($responseGood){					
-						$stock_akhir = $data_product[0]->stock - $data_update[0]->good;				
-						
-						DB::table($master_table)->where('id', $order_name[1])->update(array('stock' => $stock_akhir)); 						
-					}
-				}
-				if($data_update[0]->hold>0){
-					$validatedData = ([
-						'id_good_receipt_notes_details' => $data_update[0]->report_number,
-						'type_product' => $data_update[0]->type_product,
-						'id_master_products' => $order_name[1],
-						'qty' => $data_update[0]->hold,
-						'type_stock' => 'Un Posted',
-						'date' => date("Y-m-d"),
-						'remarks' => 'From HOLD Posted'
-					]);	
-					$responseHold = HistoryStock::create($validatedData);
-				}
-				if($data_update[0]->reject>0){
-					$validatedData = ([
-						'id_good_receipt_notes_details' => $data_update[0]->report_number,
-						'type_product' => $data_update[0]->type_product,
-						'id_master_products' => $order_name[1],
-						'qty' => $data_update[0]->reject,
-						'type_stock' => 'Un Posted',
-						'date' => date("Y-m-d"),
-						'remarks' => 'From REJECT Posted'
-					]);	
-					$responseReject = HistoryStock::create($validatedData);
-				}
 				
-				if($responseGood or $responseHold or $responseReject){
-					
-					$validatedData = ([
-						'status' => 'Un Posted',
-					]);				
-					
-					ProductionEntryReportSF::where('report_number', $data_update[0]->report_number)
-						->update($validatedData);
-					
-					//Audit Log
-					$username= auth()->user()->email; 
-					$ipAddress=$_SERVER['REMOTE_ADDR'];
-					$location='0';
-					$access_from=Browser::browserName();
-					$activity='Un Posted Histori Stock Slitting Report Number ="'.$data_update[0]->report_number.'" (Good : '.$data_update[0]->good.', Hold : '.$data_update[0]->hold.', Reject : '.$data_update[0]->reject.')';
-					$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+		
+		if(!empty($data_update[0])){
+			
+			$master_table = $data_update[0]->type_product=="WIP"?'master_wips':'master_product_fgs';
+			$order_name = explode('|', $data_update[0]->note);	
+			
+			if(count($order_name)>1){
+				$data_product = DB::table($master_table)
+					->select('*')
+					->whereRaw( "id = '".$order_name[1]."'")
+					->get();
+				
+				if(!empty($data_product[0])){	
+					if($data_update[0]->good>0){
+						$validatedData = ([
+							'id_good_receipt_notes_details' => $data_update[0]->report_number,
+							'type_product' => $data_update[0]->type_product,
+							'id_master_products' => $order_name[1],
+							'qty' => $data_update[0]->good,
+							'type_stock' => 'Un Posted',
+							'date' => date("Y-m-d"),
+							'remarks' => 'From GOOD Posted'
+						]);	
+						$responseGood = HistoryStock::create($validatedData);
 						
-					return Redirect::to('/production-ent-report-slitting')->with('pesan', 'Update Stock Successfuly.');
+						if($responseGood){					
+							$stock_akhir = $data_product[0]->stock - $data_update[0]->good;				
+							
+							DB::table($master_table)->where('id', $order_name[1])->update(array('stock' => $stock_akhir)); 						
+						}
+					}
+					if($data_update[0]->hold>0){
+						$validatedData = ([
+							'id_good_receipt_notes_details' => $data_update[0]->report_number,
+							'type_product' => $data_update[0]->type_product,
+							'id_master_products' => $order_name[1],
+							'qty' => $data_update[0]->hold,
+							'type_stock' => 'Un Posted',
+							'date' => date("Y-m-d"),
+							'remarks' => 'From HOLD Posted'
+						]);	
+						$responseHold = HistoryStock::create($validatedData);
+					}
+					if($data_update[0]->reject>0){
+						$validatedData = ([
+							'id_good_receipt_notes_details' => $data_update[0]->report_number,
+							'type_product' => $data_update[0]->type_product,
+							'id_master_products' => $order_name[1],
+							'qty' => $data_update[0]->reject,
+							'type_stock' => 'Un Posted',
+							'date' => date("Y-m-d"),
+							'remarks' => 'From REJECT Posted'
+						]);	
+						$responseReject = HistoryStock::create($validatedData);
+					}
+					
+					if($responseGood or $responseHold or $responseReject){
+						
+						$validatedData = ([
+							'status' => 'Un Posted',
+						]);				
+						
+						ProductionEntryReportSF::where('report_number', $data_update[0]->report_number)
+							->update($validatedData);
+						
+						//Audit Log
+						$username= auth()->user()->email; 
+						$ipAddress=$_SERVER['REMOTE_ADDR'];
+						$location='0';
+						$access_from=Browser::browserName();
+						$activity='Un Posted Histori Stock Slitting Report Number ="'.$data_update[0]->report_number.'" (Good : '.$data_update[0]->good.', Hold : '.$data_update[0]->hold.', Reject : '.$data_update[0]->reject.')';
+						$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+							
+						return Redirect::to('/production-ent-report-slitting')->with('pesan', 'Update Stock Successfuly.');
+					}else{
+						return Redirect::to('/production-ent-report-slitting')->with('pesan_danger', 'There Is An Error.');
+					}
 				}else{
-					return Redirect::to('/production-ent-report-slitting')->with('pesan_danger', 'There Is An Error.');
+					return Redirect::to('/production-ent-report-slitting')->with('pesan_danger', 'There Is An Error. Data Produk Not Found.');
 				}
 			}else{
-				return Redirect::to('/production-ent-report-slitting')->with('pesan_danger', 'There Is An Error. Data Produk Not Found.');
+				return Redirect::to('/production-ent-report-slitting')->with('pesan_danger', 'Data Report Slitting Versi Aplikasi Sebelumnya Tidak Bisa Di Unposted');
 			}
 		}else{
-			return Redirect::to('/production-ent-report-slitting')->with('pesan_danger', 'There Is An Error.');
+			return Redirect::to('/production-ent-report-slitting')->with('pesan_danger', 'There Is An Error. May Be It Is Old Data.');
 		}
     }
 	public function production_entry_report_slitting_delete($response_id){
