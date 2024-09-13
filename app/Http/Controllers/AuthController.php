@@ -9,8 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 
 
-/*
-//PRODUCTION
+//PRODUCTION LOGIN
 class AuthController extends Controller
 {
     public function login(Request $request){
@@ -23,7 +22,7 @@ class AuthController extends Controller
 
     public function postlogin(Request $request)
     {
-     
+       
         $email=$request->email;
         $password=$request->password;
         $credentials = [
@@ -36,7 +35,7 @@ class AuthController extends Controller
             if($checkstatus == 1){
                 return redirect()->route('dashboard')->with('success','Successfully Entered The Application');
             } else {
-                return redirect()->route('login')->with('fail','Your Account Is Innactive');
+                return redirect()->route('login')->with('fail','Your Account Is Innactive');//jika login gagal dilakukan
             }
         }
         else{
@@ -53,7 +52,8 @@ class AuthController extends Controller
         }
     }
 }
-*/
+
+/*
 //DEV
 class AuthController extends Controller
 {
@@ -88,3 +88,4 @@ class AuthController extends Controller
         return redirect()->route('login')->with('success','Success Logout');
     }
 }
+*/
