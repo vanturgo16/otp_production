@@ -35,7 +35,7 @@ class AuthController extends Controller
             if($checkstatus == 1){
                 return redirect()->route('dashboard')->with('success','Successfully Entered The Application');
             } else {
-                return redirect()->route('login')->with('fail','Your Account Is Innactive');
+                return redirect()->route('login')->with('fail','Your Account Is Innactive');//jika login gagal dilakukan
             }
         }
         else{
