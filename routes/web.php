@@ -11,6 +11,7 @@ use App\Http\Controllers\TransDataKasController;
 //PRODUCTION
 use App\Http\Controllers\ProductionController;
 use App\Http\Controllers\ProductionReportSlittingController;
+use App\Http\Controllers\ProductionReportFoldingController;
 
 //Route Login
 Route::get('/', [AuthController::class, 'login'])->name('login');
@@ -111,8 +112,8 @@ Route::middleware(['auth', 'clear.permission.cache', 'permission:Produksi|Produk
 	
 	Route::post('/production-ent-report-slitting-update', [ProductionReportSlittingController::class, 'production_entry_report_slitting_update'])->name('production_entry_report_slitting_update');
 	
-	Route::get('/production-ent-report-slitting-json-preparation', [ProductionReportSlittingController::class, 'production_entry_report_slitting_json_preparation'])->name('production_entry_report_blow_json_preparation');
-	Route::get('/production-ent-report-slitting-json-hygiene', [ProductionReportSlittingController::class, 'production_entry_report_slitting_json_hygiene'])->name('production_entry_report_blow_json_hygiene');
+	Route::get('/production-ent-report-slitting-json-preparation', [ProductionReportSlittingController::class, 'production_entry_report_slitting_json_preparation'])->name('production_entry_report_slitting_json_preparation');
+	Route::get('/production-ent-report-slitting-json-hygiene', [ProductionReportSlittingController::class, 'production_entry_report_slitting_json_hygiene'])->name('production_entry_report_slitting_json_hygiene');
 	Route::get('/production-ent-report-slitting-json-update-stock', [ProductionReportSlittingController::class, 'production_entry_report_slitting_json_update_stock'])->name('production_entry_report_slitting_json_update_stock');
 	Route::get('/production-ent-report-slitting-json-update-stock-info', [ProductionReportSlittingController::class, 'production_entry_report_slitting_json_update_stock_info'])->name('production_entry_report_slitting_json_update_stock_info');
 	Route::get('/production-entry-report-slitting-update-stock/{id}', [ProductionReportSlittingController::class, 'production_entry_report_slitting_update_stock'])->name('production_entry_report_slitting_update_stock');	
@@ -122,12 +123,40 @@ Route::middleware(['auth', 'clear.permission.cache', 'permission:Produksi|Produk
 	Route::post('/production-entry-report-slitting-detail-production-result-add', [ProductionReportSlittingController::class, 'production_entry_report_slitting_detail_production_result_add'])->name('production_entry_report_slitting_detail_production_result_add');
 	Route::get('/production-entry-report-slitting-detail-production-result-edit/{id_rb}/{id_rb_pr}', [ProductionReportSlittingController::class, 'production_entry_report_slitting_detail_production_result_edit'])->name('production_entry_report_slitting_detail_production_result_edit');
 	Route::post('/production-entry-report-slitting-detail-production-result-edit-save', [ProductionReportSlittingController::class, 'production_entry_report_slitting_detail_production_result_edit_save'])->name('production_entry_report_slitting_detail_production_result_edit_save');
-	Route::post('/production-entry-report-slitting-detail-production-result-delete', [ProductionReportSlittingController::class, 'production_entry_report_slitting_detail_production_result_delete'])->name('production_entry_report_slitting_detail_production_result_delete');
-	
+	Route::post('/production-entry-report-slitting-detail-production-result-delete', [ProductionReportSlittingController::class, 'production_entry_report_slitting_detail_production_result_delete'])->name('production_entry_report_slitting_detail_production_result_delete');	
 	
 	
 	Route::get('/production-ent-report-slitting-print/{id}', [ProductionReportSlittingController::class, 'production_entry_report_slitting_print'])->name('production_entry_report_slitting_print');	
 	//END REPORT SLITTING
+	
+	
+	//START REPORT FOLDING
+	Route::get('/production-ent-report-folding', [ProductionReportFoldingController::class, 'production_entry_report_folding'])->name('production_entry_report_folding');
+	Route::get('/production-ent-report-folding-json', [ProductionReportFoldingController::class, 'production_entry_report_folding_json'])->name('production_entry_report_folding_json');
+	Route::get('/production-ent-report-folding-add', [ProductionReportFoldingController::class, 'production_entry_report_folding_add'])->name('production_entry_report_folding_add');
+	
+	Route::post('/production-ent-report-folding-save', [ProductionReportFoldingController::class, 'production_entry_report_folding_save'])->name('production_entry_report_folding_save');
+	
+	Route::get('/production-ent-report-folding-detail/{id}', [ProductionReportFoldingController::class, 'production_entry_report_folding_detail'])->name('production_entry_report_folding_detail');
+	
+	Route::post('/production-ent-report-folding-update', [ProductionReportFoldingController::class, 'production_entry_report_folding_update'])->name('production_entry_report_folding_update');
+	
+	Route::post('/production-entry-report-folding-detail-production-result-add', [ProductionReportFoldingController::class, 'production_entry_report_folding_detail_production_result_add'])->name('production_entry_report_folding_detail_production_result_add');
+	Route::get('/production-entry-report-folding-detail-production-result-edit/{id_rb}/{id_rb_pr}', [ProductionReportFoldingController::class, 'production_entry_report_folding_detail_production_result_edit'])->name('production_entry_report_folding_detail_production_result_edit');
+	Route::post('/production-entry-report-folding-detail-production-result-edit-save', [ProductionReportFoldingController::class, 'production_entry_report_folding_detail_production_result_edit_save'])->name('production_entry_report_folding_detail_production_result_edit_save');
+	Route::post('/production-entry-report-folding-detail-production-result-delete', [ProductionReportFoldingController::class, 'production_entry_report_folding_detail_production_result_delete'])->name('production_entry_report_folding_detail_production_result_delete');
+	
+	Route::get('/production-ent-report-folding-json-preparation', [ProductionReportFoldingController::class, 'production_entry_report_folding_json_preparation'])->name('production_entry_report_folding_json_preparation');
+	Route::get('/production-ent-report-folding-json-hygiene', [ProductionReportFoldingController::class, 'production_entry_report_folding_json_hygiene'])->name('production_entry_report_folding_json_hygiene');
+	Route::get('/production-ent-report-folding-json-update-stock', [ProductionReportFoldingController::class, 'production_entry_report_folding_json_update_stock'])->name('production_entry_report_folding_json_update_stock');
+	Route::get('/production-ent-report-folding-json-update-stock-info', [ProductionReportFoldingController::class, 'production_entry_report_folding_json_update_stock_info'])->name('production_entry_report_folding_json_update_stock_info');
+	
+	Route::get('/production-entry-report-folding-update-stock/{id}', [ProductionReportFoldingController::class, 'production_entry_report_folding_update_stock'])->name('production_entry_report_folding_update_stock');	
+	Route::get('/production-entry-report-folding-unposted/{id}', [ProductionReportFoldingController::class, 'production_entry_report_folding_unposted'])->name('production_entry_report_folding_unposted');
+	Route::get('/production-ent-report-folding-delete/{id}', [ProductionReportFoldingController::class, 'production_entry_report_folding_delete'])->name('production_entry_report_folding_delete');
+	
+	Route::get('/production-ent-report-folding-print/{id}', [ProductionReportFoldingController::class, 'production_entry_report_folding_print'])->name('production_entry_report_folding_print');	
+	//END REPORT FOLDING
 	
     //Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');

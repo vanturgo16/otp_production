@@ -9,12 +9,12 @@
             <div class="col-12">
                 <div class="page-title-box d-sm-flex align-items-center justify-content-between">
                     <!--h4 class="mb-sm-0 font-size-18"> Add Request Sparepart & Auxiliaries</h4-->
-					<a href="/production-ent-report-slitting" class="btn btn-dark waves-effect waves-light mb-3"> 
-					<i class="bx bx-list-ul" title="Back"></i> REPORT SLITTING</a>
+					<a href="/production-ent-report-folding" class="btn btn-dark waves-effect waves-light mb-3"> 
+					<i class="bx bx-list-ul" title="Back"></i> REPORT FOLDING</a>
                     <div class="page-title-right">
                         <ol class="breadcrumb m-0">
                             <li class="breadcrumb-item"><a href="javascript: void(0);">Production</a></li>
-                            <li class="breadcrumb-item active"> Add Report Slitting</li>
+                            <li class="breadcrumb-item active"> Add Report Folding</li>
                         </ol>
                     </div>
                 </div>
@@ -38,14 +38,14 @@
             <div class="col-lg-12">
                 <div class="card">
                     <div class="card-header">
-                        <h4 class="card-title">Report Slitting</h4>
+                        <h4 class="card-title">Report Folding</h4>
                         <!--  <p class="card-title-desc"> layout options : from inline, horizontal & custom grid implementations</p> -->
                     </div>
                     <div class="card-body p-4">
 
 						<div class="col-sm-12">
                             <div class="mt-4 mt-lg-0">
-								<form method="post" action="/production-ent-report-slitting-update" class="form-material m-t-40" enctype="multipart/form-data">
+								<form method="post" action="/production-ent-report-folding-update" class="form-material m-t-40" enctype="multipart/form-data">
 								@csrf
 									<input type="hidden" class="form-control" name="request_id" value="{{ Request::segment(2) }}">
 									<div class="row mb-4 field-wrapper required-field">
@@ -62,7 +62,18 @@
 												<div class="text-danger"><b>{{ $errors->first('date') }}</b></div>
 											@endif
 										</div>
-									</div>									
+									</div>				
+									<div class="row mb-4 field-wrapper required-field">
+										<label for="horizontal-firstname-input" class="col-sm-3 col-form-label">Order Name </label>
+										<div class="col-sm-9">										
+											<select class="form-select data-select2" name="id_master_products" id="id_master_products">
+												<option value="">** Please Select A Products</option>
+											</select>
+											@if($errors->has('id_master_products'))
+												<div class="text-danger"><b>{{ $errors->first('id_master_products') }}</b></div>
+											@endif
+										</div>
+									</div>
 									<div class="row mb-4 field-wrapper required-field">
 										<label for="horizontal-password-input" class="col-sm-3 col-form-label">Customers </label>
 										<div class="col-sm-9">
@@ -113,10 +124,23 @@
 										
 									<script>									
 										$(document).ready(function(){
-											//$('#id_work_orders').prop('selectedIndex', 0);
-											//$('#id_master_work_centers').prop('selectedIndex', 0);
-											//$('#id_master_regus').prop('selectedIndex', 0);
-											//$('#shift').prop('selectedIndex', 0);
+											$.ajax({
+												type: "GET",
+												url: "/json_get_produk",
+												data: { type_product : {!! "'".explode('|', $data[0]->order_name)[0]."'" !!}, id_master_products : {!! explode('|', $data[0]->order_name)[1] !!}, modul : 'folding' },//baru sampe sinihhh
+												dataType: "json",
+												beforeSend: function(e) {
+													if(e && e.overrideMimeType) {
+														e.overrideMimeType("application/json;charset=UTF-8");
+													}
+												},
+												success: function(response){
+													$("#id_master_products").html(response.list_products).show();
+												},
+												error: function (xhr, ajaxOptions, thrownError) {
+													alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
+												}
+											});
 											
 											$.ajax({
 												type: "GET",
@@ -239,7 +263,7 @@
 									<div class="row justify-content-end">
 										<div class="col-sm-9">
 											<div>											
-												<button type="submit" class="btn btn-success w-md" name="rb_update"><i class="bx bx-save" title="Back"></i> UPDATE</button>
+												<button type="submit" class="btn btn-success w-md" name="rf_update"><i class="bx bx-save" title="Back"></i> UPDATE</button>
 											</div>
 										</div>
 									</div>                        
@@ -258,7 +282,7 @@
 						<h4 class="card-title"><i data-feather="check-square"></i> Preparation Check</h4>
 					</div>
 					<div class="card-body p-4">
-						<form method="post" action="/production-ent-report-slitting-update" class="form-material m-t-40" enctype="multipart/form-data">
+						<form method="post" action="/production-ent-report-folding-update" class="form-material m-t-40" enctype="multipart/form-data">
 						@csrf
 							<input type="hidden" class="form-control" name="request_id" value="{{ Request::segment(2) }}">
 							<div class="row mb-3 field-wrapper">
@@ -349,6 +373,50 @@
 									@endif
 								</div>
 							</div><hr>
+							<div class="row mb-3 field-wrapper">
+								<label for="horizontal-firstname-input" class="col-sm-6 col-form-label"><i class="mdi mdi-arrow-right text-primary me-1"></i>Segitiga Pelipat <code>*</code></label>
+								<div class="col-sm-6">
+									<div class="form-check">
+										<input class="form-check-input" type="radio" name="pc_segitiga_pelipat" value="Ok"
+										{{ $data_detail_preparation[0]->segitiga_pelipat=="Ok"?'checked':''; }} >
+										<label class="form-check-label">
+											OK
+										</label>
+									</div>
+									<div class="form-check">
+										<input class="form-check-input" type="radio" name="pc_segitiga_pelipat" value="Not Ok"
+										{{ $data_detail_preparation[0]->segitiga_pelipat=="Not Ok"?'checked':''; }} >
+										<label>
+											Not OK
+										</label>
+									</div>
+									@if($errors->has('pc_segitiga_pelipat'))
+										<div class="text-danger"><b>{{ $errors->first('pc_segitiga_pelipat') }}</b></div>
+									@endif
+								</div>
+							</div><hr>
+							<div class="row mb-3 field-wrapper">
+								<label for="horizontal-firstname-input" class="col-sm-6 col-form-label"><i class="mdi mdi-arrow-right text-primary me-1"></i>Jarum Perforasi <code>*</code></label>
+								<div class="col-sm-6">
+									<div class="form-check">
+										<input class="form-check-input" type="radio" name="pc_jarum_perforasi" value="Ok"
+										{{ $data_detail_preparation[0]->jarum_perforasi=="Ok"?'checked':''; }} >
+										<label class="form-check-label">
+											OK
+										</label>
+									</div>
+									<div class="form-check">
+										<input class="form-check-input" type="radio" name="pc_jarum_perforasi" value="Not Ok"
+										{{ $data_detail_preparation[0]->jarum_perforasi=="Not Ok"?'checked':''; }} >
+										<label>
+											Not OK
+										</label>
+									</div>
+									@if($errors->has('pc_jarum_perforasi'))
+										<div class="text-danger"><b>{{ $errors->first('pc_jarum_perforasi') }}</b></div>
+									@endif
+								</div>
+							</div><hr>
 							
 							<div class="row justify-content-end">
 								<div class="col-sm-3">
@@ -368,7 +436,7 @@
 						
 					</div>
 					<div class="card-body p-4">
-						<form method="post" action="/production-ent-report-slitting-update" class="form-material m-t-40" enctype="multipart/form-data">
+						<form method="post" action="/production-ent-report-folding-update" class="form-material m-t-40" enctype="multipart/form-data">
 						@csrf
 							<input type="hidden" class="form-control" name="request_id" value="{{ Request::segment(2) }}">
 							<div class="row mb-3 field-wrapper">
@@ -488,7 +556,7 @@
 										
 									</div>
 									<div class="card-body p-4">
-										<form method="post" action="/production-entry-report-slitting-detail-production-result-add" class="form-material m-t-40" enctype="multipart/form-data">
+										<form method="post" action="/production-entry-report-folding-detail-production-result-add" class="form-material m-t-40" enctype="multipart/form-data">
 											@csrf
 											<div class="row mb-4 field-wrapper required-field">
 												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Start Time </label>
@@ -552,7 +620,7 @@
 													$.ajax({
 														type: "GET",
 														url: "/json_get_barcode",
-														data: { where : 'SLITTING START' },
+														data: { where : 'FOLDING START' },
 														dataType: "json",
 														beforeSend: function(e) {
 															if(e && e.overrideMimeType) {
@@ -600,7 +668,7 @@
 																}
 															},
 															success: function(response){
-																$("#id_master_products").html(response.list_products).show();
+																$("#id_master_products_detail").html(response.list_products).show();
 															},
 															error: function (xhr, ajaxOptions, thrownError) {
 																alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
@@ -613,11 +681,11 @@
 											<div class="row mb-4 field-wrapper">
 												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Product Info </label>
 												<div class="col-sm-8">
-													<select class="form-select data-select2" name="id_master_products" id="id_master_products">
+													<select class="form-select data-select2" name="id_master_products_detail" id="id_master_products_detail">
 														<option value="">** Please Select A Products</option>
 													</select>
-													@if($errors->has('id_master_products'))
-														<div class="text-danger"><b>{{ $errors->first('id_master_products') }}</b></div>
+													@if($errors->has('id_master_products_detail'))
+														<div class="text-danger"><b>{{ $errors->first('id_master_products_detail') }}</b></div>
 													@endif
 												</div>
 											</div> 
@@ -641,7 +709,7 @@
 													$.ajax({
 														type: "GET",
 														url: "/json_get_barcode",
-														data: { where : 'SLITTING' },
+														data: { where : 'FOLDING' },
 														dataType: "json",
 														beforeSend: function(e) {
 															if(e && e.overrideMimeType) {
@@ -812,14 +880,14 @@
 															
 															<td>	
 																<center>
-																	<form action="/production-entry-report-slitting-detail-production-result-delete" method="post" class="d-inline" enctype="multipart/form-data">
+																	<form action="/production-entry-report-folding-detail-production-result-delete" method="post" class="d-inline" enctype="multipart/form-data">
 																		@csrf		
-																		<input type="hidden" class="form-control" name="token_rs" value="{{ Request::segment(2) }}">
+																		<input type="hidden" class="form-control" name="token_rf" value="{{ Request::segment(2) }}">
 																		<button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure to delete this item ?')" value="{{ sha1($data_detail->id) }}" name="hapus_detail">
 																			<i class="bx bx-trash-alt" title="Delete" ></i>
 																		</button>
 																	</form>	
-																	<a href="/production-entry-report-slitting-detail-production-result-edit/{{ Request::segment(2) }}/{{ sha1($data_detail->id) }}" class="btn btn-info waves-effect waves-light">
+																	<a href="/production-entry-report-folding-detail-production-result-edit/{{ Request::segment(2) }}/{{ sha1($data_detail->id) }}" class="btn btn-info waves-effect waves-light">
 																		<i class="bx bx-edit-alt" title="Edit"></i>
 																	</a>
 																</center>											

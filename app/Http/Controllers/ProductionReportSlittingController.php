@@ -270,7 +270,8 @@ class ProductionReportSlittingController extends Controller
 				->selectRaw('SUM(IF(report_sf_production_results.status="Reject", 1, 0)) AS reject')
 				->rightJoin('report_sfs AS b', 'report_sf_production_results.id_report_sfs', '=', 'b.id')
 				->whereRaw( "sha1(report_sf_production_results.id_report_sfs) = $id_rs")
-				->groupBy('id_report_blows')
+				//->groupBy('id_report_blows')
+				->groupBy('id_report_sfs')
                 ->get();
 		//print_r($data);
 		if(!empty($data[0]->id_report_sfs)){
@@ -340,7 +341,8 @@ class ProductionReportSlittingController extends Controller
 				->selectRaw('SUM(IF(report_sf_production_results.status="Reject", 1, 0)) AS reject')
 				->rightJoin('report_sfs AS b', 'report_sf_production_results.id_report_sfs', '=', 'b.id')
 				->whereRaw( "sha1(report_sf_production_results.id_report_sfs) = $id_rs")
-				->groupBy('id_report_blows')
+				//->groupBy('id_report_blows')
+				->groupBy('id_report_sfs')
                 ->get();
 		//print_r($data);
 		if(!empty($data[0]->id_report_sfs)){
@@ -425,7 +427,8 @@ class ProductionReportSlittingController extends Controller
         return view('production.entry_report_slitting_add',compact('ms_departements','ms_tool_auxiliaries','ms_known_by','formattedCode'));			
     }
 	private function production_entry_report_slitting_create_code(){
-		$lastCode = ProductionEntryReportSF::orderBy('created_at', 'desc')
+		$lastCode = ProductionEntryReportSF::whereRaw( "left(report_number,2) = 'RS'")
+		->orderBy('created_at', 'desc')
         ->value(DB::raw('RIGHT(report_number, 6)'));
     
         // Jika tidak ada nomor urut sebelumnya, atur ke 0
@@ -824,6 +827,7 @@ class ProductionReportSlittingController extends Controller
 			->leftJoin('master_customers AS c', 'b.id_master_customers', '=', 'c.id')
 			->select('a.*','c.id AS id_master_customers')
 			->whereRaw( "left(wo_number,5) = 'WOSLT'")
+			->whereRaw( "a.id = '".$data[0]->id_work_orders."'")
 			//->whereRaw( "a.type_product = 'WIP'")
 			->get();
 			
@@ -900,11 +904,15 @@ class ProductionReportSlittingController extends Controller
 			
 			$validatedData['id_report_blows'] = $data_blow[0]->id_report_blows;
 			$validatedData['id_report_blow_production_result'] = $data_blow[0]->id;
-						
+			/*
 			$response = ProductionEntryReportSFProductionResult::where('id', $data[0]->id)
 				->where('id_report_blows', $data[0]->id_report_blows)
 				->update($validatedData);
-			
+			*/	
+			$response = ProductionEntryReportSFProductionResult::where('id', $data[0]->id)
+				->where('id', $data[0]->id)
+				->update($validatedData);
+				
 			/*
 			//Jika Barcode Bisa Digunakan Lagi, Sesuaikan status data barcode menjadi NULL
 			$updatedData['status'] = 'Un Used';
@@ -1123,7 +1131,7 @@ class ProductionReportSlittingController extends Controller
 					if($responseGood){					
 						$stock_akhir = $data_product[0]->stock + $data_update[0]->good;				
 						
-						DB::table($master_table)->where('id', $order_name[1])->update(array('stock' => $stock_akhir)); 						
+						DB::table($master_table)->where('id', $order_name[1])->update(array('stock' => $stock_akhir, 'updated_at' => date('Y-m-d H:i:s'))); 						
 					}
 					
 					$validatedData = ([
@@ -1194,7 +1202,7 @@ class ProductionReportSlittingController extends Controller
 						if($responseGood){					
 							$stock_akhir = $data_product[0]->stock - $data_update[0]->good;				
 							
-							DB::table($master_table)->where('id', $order_name[1])->update(array('stock' => $stock_akhir)); 						
+							DB::table($master_table)->where('id', $order_name[1])->update(array('stock' => $stock_akhir, 'updated_at' => date('Y-m-d H:i:s'))); 						
 						}
 					}
 					if($data_update[0]->hold>0){
@@ -1239,7 +1247,7 @@ class ProductionReportSlittingController extends Controller
 						$activity='Un Posted Histori Stock Slitting Report Number ="'.$data_update[0]->report_number.'" (Good : '.$data_update[0]->good.', Hold : '.$data_update[0]->hold.', Reject : '.$data_update[0]->reject.')';
 						$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
 							
-						return Redirect::to('/production-ent-report-slitting')->with('pesan', 'Unposted Successfuly.');
+						return Redirect::to('/production-ent-report-slitting')->with('pesan', 'Un Posted Successfuly.');
 					}else{
 						return Redirect::to('/production-ent-report-slitting')->with('pesan_danger', 'There Is An Error.');
 					}
