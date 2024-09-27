@@ -1817,14 +1817,30 @@ class ProductionController extends Controller
     {
         $type_product = request()->get('type_product');
         $id_master_products = request()->get('id_master_products');
+        $modul = !empty(request()->get('modul'))?request()->get('modul'):'';
         
 		$table = $type_product=='FG'?'master_product_fgs':'master_wips';
 		
-		$datas = DB::table($table)
-			->select('*')
-			->whereRaw( "id = '$id_master_products'")
-			->get();
+		if($id_master_products!=''){
 			
+			if($modul=='folding'){
+				$datas = DB::table($table)
+					->select('*')
+					->get();
+			}else{
+				
+				$datas = DB::table($table)
+					->select('*')
+					->whereRaw( "id = '$id_master_products'")
+					->get();
+			}
+			
+		}else{
+			$datas = DB::table($table)
+				->select('*')
+				->get();
+		}
+		
 		$lists = "<option value='' disabled='' selected=''>** Please Select A Product</option>";		
 		foreach($datas as $data){
 			$ukuran = $type_product=="FG"?$data->thickness." x ".$data->width." x ".$data->height:$data->thickness." x ".$data->width." x ".$data->length;
@@ -1905,6 +1921,45 @@ class ProductionController extends Controller
 				->select('a.*')
 				->whereRaw($where_query)
 				->get();	
+		}else if($where == "FOLDING START"){			
+			$datas = DB::table('barcode_detail as a')				
+				->leftJoin('report_sf_production_results as c', function($join) {
+					$join->on('a.barcode_number', '=', 'c.barcode_start')
+						 ->whereNotIn('a.barcode_number', function($query) {
+							 $query->select('barcode_start')
+								   ->from('report_sf_production_results');
+						 })
+						 ->where('c.type_result', '=', 'Folding');
+				})
+				
+				//Cek Status Report SLT START
+				->leftJoin('report_sf_production_results as d', function($join) {
+					$join->on('a.barcode_number', '=', 'd.barcode')
+						->where('d.type_result', '=', 'Slitting');
+				})				
+				->leftJoin('report_sfs as e', function($join) {
+					$join->on('d.id_report_sfs', '=', 'e.id');
+				})
+				->where('e.status', 'Closed')
+				//Cek Status Report SLT END
+				
+				->where('a.status', '=', 'In Stock SLT WIP')
+				->select('a.*')
+				->get();
+		}else if($where == "FOLDING"){
+			$where_query = "a.status IS NULL AND b.id_master_process_productions = '3'";
+			
+			if(!empty($key)){
+				$where_query .= " OR a.barcode_number = '$key'";
+			}
+			
+			$datas = DB::table('barcode_detail as a')
+				->leftJoin('barcodes as b', function($join) {
+					$join->on('a.id_barcode', '=', 'b.id');
+				})
+				->select('a.*')
+				->whereRaw($where_query)
+				->get();
 		}else{
 			$datas = DB::table('barcode_detail')
 					->select('*')
