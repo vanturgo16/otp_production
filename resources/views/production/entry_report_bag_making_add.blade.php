@@ -3,18 +3,18 @@
 @section('konten')
 <div class="page-content">
     <div class="container-fluid">
-    <form method="post" action="/production-ent-report-folding-save" class="form-material m-t-40" enctype="multipart/form-data">
+    <form method="post" action="/production-ent-report-bag-making-save" class="form-material m-t-40" enctype="multipart/form-data">
     @csrf
         <div class="row">
             <div class="col-12">
                 <div class="page-title-box d-sm-flex align-items-center justify-content-between">
                     <!--h4 class="mb-sm-0 font-size-18"> Add Request Sparepart & Auxiliaries</h4-->
-					<a href="/production-ent-report-folding" class="btn btn-dark waves-effect waves-light mb-3"> 
-					<i class="bx bx-list-ul" title="Back"></i> REPORT FOLDING</a>
+					<a href="/production-ent-report-bag-making" class="btn btn-dark waves-effect waves-light mb-3"> 
+					<i class="bx bx-list-ul" title="Back"></i> REPORT BAG MAKING</a>
                     <div class="page-title-right">
                         <ol class="breadcrumb m-0">
                             <li class="breadcrumb-item"><a href="javascript: void(0);">Production</a></li>
-                            <li class="breadcrumb-item active"> Add Report Folding</li>
+                            <li class="breadcrumb-item active"> Add Report Bag Making</li>
                         </ol>
                     </div>
                 </div>
@@ -25,7 +25,7 @@
             <div class="col-lg-12">
                 <div class="card">
                     <div class="card-header">
-                        <h4 class="card-title">Add Report Folding</h4>
+                        <h4 class="card-title">Add Report Bag Making</h4>
                         <!--  <p class="card-title-desc"> layout options : from inline, horizontal & custom grid implementations</p> -->
                     </div>
                     <div class="card-body p-4">
@@ -48,7 +48,7 @@
 										@endif
 									</div>
 								</div>
-								<div class="row mb-4 field-wrapper required-field">
+								<!--div class="row mb-4 field-wrapper required-field">
 									<label for="horizontal-firstname-input" class="col-sm-3 col-form-label">Order Name </label>
 									<div class="col-sm-9">										
 										<select class="form-select data-select2" name="id_master_products" id="id_master_products">
@@ -58,7 +58,7 @@
 											<div class="text-danger"><b>{{ $errors->first('id_master_products') }}</b></div>
 										@endif
 									</div>
-								</div>
+								</div-->
 								<div class="row mb-4 field-wrapper required-field">
 									<label for="horizontal-password-input" class="col-sm-3 col-form-label">Customers </label>
 									<div class="col-sm-9">
@@ -189,7 +189,7 @@
 										$.ajax({
 											type: "GET",
 											url: "/json_get_work_center",
-											data: { id_master_process_productions : '3' },
+											data: { id_master_process_productions : '1' },
 											dataType: "json",
 											beforeSend: function(e) {
 												if(e && e.overrideMimeType) {
