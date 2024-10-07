@@ -177,7 +177,7 @@
                                 <li><a href="/production-ent-report-blow" data-key="t-blog-list"><i data-feather="check-square"></i> Report Blow</a></li>
                                 <li><a href="/production-ent-report-slitting" data-key="t-blog-list"><i data-feather="check-square"></i> Report Slitting</a></li>
                                 <li><a href="/production-ent-report-folding" data-key="t-blog-list"><i data-feather="check-square"></i> Report Folding</a></li>
-                                <li><a href="/production-ent-report-bag-marketing" data-key="t-blog-list"><i data-feather="check-square"></i> Report Bag. Marketing</a></li>
+                                <li><a href="/production-ent-report-bag-making" data-key="t-blog-list"><i data-feather="check-square"></i> Report Bag Making</a></li>
                                 <li><a href="/production-ent-report-production" data-key="t-blog-list"><i data-feather="check-square"></i> Report Production</a></li>
                             </ul>
                         </li>

@@ -12,6 +12,7 @@ use App\Http\Controllers\TransDataKasController;
 use App\Http\Controllers\ProductionController;
 use App\Http\Controllers\ProductionReportSlittingController;
 use App\Http\Controllers\ProductionReportFoldingController;
+use App\Http\Controllers\ProductionReportBagMakingController;
 
 //Route Login
 Route::get('/', [AuthController::class, 'login'])->name('login');
@@ -157,6 +158,33 @@ Route::middleware(['auth', 'clear.permission.cache', 'permission:Produksi|Produk
 	
 	Route::get('/production-ent-report-folding-print/{id}', [ProductionReportFoldingController::class, 'production_entry_report_folding_print'])->name('production_entry_report_folding_print');	
 	//END REPORT FOLDING
+	
+	//START REPORT BAG MAKING
+	Route::get('/production-ent-report-bag-making', [ProductionReportBagMakingController::class, 'production_entry_report_bag_making'])->name('production_entry_report_bag_making');
+	Route::get('/production-ent-report-bag-making-json', [ProductionReportBagMakingController::class, 'production_entry_report_bag_making_json'])->name('production_entry_report_bag_making_json');
+	Route::get('/production-ent-report-bag-making-add', [ProductionReportBagMakingController::class, 'production_entry_report_bag_making_add'])->name('production_entry_report_bag_making_add');
+	
+	Route::post('/production-ent-report-bag-making-save', [ProductionReportBagMakingController::class, 'production_entry_report_bag_making_save'])->name('production_entry_report_bag_making_save');
+	
+	Route::get('/production-ent-report-bag-making-detail/{id}', [ProductionReportBagMakingController::class, 'production_entry_report_bag_making_detail'])->name('production_entry_report_bag_making_detail');
+	
+	Route::post('/production-ent-report-bag-making-update', [ProductionReportBagMakingController::class, 'production_entry_report_bag_making_update'])->name('production_entry_report_bag_making_update');
+	
+	Route::post('/production-entry-report-bag-making-detail-production-result-add', [ProductionReportBagMakingController::class, 'production_entry_report_bag_making_detail_production_result_add'])->name('production_entry_report_bag_making_detail_production_result_add');
+	Route::get('/production-entry-report-bag-making-detail-production-result-edit/{id_rb}/{id_rb_pr}', [ProductionReportBagMakingController::class, 'production_entry_report_bag_making_detail_production_result_edit'])->name('production_entry_report_bag_making_detail_production_result_edit');
+	Route::post('/production-entry-report-bag-making-detail-production-result-edit-save', [ProductionReportBagMakingController::class, 'production_entry_report_bag_making_detail_production_result_edit_save'])->name('production_entry_report_bag_making_detail_production_result_edit_save');
+	Route::post('/production-entry-report-bag-making-detail-production-result-delete', [ProductionReportBagMakingController::class, 'production_entry_report_bag_making_detail_production_result_delete'])->name('production_entry_report_bag_making_detail_production_result_delete');
+	
+	Route::post('/production-entry-report-bag-making-detail-waste-add', [ProductionReportBagMakingController::class, 'production_entry_report_bag_making_detail_waste_add'])->name('production_entry_report_bag_making_detail_waste_add');
+	Route::get('/production-entry-report-bag-making-detail-waste-edit/{id_rb}/{id_rb_w}', [ProductionReportBagMakingController::class, 'production_entry_report_bag_making_detail_waste_edit'])->name('production_entry_report_bag_making_detail_waste_edit');
+	Route::post('/production-entry-report-bag-making-detail-waste-edit-save', [ProductionReportBagMakingController::class, 'production_entry_report_bag_making_detail_waste_edit_save'])->name('production_entry_report_bag_making_detail_waste_edit_save');
+	Route::post('/production-entry-report-bag-making-detail-waste-delete', [ProductionReportBagMakingController::class, 'production_entry_report_bag_making_detail_waste_delete'])->name('production_entry_report_bag_making_detail_waste_delete');
+	
+	Route::get('/production-ent-report-bag-making-json-preparation', [ProductionReportBagMakingController::class, 'production_entry_report_bag_making_json_preparation'])->name('production_entry_report_bag_making_json_preparation');
+	Route::get('/production-ent-report-bag-making-json-hygiene', [ProductionReportBagMakingController::class, 'production_entry_report_bag_making_json_hygiene'])->name('production_entry_report_bag_making_json_hygiene');
+	
+	Route::get('/production-ent-report-bag-making-print/{id}', [ProductionReportBagMakingController::class, 'production_entry_report_bag_making_print'])->name('production_entry_report_bag_making_print');
+	//END REPORT BAG MAKING
 	
     //Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');

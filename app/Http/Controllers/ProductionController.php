@@ -1412,7 +1412,7 @@ class ProductionController extends Controller
 				$order_name = count($order_name)>1?$order_name[2]:$order_name[0];
 				//$order_name = $data->order_name;	
 				$status = empty($data->status)?"Tidak Tersedia":$data->status;			
-				$order_info = '<p>Order Name : '.$order_name.'<br><code>Customer : '.$data->name.'</code><br><footer class="blockquote-footer">Status : <cite>'.$status.'</cite></footer></p>';
+				$order_info = '<p><b>'.$order_name.'</b><br><code>Customer : '.$data->name.'</code><br><footer class="blockquote-footer">Status : <cite>'.$status.'</cite></footer></p>';
 				return $order_info;
 			})
 			->addColumn('team', function ($data) {				
@@ -1873,6 +1873,7 @@ class ProductionController extends Controller
     {
 		$where = request()->get('where');
 		$key = request()->get('barcode_number');
+		$wo = request()->get('wo_number');
         
 		if($where == "BLOW"){
 			$where_query = "a.status IS NULL AND b.id_master_process_productions = '2'";
@@ -1948,6 +1949,45 @@ class ProductionController extends Controller
 				->get();
 		}else if($where == "FOLDING"){
 			$where_query = "a.status IS NULL AND b.id_master_process_productions = '3'";
+			
+			if(!empty($key)){
+				$where_query .= " OR a.barcode_number = '$key'";
+			}
+			
+			$datas = DB::table('barcode_detail as a')
+				->leftJoin('barcodes as b', function($join) {
+					$join->on('a.id_barcode', '=', 'b.id');
+				})
+				->select('a.*')
+				->whereRaw($where_query)
+				->get();
+		}else if($where == "BAG START"){	
+			$jns_wo = substr($wo, 2, 3);
+			
+			$where = ($jns_wo=="SLT")?"In Stock SLT FG":"In Stock FLD";
+			
+			
+			$datas = DB::table('barcode_detail as a')
+				->leftJoin('barcodes as b', 'a.id_barcode', '=', 'b.id')
+				->leftJoin('report_bag_production_results as c', function($join) {
+					$join->on('a.barcode_number', '=', 'c.barcode_start')
+						 ->whereNotIn('a.barcode_number', function($query) {
+							 $query->select('barcode_start')
+								   ->from('report_bag_production_results');
+						 });
+						 //->where('c.type_result', '=', 'Slitting');
+				})
+				//Cek Status Report BLW START
+				->leftJoin('report_sf_production_results as d', 'a.barcode_number', '=', 'd.barcode')
+				->leftJoin('report_sfs as e', 'd.id_report_blows', '=', 'e.id')
+				->where('e.status', 'Closed')
+				//Cek Status Report BLW END
+				->where('a.status', $where)
+				->groupBy('a.barcode_number')
+				->select('a.*')
+				->get();
+		}else if($where == "BAG"){
+			$where_query = "a.status IS NULL AND b.id_master_process_productions = '1'";
 			
 			if(!empty($key)){
 				$where_query .= " OR a.barcode_number = '$key'";
