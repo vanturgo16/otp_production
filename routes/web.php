@@ -183,6 +183,8 @@ Route::middleware(['auth', 'clear.permission.cache', 'permission:Produksi|Produk
 	Route::get('/production-ent-report-bag-making-json-preparation', [ProductionReportBagMakingController::class, 'production_entry_report_bag_making_json_preparation'])->name('production_entry_report_bag_making_json_preparation');
 	Route::get('/production-ent-report-bag-making-json-hygiene', [ProductionReportBagMakingController::class, 'production_entry_report_bag_making_json_hygiene'])->name('production_entry_report_bag_making_json_hygiene');
 	
+	Route::get('/production-ent-report-bag-making-delete/{id}', [ProductionReportBagMakingController::class, 'production_entry_report_bag_making_delete'])->name('production_entry_report_bag_making_delete');
+	
 	Route::get('/production-ent-report-bag-making-print/{id}', [ProductionReportBagMakingController::class, 'production_entry_report_bag_making_print'])->name('production_entry_report_bag_making_print');
 	//END REPORT BAG MAKING
 	

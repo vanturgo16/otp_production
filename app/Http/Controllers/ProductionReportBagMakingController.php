@@ -149,7 +149,7 @@ class ProductionReportBagMakingController extends Controller
 							<a target="_blank" href="/production-ent-report-bag-making-detail/'.sha1($data->id).'" class="btn btn-outline-info waves-effect waves-light">
 								<i class="bx bx-edit-alt" title="Edit"></i> EDIT
 							</a>
-							<a onclick="'.$return_delete.'" href="#" class="btn btn-outline-danger waves-effect waves-light" onclick="return confirm('."'Anda yakin mau menghapus item ini ?'".')">
+							<a onclick="'.$return_delete.'" href="/production-ent-report-bag-making-delete/'.sha1($data->id).'" class="btn btn-outline-danger waves-effect waves-light" onclick="return confirm('."'Anda yakin mau menghapus item ini ?'".')">
 								<i class="bx bx-trash-alt" title="Delete" ></i> DELETE
 							</a>
 							<a target="_blank" href="/production-ent-report-bag-making-print/'.sha1($data->id).'" class="btn btn-dark waves-effect waves-light">
@@ -540,8 +540,8 @@ class ProductionReportBagMakingController extends Controller
 			$activity='Save Entry Report Bag Making ID="'.$response->id.'"';
 			$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);//tinggal uji insert
 			
-            //return Redirect::to('/production-ent-report-bag-making-detail/'.sha1($response->id))->with('pesan', 'Add Successfuly.');
-            return Redirect::to('/production-ent-report-bag-making');
+            return Redirect::to('/production-ent-report-bag-making-detail/'.sha1($response->id))->with('pesan', 'Add Successfuly.');
+            //return Redirect::to('/production-ent-report-bag-making');
         }
     }
 	public function production_entry_report_bag_making_detail($response_id){
@@ -1461,23 +1461,23 @@ class ProductionReportBagMakingController extends Controller
 			return Redirect::to('/production-ent-report-folding')->with('pesan_danger', 'There Is An Error. May Be It Is Old Data.');
 		}
     }
-	public function production_entry_report_folding_delete($response_id){
-		$id_rf = $response_id;
-		
-		$data_update = ProductionEntryReportSFProductionResult::select('b.report_number','c.type_product','b.order_name','report_sf_production_results.id_report_sfs', 'report_sf_production_results.id', 'report_sf_production_results.note')
-			->selectRaw('SUM(IF(report_sf_production_results.status="Good", 1, 0)) AS good')
-			->selectRaw('SUM(IF(report_sf_production_results.status="Hold", 1, 0)) AS hold')
-			->selectRaw('SUM(IF(report_sf_production_results.status="Reject", 1, 0)) AS reject')
-			->selectRaw('b.id AS id_rf')
-			->rightJoin('report_sfs AS b', 'report_sf_production_results.id_report_sfs', '=', 'b.id')
-			->rightJoin('work_orders AS c', 'report_sf_production_results.id_work_orders', '=', 'c.id')
-			->whereRaw( "sha1(report_sf_production_results.id_report_sfs) = '$id_rf'")
-			->groupBy('report_sf_production_results.id_report_sfs')
+	public function production_entry_report_bag_making_delete($response_id){
+		$id_rb = $response_id;
+		//echo $id_rb; exit;
+		$data_update = ProductionEntryReportBagMakingProductionResult::select('b.report_number','c.type_product','b.order_name','report_bag_production_results.id_report_bags', 'report_bag_production_results.id', 'report_bag_production_results.note')
+			//->selectRaw('SUM(IF(report_bag_production_results.status="Good", 1, 0)) AS good')
+			//->selectRaw('SUM(IF(report_bag_production_results.status="Hold", 1, 0)) AS hold')
+			//->selectRaw('SUM(IF(report_bag_production_results.status="Reject", 1, 0)) AS reject')
+			->selectRaw('b.id AS id_rb')
+			->rightJoin('report_bags AS b', 'report_bag_production_results.id_report_bags', '=', 'b.id')
+			->rightJoin('work_orders AS c', 'report_bag_production_results.id_work_orders', '=', 'c.id')
+			->whereRaw( "sha1(report_bag_production_results.id_report_bags) = '$id_rb'")
+			->groupBy('report_bag_production_results.id_report_bags')
 			->get();		
 		
 		if(!empty($data_update[0])){	
 			
-			
+			/*
 			$order_name = explode('|', $data_update[0]->note);			
 			$master_table = $data_update[0]->type_product=="WIP"?'master_wips':'master_product_fgs';
 			
@@ -1485,22 +1485,24 @@ class ProductionReportBagMakingController extends Controller
 				->select('*')
 				->whereRaw( "id = '".$order_name[1]."'")
 				->get();
-			
-			
-			if(!empty($data_product[0])){	
-				$data_detail = ProductionEntryReportSFProductionResult::select('*')
-					->whereRaw( "sha1(report_sf_production_results.id_report_sfs) = '$id_rf'")
+			*/
+			/*
+			if(!empty($data_product[0])){
+			*/			
+				$data_detail = ProductionEntryReportBagMakingProductionResult::select('*')
+					->whereRaw( "sha1(report_bag_production_results.id_report_bags) = '$id_rb'")
 					->get();
 					
 				if($data_detail){
-					$deleteHistori = HistoryStock::whereRaw( "id_good_receipt_notes_details = '".$data_update[0]->report_number."'" )->delete();
+					//$deleteHistori = HistoryStock::whereRaw( "id_good_receipt_notes_details = '".$data_update[0]->report_number."'" )->delete();
 					
-					$deleteHygiene = ProductionEntryReportSFHygiene::whereRaw( "id_report_sfs = '".$data_update[0]->id_rs."'" )->delete();
-					$deletePreparation = ProductionEntryReportSFPreparation::whereRaw( "id_report_sfs = '".$data_update[0]->id_rs."'" )->delete();
-					$deleteProductionResult = ProductionEntryReportSFProductionResult::whereRaw( "id_report_sfs = '".$data_update[0]->id_rs."'" )->delete();
-					$deleteFolding = ProductionEntryReportSF::whereRaw( "id = '".$data_update[0]->id_rf."'" )->delete();
+					$deleteHygiene = ProductionEntryReportBagMakingHygiene::whereRaw( "id_report_bags = '".$data_update[0]->id_rb."'" )->delete();
+					$deletePreparation = ProductionEntryReportBagMakingPreparation::whereRaw( "id_report_bags = '".$data_update[0]->id_rb."'" )->delete();
+					$deleteProductionResult = ProductionEntryReportBagMakingProductionResult::whereRaw( "id_report_bags = '".$data_update[0]->id_rb."'" )->delete();
+					$deleteProductionWaste = ProductionEntryReportBagMakingWaste::whereRaw( "id_report_bags = '".$data_update[0]->id_rb."'" )->delete();
+					$deleteBagMaking = ProductionEntryReportBagMaking::whereRaw( "id = '".$data_update[0]->id_rb."'" )->delete();
 					
-					if($deleteFolding){
+					if($deleteBagMaking){
 						$updatedData['status'] = null;	
 						
 						foreach($data_detail as $data){
@@ -1514,50 +1516,53 @@ class ProductionReportBagMakingController extends Controller
 						$ipAddress=$_SERVER['REMOTE_ADDR'];
 						$location='0';
 						$access_from=Browser::browserName();
-						$activity='Deleted Folding Report Number ="'.$data_update[0]->report_number.'" (Good : '.$data_update[0]->good.', Hold : '.$data_update[0]->hold.', Reject : '.$data_update[0]->reject.')';
+						$activity='Deleted Bag Making Report Number ="'.$data_update[0]->report_number.'"';
 						$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
 					
-						return Redirect::to('/production-ent-report-folding')->with('pesan', 'Delete Successfuly.');
+						return Redirect::to('/production-ent-report-bag-making')->with('pesan', 'Delete Successfuly.');
 					}else{
-						return Redirect::to('/production-ent-report-folding')->with('pesan_danger', 'There Is An Error.');
+						return Redirect::to('/production-ent-report-bag-making')->with('pesan_danger', 'There Is An Error.');
 					}						
 				}else{
-					return Redirect::to('/production-ent-report-folding')->with('pesan_danger', 'There Is An Error.');
+					return Redirect::to('/production-ent-report-bag-making')->with('pesan_danger', 'There Is An Error.');
 				}
+			/*	
 			}else{
 				return Redirect::to('/production-ent-report-folding')->with('pesan_danger', 'There Is An Error. Data Produk Not Found.');
 			}
+			*/
 		}else{
-			$data_folding = DB::table('report_sfs')
-				->selectRaw('id AS id_rf')
+			$data_bag_making = DB::table('report_bags')
+				->selectRaw('id AS id_rb')
 				->selectRaw('report_number')
-				->whereRaw( "sha1(id) = '".$id_rf."'")
+				->whereRaw( "sha1(id) = '".$id_rb."'")
 				->get();
 			
 			//print_r($data_blow);exit;
-			if($data_folding){
-				$report_number = $data_folding[0]->report_number;
+			if($data_bag_making){
+				$report_number = $data_bag_making[0]->report_number;
 				
-				$deleteHygiene = ProductionEntryReportSFHygiene::whereRaw( "id_report_sfs = '".$data_folding[0]->id_rf."'" )->delete();
-				$deletePreparation = ProductionEntryReportSFPreparation::whereRaw( "id_report_sfs = '".$data_folding[0]->id_rf."'" )->delete();
-				$deleteProductionResult = ProductionEntryReportSFProductionResult::whereRaw( "id_report_sfs = '".$data_folding[0]->id_rf."'" )->delete();
-				$deleteFolding = ProductionEntryReportSF::whereRaw( "id = '".$data_folding[0]->id_rf."'" )->delete();
+				$deleteHygiene = ProductionEntryReportBagMakingHygiene::whereRaw( "id_report_bags = '".$data_bag_making[0]->id_rb."'" )->delete();
+				$deletePreparation = ProductionEntryReportBagMakingPreparation::whereRaw( "id_report_bags = '".$data_bag_making[0]->id_rb."'" )->delete();
+				$deleteProductionResult = ProductionEntryReportBagMakingProductionResult::whereRaw( "id_report_bags = '".$data_bag_making[0]->id_rb."'" )->delete();
+				$deleteProductionWaste = ProductionEntryReportBagMakingWaste::whereRaw( "id_report_bags = '".$data_bag_making[0]->id_rb."'" )->delete();
+				$deleteBagMaking = ProductionEntryReportBagMaking::whereRaw( "id = '".$data_bag_making[0]->id_rb."'" )->delete();
 				
-				if($deleteFolding){
+				if($deleteBagMaking){
 					//Audit Log
 					$username= auth()->user()->email; 
 					$ipAddress=$_SERVER['REMOTE_ADDR'];
 					$location='0';
 					$access_from=Browser::browserName();
-					$activity='Deleted Folding Report Number ="'.$report_number.'" (Good : "-", Hold : "-", Reject : "-")';
+					$activity='Deleted Bag Making Report Number ="'.$report_number.'"';
 					$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
 				
-					return Redirect::to('/production-ent-report-folding')->with('pesan', 'Delete Successfuly.');
+					return Redirect::to('/production-ent-report-bag-making')->with('pesan', 'Delete Successfuly.');
 				}else{
-					return Redirect::to('/production-ent-report-folding')->with('pesan_danger', 'There Is An Error.');
+					return Redirect::to('/production-ent-report-bag-making')->with('pesan_danger', 'There Is An Error.');
 				}	
 			}else{
-				return Redirect::to('/production-ent-report-folding')->with('pesan_danger', 'There Is An Error.');
+				return Redirect::to('/production-ent-report-bag-making')->with('pesan_danger', 'There Is An Error.');
 			}
 		}
     }
