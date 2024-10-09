@@ -297,16 +297,16 @@
 				<th class="text-right pr-1">Pcs </th>
 				<td class="text-left pl-2"> <b>{{ $sum_amount_result }}<b> </td>
 				<td class="text-left pl-2"> <b>{{ $sum_wrap_pcs }}<b> </td>
-				<td class="text-left pl-2"> <b>{{ $sum_wrap }}<b> </td>
-				<td class="text-left pl-2"> <b>{{ $sum_waste }}<b> </td>
+				<td class="text-left pl-2"> <b> - <b> </td>
+				<td class="text-left pl-2"> <b> - <b> </td>
 				<th colspan="2" rowspan="2"></th>
             </tr>
             <tr>
             	<th class="text-right pr-1">Kg </th>
-            	<td></td>
-            	<td></td>
-            	<td></td>
-            	<td></td>
+            	<td class="text-left pl-2"> <b> - <b> </td>
+				<td class="text-left pl-2"> <b> - <b> </td>
+            	<td class="text-left pl-2"> <b>{{ $sum_wrap }}<b> </td>
+				<td class="text-left pl-2"> <b>{{ $sum_waste }}<b> </td>
             </tr>
           </table>
         </div>
