@@ -117,7 +117,7 @@ class ProductionReportBagMakingController extends Controller
 				
 				if($data->status=='Un Posted'){
 					$update = '
-						<a data-bs-toggle="modal" onclick="showUpdateStock('.$id.')x" data-bs-target="#modal_update_stock" class="btn btn-success waves-effect btn-label waves-light"><i class="bx bx-sync label-icon"></i>  Update Stock</a>
+						<a data-bs-toggle="modal" onclick="showUpdateStock('.$id.')" data-bs-target="#modal_update_stock" class="btn btn-success waves-effect btn-label waves-light"><i class="bx bx-sync label-icon"></i>  Update Stock</a>
 						
 						<!--a href="#" class="btn btn-success waves-effect btn-label waves-light"><i class="bx bx-sync label-icon"></i>  Update Stock</a><br-->
 						<!--p class="mt-2"><code>Result : </code><br>
@@ -127,8 +127,8 @@ class ProductionReportBagMakingController extends Controller
 						</p-->';
 				}else{
 					$update = '
-						<a data-bs-toggle="modal" onclick="showUpdateStockInfo('.$id.')x" data-bs-target="#modal_update_stock_info" class="btn btn-info waves-effect btn-label waves-light"><i class="bx bx-info-circle  label-icon"></i>  Stock Updated</a><br>						
-						<a onclick="'.$return_unposted.'" href="/production-entry-report-folding-unposted/'.sha1($data->id).'" class="btn btn-primary waves-effect btn-label waves-light mt-1" onclick="return confirm('."'Anda yakin unposted data ?'".')">
+						<a data-bs-toggle="modal" onclick="showUpdateStockInfo('.$id.')" data-bs-target="#modal_update_stock_info" class="btn btn-info waves-effect btn-label waves-light"><i class="bx bx-info-circle  label-icon"></i>  Stock Updated</a><br>						
+						<a onclick="'.$return_unposted.'" href="/production-entry-report-bag-making-unposted/'.sha1($data->id).'" class="btn btn-primary waves-effect btn-label waves-light mt-1" onclick="return confirm('."'Anda yakin unposted data ?'".')">
 							<i class="bx bx-reply label-icon"></i> Un Posted
 						</a>';
 				}
@@ -280,7 +280,7 @@ class ProductionReportBagMakingController extends Controller
 		
 		<?php
 	}	
-	public function production_entry_report_folding_json_update_stock(Request $request){
+	public function production_entry_report_bag_making_json_update_stock(Request $request){
 		
 		/*
 		?>
@@ -288,69 +288,74 @@ class ProductionReportBagMakingController extends Controller
 		<?php
 		*/
 		
-		$id_rf = request()->get('id');
+		$id_rb = request()->get('id');
 		
-		$data = ProductionEntryReportSFProductionResult::select('b.report_number','report_sf_production_results.id_report_sfs', 'report_sf_production_results.id')
-				->selectRaw('SUM(IF(report_sf_production_results.status="Good", 1, 0)) AS good')
-				->selectRaw('SUM(IF(report_sf_production_results.status="Hold", 1, 0)) AS hold')
-				->selectRaw('SUM(IF(report_sf_production_results.status="Reject", 1, 0)) AS reject')
-				->rightJoin('report_sfs AS b', 'report_sf_production_results.id_report_sfs', '=', 'b.id')
-				->whereRaw( "sha1(report_sf_production_results.id_report_sfs) = $id_rf")
-				->groupBy('id_report_sfs')
+		$data = ProductionEntryReportBagMakingProductionResult::select('b.report_number','report_bag_production_results.id_report_bags', 'report_bag_production_results.id', 'report_bag_production_results.note')
+				->selectRaw('SUM(report_bag_production_results.amount_result) AS amount')
+				->selectRaw('SUM(report_bag_production_results.wrap) AS wrap')
+				->rightJoin('report_bags AS b', 'report_bag_production_results.id_report_bags', '=', 'b.id')
+				->whereRaw( "sha1(report_bag_production_results.id_report_bags) = $id_rb")
+				->groupBy('id_report_bags')
+				->groupBy('report_bag_production_results.note')
                 ->get();
-		//print_r($data);
-		if(!empty($data[0]->id_report_sfs)){
-		?>					
-			<!--form method="post" action="/production-entry-report-blow-update-stock" class="form-material m-t-40" enctype="multipart/form-data"-->
-			
-				<div class="card-header">
-					<p class="card-title-desc">
-						Production Result : Report Number <b><?= $data[0]->report_number; ?></b><br>
-						Total Product : <b><?= $data[0]->good+$data[0]->hold+$data[0]->reject; ?></b>
-					</p>
-				</div>
+		//print_r($data[0]);
+		if(!empty($data[0]->id_report_bags)){
+			if(!empty($data[0]->note)){
+			?>					
+				<!--form method="post" action="/production-entry-report-blow-update-stock" class="form-material m-t-40" enctype="multipart/form-data"-->
+					<div class="card-header">
+						<p class="card-title-desc">
+							Production Result : Report Number <b><?= $data[0]->report_number; ?></b>
+						</p>
+					</div>
+					<?php foreach($data as $data_for) { ?>
+						<div class="card-body">
+							<p class="card-title-desc">
+								<?php $product = explode('|', $data_for->note); ?>
+								Product : <br><b><?= $product[2]; ?></b><br><br>
+							</p>
+							<div class="row g-4">	
+								<div class="col-sm-6">
+									<div class="alert alert-success alert-dismissible fade show px-4 mb-0 text-center" role="alert">
+										<p>Amount Result :</p>
+										<i class="mdi mdi-chart-bubble d-block display-4 mt-2 mb-3 text-success"></i>
+										<h5 class="text-success"><?= $data_for->amount; ?> Pcs</h5>
+									</div>
+								</div><!-- end col -->
+
+								<div class="col-sm-6">
+									<div class="alert alert-warning alert-dismissible fade show px-4 mb-0 text-center" role="alert">
+										<p>Sliccing On :</p>
+										<i class="mdi mdi-package-variant d-block display-4 mt-2 mb-3 text-warning"></i>
+										<h5 class="text-warning"><?= $data_for->wrap; ?> Bungkus</h5>
+									</div>
+								</div><!-- end col -->
+							</div><!-- end row -->
+						</div>
+					<?php }; ?>
+					
+					<div class="modal-footer">
+						<a href="/production-entry-report-bag-making-update-stock/<?= sha1($data[0]->id_report_bags); ?>" type="submit" class="btn btn-primary btn-lg"><i class="bx bx-save" title="Update"></i> UPDATE</a>
+						<!--a href="#" type="submit" class="btn btn-primary btn-lg"><i class="bx bx-save" title="Update"></i> UPDATE</a-->
+					</div>
+				<!--/form-->
+			<?php
+			}else{
+			?>
 				<div class="card-body">
-					<div class="row g-4">
-						<div class="col-sm-4">
-							<div class="alert alert-success alert-dismissible fade show px-4 mb-0 text-center" role="alert">
-								<i class="mdi mdi-check-all d-block display-4 mt-2 mb-3 text-success"></i>
-								<h5 class="text-success"><?= $data[0]->good; ?></h5>
-								<p>Good Product</p>
-							</div>
-						</div><!-- end col -->
-
-						<div class="col-sm-4">
-							<div class="alert alert-warning alert-dismissible fade show px-4 mb-0 text-center" role="alert">
-								<i class="mdi mdi-alert-outline d-block display-4 mt-2 mb-3 text-warning"></i>
-								<h5 class="text-warning"><?= $data[0]->hold; ?></h5>
-								<p>Hold Product</p>
-							</div>
-						</div><!-- end col -->
-
-						<div class="col-sm-4">
-							<div class="alert alert-danger alert-dismissible fade show px-4 mb-0 text-center" role="alert">
-								<i class="mdi mdi-block-helper d-block display-4 mt-2 mb-3 text-danger"></i>
-								<h5 class="text-danger"><?= $data[0]->reject; ?></h5>
-								<p>Reject Product</p>
-							</div>
-						</div><!-- end col -->
-					</div><!-- end row -->
+					<p class="card-title-desc">Production Result : TIDAK TERSEDIA</b></p>
 				</div>
-				<div class="modal-footer">
-					<a href="/production-entry-report-folding-update-stock/<?= sha1($data[0]->id_report_sfs); ?>" type="submit" class="btn btn-primary btn-lg"><i class="bx bx-save" title="Update"></i> UPDATE</a>
-					<!--a href="#" type="submit" class="btn btn-primary btn-lg"><i class="bx bx-save" title="Update"></i> UPDATE</a-->
-				</div>
-			<!--/form-->
-		<?php
+			<?php
+			}
 		}else{
 		?>
 			<div class="card-body">
 				<p class="card-title-desc">Production Result : TIDAK TERSEDIA</b></p>
 			</div>
 		<?php
-		}
+		}	
 	}	
-	public function production_entry_report_folding_json_update_stock_info(Request $request){
+	public function production_entry_report_bag_making_json_update_stock_info(Request $request){
 		
 		/*
 		?>
@@ -358,63 +363,67 @@ class ProductionReportBagMakingController extends Controller
 		<?php
 		*/
 		
-		$id_rs = request()->get('id');
+		$id_rb = request()->get('id');
 		
-		$data = ProductionEntryReportSFProductionResult::select('b.report_number','report_sf_production_results.id_report_sfs', 'report_sf_production_results.id')
-				->selectRaw('SUM(IF(report_sf_production_results.status="Good", 1, 0)) AS good')
-				->selectRaw('SUM(IF(report_sf_production_results.status="Hold", 1, 0)) AS hold')
-				->selectRaw('SUM(IF(report_sf_production_results.status="Reject", 1, 0)) AS reject')
-				->rightJoin('report_sfs AS b', 'report_sf_production_results.id_report_sfs', '=', 'b.id')
-				->whereRaw( "sha1(report_sf_production_results.id_report_sfs) = $id_rs")
-				->groupBy('id_report_sfs')
+		$data = ProductionEntryReportBagMakingProductionResult::select('b.report_number','report_bag_production_results.id_report_bags', 'report_bag_production_results.id', 'report_bag_production_results.note')
+				->selectRaw('SUM(report_bag_production_results.amount_result) AS amount')
+				->selectRaw('SUM(report_bag_production_results.wrap) AS wrap')
+				->rightJoin('report_bags AS b', 'report_bag_production_results.id_report_bags', '=', 'b.id')
+				->whereRaw( "sha1(report_bag_production_results.id_report_bags) = $id_rb")
+				->groupBy('id_report_bags')
+				->groupBy('report_bag_production_results.note')
                 ->get();
-		//print_r($data);
-		if(!empty($data[0]->id_report_sfs)){
-		?>					
-			<!--form method="post" action="/production-entry-report-blow-update-stock" class="form-material m-t-40" enctype="multipart/form-data"-->
-			
-				<div class="card-header">
-					<p class="card-title-desc">
-						Production Result : Report Number <b><?= $data[0]->report_number; ?></b><br>
-						Total Product : <b><?= $data[0]->good+$data[0]->hold+$data[0]->reject; ?></b>
-					</p>
-				</div>
+				
+		if(!empty($data[0]->id_report_bags)){
+			if(!empty($data[0]->note)){
+				?>					
+				<!--form method="post" action="/production-entry-report-blow-update-stock" class="form-material m-t-40" enctype="multipart/form-data"-->
+					<div class="card-header">
+						<p class="card-title-desc">
+							Production Result : Report Number <b><?= $data[0]->report_number; ?></b>
+						</p>
+					</div>
+					<?php foreach($data as $data_for) { ?>
+						<div class="card-body">
+							<p class="card-title-desc">
+								<?php $product = explode('|', $data_for->note); ?>
+								Product : <br><b><?= $product[2]; ?></b><br><br>
+							</p>
+							<div class="row g-4">	
+								<div class="col-sm-6">
+									<div class="alert alert-success alert-dismissible fade show px-4 mb-0 text-center" role="alert">
+										<p>Amount Result :</p>
+										<i class="mdi mdi-chart-bubble d-block display-4 mt-2 mb-3 text-success"></i>
+										<h5 class="text-success"><?= $data_for->amount; ?> Pcs</h5>
+									</div>
+								</div><!-- end col -->
+
+								<div class="col-sm-6">
+									<div class="alert alert-warning alert-dismissible fade show px-4 mb-0 text-center" role="alert">
+										<p>Sliccing On :</p>
+										<i class="mdi mdi-package-variant d-block display-4 mt-2 mb-3 text-warning"></i>
+										<h5 class="text-warning"><?= $data_for->wrap; ?> Bungkus</h5>
+									</div>
+								</div><!-- end col -->
+							</div><!-- end row -->
+						</div>
+					<?php }; ?>
+			<?php
+			}else{
+			?>
+				
 				<div class="card-body">
-					<div class="row g-4">
-						<div class="col-sm-4">
-							<div class="alert alert-success alert-dismissible fade show px-4 mb-0 text-center" role="alert">
-								<i class="mdi mdi-check-all d-block display-4 mt-2 mb-3 text-success"></i>
-								<h5 class="text-success"><?= $data[0]->good; ?></h5>
-								<p>Good Product</p>
-							</div>
-						</div><!-- end col -->
-
-						<div class="col-sm-4">
-							<div class="alert alert-warning alert-dismissible fade show px-4 mb-0 text-center" role="alert">
-								<i class="mdi mdi-alert-outline d-block display-4 mt-2 mb-3 text-warning"></i>
-								<h5 class="text-warning"><?= $data[0]->hold; ?></h5>
-								<p>Hold Product</p>
-							</div>
-						</div><!-- end col -->
-
-						<div class="col-sm-4">
-							<div class="alert alert-danger alert-dismissible fade show px-4 mb-0 text-center" role="alert">
-								<i class="mdi mdi-block-helper d-block display-4 mt-2 mb-3 text-danger"></i>
-								<h5 class="text-danger"><?= $data[0]->reject; ?></h5>
-								<p>Reject Product</p>
-							</div>
-						</div><!-- end col -->
-					</div><!-- end row -->
+					<p class="card-title-desc">Production Result Data Aplikasi Lama : TIDAK TERSEDIA</b></p>
 				</div>
-			<!--/form-->
-		<?php
+			<?php
+			}
 		}else{
 		?>
 			<div class="card-body">
 				<p class="card-title-desc">Production Result : TIDAK TERSEDIA</b></p>
 			</div>
 		<?php
-		}
+		}	
 	}
 	
 	public function production_entry_report_bag_making_add(Request $request){
@@ -584,6 +593,7 @@ class ProductionReportBagMakingController extends Controller
 					->leftJoin('master_customers AS c', 'b.id_master_customers', '=', 'c.id')
 					->leftJoin('sales_orders AS d', 'a.id_sales_orders', '=', 'd.id')
 					->select('a.*','c.id AS id_master_customers')
+					->whereRaw( "left(wo_number,5) = 'WOBGM'")
 					->whereRaw( "a.type_product = 'FG'")
 					->whereRaw( "d.id_master_customers = '$id_master_customers'")
 					->get();
@@ -1253,212 +1263,143 @@ class ProductionReportBagMakingController extends Controller
 		}
 		
     }
-	public function production_entry_report_folding_update_stock($response_id){
+	public function production_entry_report_bag_making_update_stock($response_id){
 		//echo $response_id;exit;
 		//print_r($_POST);exit;
 		
-		$id_rf = $response_id;
+		$id_rb = $response_id;
 		
-		$data_update = ProductionEntryReportSFProductionResult::select('b.report_number','c.type_product','b.order_name','report_sf_production_results.id_report_sfs', 'report_sf_production_results.id', 'report_sf_production_results.note')
-			->selectRaw('SUM(IF(report_sf_production_results.status="Good", 1, 0)) AS good')
-			->selectRaw('SUM(IF(report_sf_production_results.status="Hold", 1, 0)) AS hold')
-			->selectRaw('SUM(IF(report_sf_production_results.status="Reject", 1, 0)) AS reject')
-			->rightJoin('report_sfs AS b', 'report_sf_production_results.id_report_sfs', '=', 'b.id')
-			->rightJoin('work_orders AS c', 'report_sf_production_results.id_work_orders', '=', 'c.id')
-			->whereRaw( "sha1(report_sf_production_results.id_report_sfs) = '$id_rf'")
-			->groupBy('report_sf_production_results.id_report_sfs')
-			//->groupBy('report_sf_production_results.id_work_orders')//jika 1 report bisa banyak wo
-			->get();
-			
-		//echo $data_update[0]->type_product;exit;
-		//echo $data_update->count();exit;
-		//print_r($data_update);exit;
-		/*
-		//jika 1 report bisa banyak wo
-		echo empty($data_update[0])?"kosong":"gak kosong";
-		foreach($data_update as $data){
-			echo $data->note.'--';
-		}
-		exit;
-		*/
-		$order_name = explode('|', $data_update[0]->note);			
-		$master_table = $data_update[0]->type_product=="WIP"?'master_wips':'master_product_fgs';
-		
-		if(!empty($data_update[0])){	
-			$data_product = DB::table($master_table)
-				->select('*')
-				->whereRaw( "id = '".$order_name[1]."'")
-				->get();
-			//print_r($data_product);exit;
-			if(!empty($data_product[0])){	
-				if($data_update[0]->good>0){
-					$validatedData = ([
-						'id_good_receipt_notes_details' => $data_update[0]->report_number,
-						'type_product' => $data_update[0]->type_product,
-						'id_master_products' => $order_name[1],
-						'qty' => $data_update[0]->good,
-						'type_stock' => 'IN',
-						'date' => date("Y-m-d"),
-					]);	
-					$responseGood = HistoryStock::create($validatedData);
-					
-					
-				}
-				if($data_update[0]->hold>0){
-					$validatedData = ([
-						'id_good_receipt_notes_details' => $data_update[0]->report_number,
-						'type_product' => $data_update[0]->type_product,
-						'id_master_products' => $order_name[1],
-						'qty' => $data_update[0]->hold,
-						'type_stock' => 'HOLD',
-						'date' => date("Y-m-d"),
-					]);	
-					$responseHold = HistoryStock::create($validatedData);
-				}
-				if($data_update[0]->reject>0){
-					$validatedData = ([
-						'id_good_receipt_notes_details' => $data_update[0]->report_number,
-						'type_product' => $data_update[0]->type_product,
-						'id_master_products' => $order_name[1],
-						'qty' => $data_update[0]->reject,
-						'type_stock' => 'REJECT',
-						'date' => date("Y-m-d"),
-					]);	
-					$responseReject = HistoryStock::create($validatedData);
-				}
-				
-				if($responseGood or $responseHold or $responseReject){
-					if($responseGood){					
-						$stock_akhir = $data_product[0]->stock + $data_update[0]->good;				
-						
-						DB::table($master_table)->where('id', $order_name[1])->update(array('stock' => $stock_akhir, 'updated_at' => date('Y-m-d H:i:s'))); 						
-					}
-					
-					$validatedData = ([
-						'status' => 'Closed',
-					]);				
-					
-					ProductionEntryReportSF::where('report_number', $data_update[0]->report_number)
-						->update($validatedData);
-					
-					//Audit Log
-					$username= auth()->user()->email; 
-					$ipAddress=$_SERVER['REMOTE_ADDR'];
-					$location='0';
-					$access_from=Browser::browserName();
-					$activity='Update Histori Stock Folding Report Number ="'.$data_update[0]->report_number.'" (Good : '.$data_update[0]->good.', Hold : '.$data_update[0]->hold.', Reject : '.$data_update[0]->reject.')';
-					$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
-						
-					return Redirect::to('/production-ent-report-folding')->with('pesan', 'Update Stock Successfuly.');
-				}else{
-					return Redirect::to('/production-ent-report-folding')->with('pesan_danger', 'There Is An Error.');
-				}
-			}else{
-				return Redirect::to('/production-ent-report-folding')->with('pesan_danger', 'There Is An Error. Data Produk Not Found.');
-			}
-		}else{
-			return Redirect::to('/production-ent-report-folding')->with('pesan_danger', 'There Is An Error.');
-		}
-    }
-	public function production_entry_report_folding_unposted($response_id){
-	
-		$id_rf = $response_id;
-		
-		$data_update = ProductionEntryReportSFProductionResult::select('b.report_number','c.type_product','b.order_name','report_sf_production_results.id_report_sfs', 'report_sf_production_results.id', 'report_sf_production_results.note')
-			->selectRaw('SUM(IF(report_sf_production_results.status="Good", 1, 0)) AS good')
-			->selectRaw('SUM(IF(report_sf_production_results.status="Hold", 1, 0)) AS hold')
-			->selectRaw('SUM(IF(report_sf_production_results.status="Reject", 1, 0)) AS reject')
-			->rightJoin('report_sfs AS b', 'report_sf_production_results.id_report_sfs', '=', 'b.id')
-			->rightJoin('work_orders AS c', 'report_sf_production_results.id_work_orders', '=', 'c.id')
-			->whereRaw( "sha1(report_sf_production_results.id_report_sfs) = '$id_rf'")
-			->groupBy('report_sf_production_results.id_report_sfs')
-			->get();
-				
+		$data_update = ProductionEntryReportBagMakingProductionResult::select('b.report_number','report_bag_production_results.id_report_bags', 'report_bag_production_results.id', 'report_bag_production_results.note')
+				->selectRaw('SUM(report_bag_production_results.amount_result) AS amount')
+				->selectRaw('SUM(report_bag_production_results.wrap) AS wrap')
+				->rightJoin('report_bags AS b', 'report_bag_production_results.id_report_bags', '=', 'b.id')
+				->whereRaw( "sha1(report_bag_production_results.id_report_bags) = '$id_rb'")
+				->groupBy('id_report_bags')
+				->groupBy('report_bag_production_results.note')
+                ->get();			
 		
 		if(!empty($data_update[0])){
-			
-			$master_table = $data_update[0]->type_product=="WIP"?'master_wips':'master_product_fgs';
-			$order_name = explode('|', $data_update[0]->note);	
-			
-			if(count($order_name)>1){
-				$data_product = DB::table($master_table)
+			foreach($data_update as $data_for){
+				$order_name = explode('|', $data_for->note);
+				
+				$data_product = DB::table('master_product_fgs')
 					->select('*')
 					->whereRaw( "id = '".$order_name[1]."'")
 					->get();
-				
+				//print_r($data_product);exit;
 				if(!empty($data_product[0])){	
-					if($data_update[0]->good>0){
-						$validatedData = ([
-							'id_good_receipt_notes_details' => $data_update[0]->report_number,
-							'type_product' => $data_update[0]->type_product,
-							'id_master_products' => $order_name[1],
-							'qty' => $data_update[0]->good,
-							'type_stock' => 'Un Posted',
-							'date' => date("Y-m-d"),
-							'remarks' => 'From GOOD Posted'
-						]);	
-						$responseGood = HistoryStock::create($validatedData);
-						
-						if($responseGood){					
-							$stock_akhir = $data_product[0]->stock - $data_update[0]->good;				
-							
-							DB::table($master_table)->where('id', $order_name[1])->update(array('stock' => $stock_akhir, 'updated_at' => date('Y-m-d H:i:s'))); 						
-						}
-					}
-					if($data_update[0]->hold>0){
-						$validatedData = ([
-							'id_good_receipt_notes_details' => $data_update[0]->report_number,
-							'type_product' => $data_update[0]->type_product,
-							'id_master_products' => $order_name[1],
-							'qty' => $data_update[0]->hold,
-							'type_stock' => 'Un Posted',
-							'date' => date("Y-m-d"),
-							'remarks' => 'From HOLD Posted'
-						]);	
-						$responseHold = HistoryStock::create($validatedData);
-					}
-					if($data_update[0]->reject>0){
-						$validatedData = ([
-							'id_good_receipt_notes_details' => $data_update[0]->report_number,
-							'type_product' => $data_update[0]->type_product,
-							'id_master_products' => $order_name[1],
-							'qty' => $data_update[0]->reject,
-							'type_stock' => 'Un Posted',
-							'date' => date("Y-m-d"),
-							'remarks' => 'From REJECT Posted'
-						]);	
-						$responseReject = HistoryStock::create($validatedData);
-					}
 					
-					if($responseGood or $responseHold or $responseReject){
+					$validatedData = ([
+						'id_good_receipt_notes_details' => $data_for->report_number,
+						'type_product' => $order_name[0],
+						'id_master_products' => $order_name[1],
+						'qty' => $data_for->amount,
+						'type_stock' => 'IN',
+						'date' => date("Y-m-d"),
+						'remarks' => 'Product : '.$data_for->note
+					]);	
+					$responseHistory = HistoryStock::create($validatedData);
 						
-						$validatedData = ([
-							'status' => 'Un Posted',
-						]);				
+					
+					if($responseHistory){		
+						$stock_akhir = $data_product[0]->stock + $data_for->amount;				
 						
-						ProductionEntryReportSF::where('report_number', $data_update[0]->report_number)
-							->update($validatedData);
+						DB::table('master_product_fgs')->where('id', $order_name[1])->update(array('stock' => $stock_akhir, 'updated_at' => date('Y-m-d H:i:s'))); 						
 						
-						//Audit Log
-						$username= auth()->user()->email; 
-						$ipAddress=$_SERVER['REMOTE_ADDR'];
-						$location='0';
-						$access_from=Browser::browserName();
-						$activity='Un Posted Histori Stock Folding Report Number ="'.$data_update[0]->report_number.'" (Good : '.$data_update[0]->good.', Hold : '.$data_update[0]->hold.', Reject : '.$data_update[0]->reject.')';
-						$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
-							
-						return Redirect::to('/production-ent-report-folding')->with('pesan', 'Un Posted Successfuly.');
-					}else{
-						return Redirect::to('/production-ent-report-folding')->with('pesan_danger', 'There Is An Error.');
 					}
 				}else{
-					return Redirect::to('/production-ent-report-folding')->with('pesan_danger', 'There Is An Error. Data Produk Not Found.');
+					return Redirect::to('/production-ent-report-bag-making')->with('pesan_danger', 'There Is An Error. Data Produk Not Found.');
 				}
+			}
+			
+			$validatedData = ([
+				'status' => 'Closed',
+			]);				
+			
+			ProductionEntryReportBagMaking::where('report_number', $data_update[0]->report_number)
+				->update($validatedData);
+			
+			//Audit Log
+			$username= auth()->user()->email; 
+			$ipAddress=$_SERVER['REMOTE_ADDR'];
+			$location='0';
+			$access_from=Browser::browserName();
+			$activity='Update Histori Stock Bag Making Report Number ="'.$data_update[0]->report_number.'"';
+			$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+				
+			return Redirect::to('/production-ent-report-bag-making')->with('pesan', 'Update Stock Successfuly.');
+		}else{
+			return Redirect::to('/production-ent-report-bag-making')->with('pesan_danger', 'There Is An Error.');
+		}
+    }
+	public function production_entry_report_bag_making_unposted($response_id){
+		$id_rb = $response_id;
+		
+		$data_update = ProductionEntryReportBagMakingProductionResult::select('b.report_number','report_bag_production_results.id_report_bags', 'report_bag_production_results.id', 'report_bag_production_results.note')
+				->selectRaw('SUM(report_bag_production_results.amount_result) AS amount')
+				->selectRaw('SUM(report_bag_production_results.wrap) AS wrap')
+				->rightJoin('report_bags AS b', 'report_bag_production_results.id_report_bags', '=', 'b.id')
+				->whereRaw( "sha1(report_bag_production_results.id_report_bags) = '$id_rb'")
+				->groupBy('id_report_bags')
+				->groupBy('report_bag_production_results.note')
+                ->get();	
+				
+		if(!empty($data_update[0])){
+			if(!empty($data_update[0]->note)){				
+				foreach($data_update as $data_for){
+					$order_name = explode('|', $data_for->note);
+					
+					$data_product = DB::table('master_product_fgs')
+						->select('*')
+						->whereRaw( "id = '".$order_name[1]."'")
+						->get();
+					//print_r($data_product);exit;
+					if(!empty($data_product[0])){	
+						
+						$validatedData = ([
+							'id_good_receipt_notes_details' => $data_for->report_number,
+							'type_product' => $order_name[0],
+							'id_master_products' => $order_name[1],
+							'qty' => $data_for->amount,
+							'type_stock' => 'Un Posted',
+							'date' => date("Y-m-d"),
+							'remarks' => 'Product : '.$data_for->note
+						]);	
+						$responseHistory = HistoryStock::create($validatedData);
+							
+						
+						if($responseHistory){		
+							$stock_akhir = $data_product[0]->stock - $data_for->amount;				
+							
+							DB::table('master_product_fgs')->where('id', $order_name[1])->update(array('stock' => $stock_akhir, 'updated_at' => date('Y-m-d H:i:s'))); 						
+							
+						}
+					}else{
+						return Redirect::to('/production-ent-report-bag-making')->with('pesan_danger', 'There Is An Error. Data Produk Not Found.');
+					}
+				}
+				
+				$validatedData = ([
+					'status' => 'Un Posted',
+				]);				
+				
+				ProductionEntryReportBagMaking::where('report_number', $data_update[0]->report_number)
+					->update($validatedData);
+				
+				//Audit Log
+				$username= auth()->user()->email; 
+				$ipAddress=$_SERVER['REMOTE_ADDR'];
+				$location='0';
+				$access_from=Browser::browserName();
+				$activity='Un Posted Histori Stock Bag Making Report Number ="'.$data_update[0]->report_number.'"';
+				$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+					
+				return Redirect::to('/production-ent-report-bag-making')->with('pesan', 'Update Stock Successfuly.');
 			}else{
-				return Redirect::to('/production-ent-report-folding')->with('pesan_danger', 'Data Report Folding Versi Aplikasi Sebelumnya Tidak Bisa Di Unposted');
+				return Redirect::to('/production-ent-report-bag-making')->with('pesan_danger', 'Data Report Bag Making Versi Aplikasi Sebelumnya Tidak Bisa Di Unposted.');
 			}
 		}else{
-			return Redirect::to('/production-ent-report-folding')->with('pesan_danger', 'There Is An Error. May Be It Is Old Data.');
+			return Redirect::to('/production-ent-report-bag-making')->with('pesan_danger', 'There Is An Error.');
 		}
     }
 	public function production_entry_report_bag_making_delete($response_id){

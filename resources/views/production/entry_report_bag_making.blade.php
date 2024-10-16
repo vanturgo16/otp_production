@@ -167,7 +167,7 @@
 									{
 										$.ajax({
 											type: "GET",
-											//url: "/production-ent-report-folding-json-update-stock",
+											url: "/production-ent-report-bag-making-json-update-stock",
 											data: "id='"+id+"'",
 											dataType: "html",
 											success: function (response) {
@@ -200,7 +200,7 @@
 									{
 										$.ajax({
 											type: "GET",
-											//url: "/production-ent-report-folding-json-update-stock-info",
+											url: "/production-ent-report-bag-making-json-update-stock-info",
 											data: "id='"+id+"'",
 											dataType: "html",
 											success: function (response) {
