@@ -1962,10 +1962,9 @@ class ProductionController extends Controller
 				->whereRaw($where_query)
 				->get();
 		}else if($where == "BAG START"){	
-			$jns_wo = substr($wo, 2, 3);
-			
-			$where = ($jns_wo=="SLT")?"In Stock SLT FG":"In Stock FLD";
-			
+			//$jns_wo = substr($wo, 2, 3);			
+			//$where = ($jns_wo=="SLT")?"In Stock SLT FG":"In Stock FLD";
+			$where_query = "a.status IN('In Stock SLT FG','In Stock FLD')";
 			
 			$datas = DB::table('barcode_detail as a')
 				->leftJoin('barcodes as b', 'a.id_barcode', '=', 'b.id')
@@ -1982,7 +1981,8 @@ class ProductionController extends Controller
 				->leftJoin('report_sfs as e', 'd.id_report_blows', '=', 'e.id')
 				->where('e.status', 'Closed')
 				//Cek Status Report BLW END
-				->where('a.status', $where)
+				//->where('a.status', $where)
+				->whereRaw($where_query)
 				->groupBy('a.barcode_number')
 				->select('a.*')
 				->get();

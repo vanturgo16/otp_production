@@ -182,7 +182,11 @@ Route::middleware(['auth', 'clear.permission.cache', 'permission:Produksi|Produk
 	
 	Route::get('/production-ent-report-bag-making-json-preparation', [ProductionReportBagMakingController::class, 'production_entry_report_bag_making_json_preparation'])->name('production_entry_report_bag_making_json_preparation');
 	Route::get('/production-ent-report-bag-making-json-hygiene', [ProductionReportBagMakingController::class, 'production_entry_report_bag_making_json_hygiene'])->name('production_entry_report_bag_making_json_hygiene');
+	Route::get('/production-ent-report-bag-making-json-update-stock', [ProductionReportBagMakingController::class, 'production_entry_report_bag_making_json_update_stock'])->name('production_entry_report_bag_making_json_update_stock');
+	Route::get('/production-ent-report-bag-making-json-update-stock-info', [ProductionReportBagMakingController::class, 'production_entry_report_bag_making_json_update_stock_info'])->name('production_entry_report_bag_making_json_update_stock_info');
 	
+	Route::get('/production-entry-report-bag-making-update-stock/{id}', [ProductionReportBagMakingController::class, 'production_entry_report_bag_making_update_stock'])->name('production_entry_report_bag_making_update_stock');	
+	Route::get('/production-entry-report-bag-making-unposted/{id}', [ProductionReportBagMakingController::class, 'production_entry_report_bag_making_unposted'])->name('production_entry_report_bag_making_unposted');
 	Route::get('/production-ent-report-bag-making-delete/{id}', [ProductionReportBagMakingController::class, 'production_entry_report_bag_making_delete'])->name('production_entry_report_bag_making_delete');
 	
 	Route::get('/production-ent-report-bag-making-print/{id}', [ProductionReportBagMakingController::class, 'production_entry_report_bag_making_print'])->name('production_entry_report_bag_making_print');
