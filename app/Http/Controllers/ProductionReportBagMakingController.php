@@ -1396,7 +1396,7 @@ class ProductionReportBagMakingController extends Controller
 					
 				return Redirect::to('/production-ent-report-bag-making')->with('pesan', 'Update Stock Successfuly.');
 			}else{
-				return Redirect::to('/production-ent-report-bag-making')->with('pesan_danger', 'Data Report Bag Making Versi Aplikasi Sebelumnya Tidak Bisa Di Unposted.');
+				return Redirect::to('/production-ent-report-bag-making')->with('pesan_danger', 'Data Report Bag Making Versi Aplikasi Sebelumnya Tidak Bisa Di Un Posted.');
 			}
 		}else{
 			return Redirect::to('/production-ent-report-bag-making')->with('pesan_danger', 'There Is An Error.');
