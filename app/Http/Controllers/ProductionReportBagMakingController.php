@@ -1434,8 +1434,9 @@ class ProductionReportBagMakingController extends Controller
 					->whereRaw( "sha1(report_bag_production_results.id_report_bags) = '$id_rb'")
 					->get();
 					
-				if($data_detail){
-					//$deleteHistori = HistoryStock::whereRaw( "id_good_receipt_notes_details = '".$data_update[0]->report_number."'" )->delete();
+				if($data_detail&&(!empty($data_update[0]->note))){
+					
+					$deleteHistori = HistoryStock::whereRaw( "id_good_receipt_notes_details = '".$data_update[0]->report_number."'" )->delete();
 					
 					$deleteHygiene = ProductionEntryReportBagMakingHygiene::whereRaw( "id_report_bags = '".$data_update[0]->id_rb."'" )->delete();
 					$deletePreparation = ProductionEntryReportBagMakingPreparation::whereRaw( "id_report_bags = '".$data_update[0]->id_rb."'" )->delete();
@@ -1469,7 +1470,7 @@ class ProductionReportBagMakingController extends Controller
 				}
 			/*	
 			}else{
-				return Redirect::to('/production-ent-report-folding')->with('pesan_danger', 'There Is An Error. Data Produk Not Found.');
+				return Redirect::to('/production-ent-report-bag-making')->with('pesan_danger', 'There Is An Error. Data Produk Not Found.');
 			}
 			*/
 		}else{
