@@ -1404,11 +1404,8 @@ class ProductionReportBagMakingController extends Controller
     }
 	public function production_entry_report_bag_making_delete($response_id){
 		$id_rb = $response_id;
-		//echo $id_rb; exit;
+		
 		$data_update = ProductionEntryReportBagMakingProductionResult::select('b.report_number','c.type_product','b.order_name','report_bag_production_results.id_report_bags', 'report_bag_production_results.id', 'report_bag_production_results.note')
-			//->selectRaw('SUM(IF(report_bag_production_results.status="Good", 1, 0)) AS good')
-			//->selectRaw('SUM(IF(report_bag_production_results.status="Hold", 1, 0)) AS hold')
-			//->selectRaw('SUM(IF(report_bag_production_results.status="Reject", 1, 0)) AS reject')
 			->selectRaw('b.id AS id_rb')
 			->rightJoin('report_bags AS b', 'report_bag_production_results.id_report_bags', '=', 'b.id')
 			->rightJoin('work_orders AS c', 'report_bag_production_results.id_work_orders', '=', 'c.id')
@@ -1417,62 +1414,45 @@ class ProductionReportBagMakingController extends Controller
 			->get();		
 		
 		if(!empty($data_update[0])){	
-			
-			/*
-			$order_name = explode('|', $data_update[0]->note);			
-			$master_table = $data_update[0]->type_product=="WIP"?'master_wips':'master_product_fgs';
-			
-			$data_product = DB::table($master_table)
-				->select('*')
-				->whereRaw( "id = '".$order_name[1]."'")
+						
+			$data_detail = ProductionEntryReportBagMakingProductionResult::select('*')
+				->whereRaw( "sha1(report_bag_production_results.id_report_bags) = '$id_rb'")
 				->get();
-			*/
-			/*
-			if(!empty($data_product[0])){
-			*/			
-				$data_detail = ProductionEntryReportBagMakingProductionResult::select('*')
-					->whereRaw( "sha1(report_bag_production_results.id_report_bags) = '$id_rb'")
-					->get();
+				
+			if($data_detail&&(!empty($data_update[0]->note))){
+				
+				$deleteHistori = HistoryStock::whereRaw( "id_good_receipt_notes_details = '".$data_update[0]->report_number."'" )->delete();
+				
+				$deleteHygiene = ProductionEntryReportBagMakingHygiene::whereRaw( "id_report_bags = '".$data_update[0]->id_rb."'" )->delete();
+				$deletePreparation = ProductionEntryReportBagMakingPreparation::whereRaw( "id_report_bags = '".$data_update[0]->id_rb."'" )->delete();
+				$deleteProductionResult = ProductionEntryReportBagMakingProductionResult::whereRaw( "id_report_bags = '".$data_update[0]->id_rb."'" )->delete();
+				$deleteProductionWaste = ProductionEntryReportBagMakingWaste::whereRaw( "id_report_bags = '".$data_update[0]->id_rb."'" )->delete();
+				$deleteBagMaking = ProductionEntryReportBagMaking::whereRaw( "id = '".$data_update[0]->id_rb."'" )->delete();
+				
+				if($deleteBagMaking){
+					$updatedData['status'] = null;	
 					
-				if($data_detail&&(!empty($data_update[0]->note))){
+					foreach($data_detail as $data){
+						DB::table('barcode_detail')
+							->where('barcode_number', $data->barcode)
+							->update($updatedData);
+					}			
 					
-					$deleteHistori = HistoryStock::whereRaw( "id_good_receipt_notes_details = '".$data_update[0]->report_number."'" )->delete();
-					
-					$deleteHygiene = ProductionEntryReportBagMakingHygiene::whereRaw( "id_report_bags = '".$data_update[0]->id_rb."'" )->delete();
-					$deletePreparation = ProductionEntryReportBagMakingPreparation::whereRaw( "id_report_bags = '".$data_update[0]->id_rb."'" )->delete();
-					$deleteProductionResult = ProductionEntryReportBagMakingProductionResult::whereRaw( "id_report_bags = '".$data_update[0]->id_rb."'" )->delete();
-					$deleteProductionWaste = ProductionEntryReportBagMakingWaste::whereRaw( "id_report_bags = '".$data_update[0]->id_rb."'" )->delete();
-					$deleteBagMaking = ProductionEntryReportBagMaking::whereRaw( "id = '".$data_update[0]->id_rb."'" )->delete();
-					
-					if($deleteBagMaking){
-						$updatedData['status'] = null;	
-						
-						foreach($data_detail as $data){
-							DB::table('barcode_detail')
-								->where('barcode_number', $data->barcode)
-								->update($updatedData);
-						}			
-						
-						//Audit Log
-						$username= auth()->user()->email; 
-						$ipAddress=$_SERVER['REMOTE_ADDR'];
-						$location='0';
-						$access_from=Browser::browserName();
-						$activity='Deleted Bag Making Report Number ="'.$data_update[0]->report_number.'"';
-						$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
-					
-						return Redirect::to('/production-ent-report-bag-making')->with('pesan', 'Delete Successfuly.');
-					}else{
-						return Redirect::to('/production-ent-report-bag-making')->with('pesan_danger', 'There Is An Error.');
-					}						
+					//Audit Log
+					$username= auth()->user()->email; 
+					$ipAddress=$_SERVER['REMOTE_ADDR'];
+					$location='0';
+					$access_from=Browser::browserName();
+					$activity='Deleted Bag Making Report Number ="'.$data_update[0]->report_number.'"';
+					$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+				
+					return Redirect::to('/production-ent-report-bag-making')->with('pesan', 'Delete Successfuly.');
 				}else{
 					return Redirect::to('/production-ent-report-bag-making')->with('pesan_danger', 'There Is An Error.');
-				}
-			/*	
+				}						
 			}else{
-				return Redirect::to('/production-ent-report-bag-making')->with('pesan_danger', 'There Is An Error. Data Produk Not Found.');
+				return Redirect::to('/production-ent-report-bag-making')->with('pesan_danger', 'There Is An Error.');
 			}
-			*/
 		}else{
 			$data_bag_making = DB::table('report_bags')
 				->selectRaw('id AS id_rb')
