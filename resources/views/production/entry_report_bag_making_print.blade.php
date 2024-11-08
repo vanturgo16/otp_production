@@ -266,7 +266,12 @@
 				<th class="text-center">(Pcs)</th>
 				<th class="text-center">(Bungkus)</th>
             </tr>
+			<tr>
+				<td class="text-center pt-2 pb-2" colspan="12">Sedang Di Desain Ulang</td>
+			</tr>
 			<?php if(!empty($data_detail_production[0])){ ?>
+				<?php exit; ?>
+				<?php print_r($data_detail_production);exit; ?>
 				<?php  $sum_amount_result = 0; $sum_wrap_pcs = 0; $sum_wrap = 0; $sum_waste = 0; ?>
 				@foreach ($data_detail_production as $data_detail)
 				<?php $order_names = explode('|', $data_detail->order_name_sf) ?>
@@ -279,10 +284,10 @@
 					<td class="pl-2">{{ $data_detail->barcode_start }}</td>
 					<td class="pl-2">{{ $note[3] }}</td>
 					<td class="pl-2">{{ $data_detail->amount_result }}</td><?php $sum_amount_result += $data_detail->amount_result; ?>
-					<td class="pl-2">{{ $data_detail->wrap_pcs }}</td><?php $sum_wrap_pcs += $data_detail->wrap_pcs; ?>
+					<td class="pl-2">{{ $data_detail->wrap }}</td><?php $sum_wrap_pcs += $data_detail->wrap; ?>
 					<td class="pl-2">{{ $data_detail->wrap }}</td><?php $sum_wrap += $data_detail->wrap; ?>
 					<td class="pl-2">{{ $data_detail->waste>0?$data_detail->waste:0; }}</td><?php $sum_waste += $data_detail->waste; ?>
-					<td class="pl-2">{{ $data_detail->barcode }}</td>
+					<td class="pl-2">{{ $data_detail->barcode_start }}</td>
 					<td class="pl-2">{{ $data_detail->wo_number }}</td>
 				</tr>
 				@endforeach
