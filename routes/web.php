@@ -189,7 +189,11 @@ Route::middleware(['auth', 'clear.permission.cache', 'permission:Produksi|Produk
 	Route::get('/production-entry-report-bag-making-unposted/{id}', [ProductionReportBagMakingController::class, 'production_entry_report_bag_making_unposted'])->name('production_entry_report_bag_making_unposted');
 	Route::get('/production-ent-report-bag-making-delete/{id}', [ProductionReportBagMakingController::class, 'production_entry_report_bag_making_delete'])->name('production_entry_report_bag_making_delete');
 	
-	Route::get('/production-ent-report-bag-making-print/{id}', [ProductionReportBagMakingController::class, 'production_entry_report_bag_making_print'])->name('production_entry_report_bag_making_print');
+	Route::get('/production-ent-report-bag-making-print/{id}', [ProductionReportBagMakingController::class, 'production_entry_report_bag_making_print'])->name('production_entry_report_bag_making_print');	
+	
+	Route::post('/production-entry-report-bag-making-wrap-add', [ProductionReportBagMakingController::class, 'production_entry_report_bag_making_wrap_add'])->name('production_entry_report_bag_making_wrap_add');
+	Route::post('/production-entry-report-bag-making-wrap-edit', [ProductionReportBagMakingController::class, 'production_entry_report_bag_making_wrap_edit'])->name('production_entry_report_bag_making_wrap_edit');
+	Route::post('/production-entry-report-bag-making-wrap-delete', [ProductionReportBagMakingController::class, 'production_entry_report_bag_making_wrap_delete'])->name('production_entry_report_bag_making_wrap_delete');
 	//END REPORT BAG MAKING
 	
     //Dashboard

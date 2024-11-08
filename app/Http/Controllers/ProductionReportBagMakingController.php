@@ -32,6 +32,7 @@ use App\Models\ProductionEntryReportBagMaking;
 use App\Models\ProductionEntryReportBagMakingHygiene;
 use App\Models\ProductionEntryReportBagMakingPreparation;
 use App\Models\ProductionEntryReportBagMakingProductionResult;
+use App\Models\ProductionEntryReportBagMakingProductionResultDetail;
 use App\Models\ProductionEntryReportBagMakingWaste;
 
 //END REQUEST SPAREPART AND AUXILIARIES
@@ -563,9 +564,18 @@ class ProductionReportBagMakingController extends Controller
 				
 				$data_detail_production = DB::table('report_bag_production_results AS a')
 						->leftJoin('work_orders AS b', 'a.id_work_orders', '=', 'b.id')
+						->leftJoin('report_bag_production_result_details AS c', function ($join) {
+							$join->on('a.id', '=', 'c.id_report_bag_production_results')
+								 ->on('a.id_report_bags', '=', 'c.id_report_bags')
+								 ->whereRaw('c.barcode!=""');
+						})
 						->select('a.*','b.wo_number')
+						->selectRaw('COUNT(c.barcode) AS count_detail_pr')
+						->selectRaw('SUM(c.wrap_pcs) AS sum_wrap_pcs_pr')
 						->whereRaw( "sha1(a.id_report_bags) = '$response_id'")
-						->get();	
+						->groupBy('a.id')
+						->get();
+								
 				/*
 				//Jika 1 Report hanya boleh 1 WO
 				if(!empty($data_detail_production[0])){
@@ -785,99 +795,128 @@ class ProductionReportBagMakingController extends Controller
 		}
     }
 	public function production_entry_report_bag_making_detail_production_result_add(Request $request){
-		//print_r($_POST);exit;
+		
         if ($request->has('savemore')) {
             return "Tombol Save & Add More diklik.";
         } elseif ($request->has('save')) {
-			
+			$request_id = $_POST['request_id'];		
+					
 			$barcode_start = $_POST['id_master_barcode_start'];
 			$data_slitting = ProductionEntryReportSFProductionResult::whereRaw( "report_sf_production_results.barcode = '$barcode_start'")
 				->select('*')
 				->get();
 			
-			//$type_wo = explode('|', $_POST['id_master_products']);
-			//echo $_POST['id_master_products'];exit;
-			//echo($data_blow[0]->id);exit;
-			//echo($data_slitting[0]->id_report_sfs);exit;
-			
-			if(!empty($data_slitting[0]->id_report_sfs)){
-				//print_r($_POST);exit;
-				$request_id = $_POST['request_id'];		
-				$data = ProductionEntryReportBagMaking::whereRaw( "sha1(report_bags.id) = '$request_id'")
-					->select('id')
+			if(!empty($data_slitting[0]->id_report_sfs) && $_POST['wrap'] > 0 ){
+				
+				//CEK KETERSEDIAAN BARCODE
+				$where_query = "a.status IS NULL AND b.id_master_process_productions = '1'";				
+				$data_barcode = DB::table('barcode_detail as a')
+					->leftJoin('barcodes as b', function($join) {
+						$join->on('a.id_barcode', '=', 'b.id');
+					})
+					->select('a.*')
+					->whereRaw($where_query)
+					->limit($_POST['wrap'])
 					->get();
 					
-				$pesan = [
-					'id_work_orders.required' => 'Cannot Be Empty',
-					'start.required' => 'Cannot Be Empty',
-					'finish.required' => 'Cannot Be Empty',
-					'id_master_barcode_start.required' => 'Cannot Be Empty',
-					'weight_starting.required' => 'Cannot Be Empty',
-					'amount_result.required' => 'Cannot Be Empty',
-					'wrap_pcs.required' => 'Cannot Be Empty',
-					'wrap.required' => 'Cannot Be Empty',
-					'id_master_barcode.required' => 'Cannot Be Empty',
-					    
-				];
-
-				$validatedData = $request->validate([
-					'id_work_orders' => 'required',
-					'start' => 'required',
-					'finish' => 'required',
-					'id_master_barcode_start' => 'required',
-					'weight_starting' => 'required',
-					'amount_result' => 'required',
-					'wrap_pcs' => 'required',
-					'wrap' => 'required',
-					'id_master_barcode' => 'required',
-					
-				], $pesan);			
-				
-				$validatedData['start_time'] = $_POST['start'];		
-				$validatedData['finish_time'] = $_POST['finish'];		
-				$validatedData['barcode_start'] = $_POST['id_master_barcode_start'];
-				$validatedData['barcode'] = $_POST['id_master_barcode'];
-				$validatedData['note'] = $_POST['id_master_products_detail'];
-				$validatedData['waste'] = $_POST['waste'];
-				$validatedData['keterangan'] = $_POST['keterangan'];
-				
-				unset($validatedData["start"]);
-				unset($validatedData["finish"]);
-				unset($validatedData["id_master_barcode_start"]);
-				unset($validatedData["id_master_barcode"]);
-				unset($validatedData["id_master_products_detail"]);
-				unset($validatedData["waste"]);
-				unset($validatedData["keterangan"]);
-				
-				$validatedData['id_report_bags'] = $data[0]->id;
-				$validatedData['id_report_sfs'] = $data_slitting[0]->id_report_sfs;
-				$validatedData['id_report_sf_production_results'] = $data_slitting[0]->id;
-				//$validatedData['type_result'] = 'Folding';
-				
-				$response = ProductionEntryReportBagMakingProductionResult::create($validatedData);
-				
-				if(!empty($response)){
-					//HARUS UPDATE STATUS BARCODE
-					//$instock_type = $type_wo[0] == 'WIP' ? 'In Stock SLT WIP' : 'In Stock SLT FG';		
-					
-					$updatedData['status'] = 'In Stock BAG';//pukul rata jenis nya join lagi berdasarkan wo
-				
-					DB::table('barcode_detail')
-					->where('barcode_number', $response->barcode)
-					->update($updatedData);
-					
-					
-					//Audit Log		
-					$username= auth()->user()->email; 
-					$ipAddress=$_SERVER['REMOTE_ADDR'];
-					$location='0';
-					$access_from=Browser::browserName();
-					$activity='Add Production Result Entry Report Bag Making ID ="'.$response->id.'"';
-					$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
-					
-					return Redirect::to('/production-ent-report-bag-making-detail/'.$request_id)->with('pesan', 'Add Successfuly.');
+				//echo count($data_barcode); exit;//baru sampe sini ya..
+				//print_r($data_barcode); exit;				
+				/*
+				if( count($data_barcode) >= $_POST['wrap']){					
+					echo $_POST['wrap']."stok tersedia".count($data_barcode);exit;
 				}else{
-					return Redirect::to('/production-ent-report-bag-making-detail/'.$request_id)->with('pesan_danger', 'There Is An Error.');
+					echo $_POST['wrap']."stok kurang".count($data_barcode);exit;
+				}
+				*/
+				
+				if( count($data_barcode) >= $_POST['wrap']){
+					$data = ProductionEntryReportBagMaking::whereRaw( "sha1(report_bags.id) = '$request_id'")
+						->select('id')
+						->get();			
+					//print_r($data[0]);exit;
+					$pesan = [
+						'id_work_orders.required' => 'Cannot Be Empty',
+						'start.required' => 'Cannot Be Empty',
+						'finish.required' => 'Cannot Be Empty',
+						'id_master_barcode_start.required' => 'Cannot Be Empty',
+						'weight_starting.required' => 'Cannot Be Empty',
+						'amount_result.required' => 'Cannot Be Empty',
+						//'wrap_pcs.required' => 'Cannot Be Empty',
+						'wrap.required' => 'Cannot Be Empty',
+						//'id_master_barcode.required' => 'Cannot Be Empty',
+							
+					];
+
+					$validatedData = $request->validate([
+						'id_work_orders' => 'required',
+						'start' => 'required',
+						'finish' => 'required',
+						'id_master_barcode_start' => 'required',
+						'weight_starting' => 'required',
+						'amount_result' => 'required',
+						//'wrap_pcs' => 'required',
+						'wrap' => 'required',
+						//'id_master_barcode' => 'required',
+						
+					], $pesan);			
+					
+					$validatedData['start_time'] = $_POST['start'];		
+					$validatedData['finish_time'] = $_POST['finish'];		
+					$validatedData['barcode_start'] = $_POST['id_master_barcode_start'];
+					//$validatedData['barcode'] = $_POST['id_master_barcode'];
+					$validatedData['note'] = $_POST['id_master_products_detail'];
+					$validatedData['waste'] = $_POST['waste'];
+					$validatedData['keterangan'] = $_POST['keterangan'];
+					
+					unset($validatedData["start"]);
+					unset($validatedData["finish"]);
+					unset($validatedData["id_master_barcode_start"]);
+					//unset($validatedData["id_master_barcode"]);
+					unset($validatedData["id_master_products_detail"]);
+					unset($validatedData["waste"]);
+					unset($validatedData["keterangan"]);
+					
+					$validatedData['id_report_bags'] = $data[0]->id;
+					$validatedData['id_report_sfs'] = $data_slitting[0]->id_report_sfs;
+					$validatedData['id_report_sf_production_results'] = $data_slitting[0]->id;
+					
+					$response = ProductionEntryReportBagMakingProductionResult::create($validatedData);
+					
+					if(!empty($response)){
+						/* UPDATE STATUS BARCODE
+						$updatedData['status'] = 'In Stock BAG';//pukul rata jenis nya join lagi berdasarkan wo
+					
+						DB::table('barcode_detail')
+						->where('barcode_number', $response->barcode)
+						->update($updatedData);
+						*/
+						foreach($data_barcode as $datas){
+							$data_detail = array(
+									'id_report_bags' => $data[0]->id,
+									'id_report_bag_production_results' => $response->id,
+									//'wrap_pcs' => '',
+									//'barcode' => '',
+									//'keterangan' => '',
+									'created_at' => date('Y-m-d H:i:s'),
+									'updated_at' => date('Y-m-d H:i:s')
+								);
+							ProductionEntryReportBagMakingProductionResultDetail::create($data_detail);
+						}						
+						
+						//Audit Log		
+						$username= auth()->user()->email; 
+						$ipAddress=$_SERVER['REMOTE_ADDR'];
+						$location='0';
+						$access_from=Browser::browserName();
+						$activity='Add Production Result Entry Report Bag Making ID ="'.$response->id.'"';
+						$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+						
+						return Redirect::to('/production-ent-report-bag-making-detail/'.$request_id)->with('pesan', 'Add Successfuly.');
+					}else{
+						return Redirect::to('/production-ent-report-bag-making-detail/'.$request_id)->with('pesan_danger', 'There Is An Error.');
+					}
+				}else{
+					return Redirect::to('/production-ent-report-bag-making-detail/'.$request_id)->with('pesan_danger', 'Jumlah Barcode Tidak Terpenuhi.');
 				}
 			}else{
 				return Redirect::to('/production-ent-report-bag-making-detail/'.$request_id)->with('pesan_danger', 'There Is An Error.');
@@ -901,20 +940,28 @@ class ProductionReportBagMakingController extends Controller
 			->leftJoin('master_customers AS c', 'b.id_master_customers', '=', 'c.id')
 			->leftJoin('sales_orders AS d', 'a.id_sales_orders', '=', 'd.id')
 			->select('a.*','c.id AS id_master_customers')
+			->whereRaw( "left(wo_number,5) = 'WOBGM'")
 			->whereRaw( "a.type_product = 'FG'")
 			->whereRaw( "d.id_master_customers = '$id_master_customers'")
 			->get();	
-			
+		
 		//print_r($data);exit;
 		if(!empty($data[0])){			
-			return view('production.entry_report_bag_making_detail_edit_production_result', compact('data','ms_work_orders'));			
+			$data_detail= DB::table('report_bag_production_result_details AS a')
+				//->leftJoin('work_orders AS b', 'a.id_work_orders', '=', 'b.id')
+				->select('a.*')
+				->whereRaw( "sha1(a.id_report_bags) = '$response_id_rb'")
+				->whereRaw( "sha1(a.id_report_bag_production_results) = '$response_id_rb_pr'")
+				->get();
+			
+			return view('production.entry_report_bag_making_detail_edit_production_result', compact('data','ms_work_orders','data_detail'));			
 		}else{
 			return Redirect::to('/production-ent-report-bag-making-detail/'.$response_id_rs)->with('pesan_danger', 'There Is An Error.');
 		}
     } 
 	public function production_entry_report_bag_making_detail_production_result_edit_save(Request $request){
 		
-		//sampe sini cek data sebelum edit terutama update status barcode
+		//sampe sini cek data sebelum edit terutama update status barcode versi baru nya
 		$response_id_rb = $_POST['token_rb'];
 		$response_id_rb_pr = $_POST['token_rb_pr'];
 		
@@ -939,9 +986,9 @@ class ProductionReportBagMakingController extends Controller
 				'id_master_barcode_start.required' => 'Cannot Be Empty',
 				'weight_starting.required' => 'Cannot Be Empty',
 				'amount_result.required' => 'Cannot Be Empty',
-				'wrap_pcs.required' => 'Cannot Be Empty',
+				//'wrap_pcs.required' => 'Cannot Be Empty',
 				'wrap.required' => 'Cannot Be Empty',
-				'id_master_barcode.required' => 'Cannot Be Empty',
+				//'id_master_barcode.required' => 'Cannot Be Empty',
 					
 			];
 
@@ -952,16 +999,16 @@ class ProductionReportBagMakingController extends Controller
 				'id_master_barcode_start' => 'required',
 				'weight_starting' => 'required',
 				'amount_result' => 'required',
-				'wrap_pcs' => 'required',
+				//'wrap_pcs' => 'required',
 				'wrap' => 'required',
-				'id_master_barcode' => 'required',
+				//'id_master_barcode' => 'required',
 				
 			], $pesan);			
 			
 			$validatedData['start_time'] = $_POST['start'];		
 			$validatedData['finish_time'] = $_POST['finish'];		
 			$validatedData['barcode_start'] = $_POST['id_master_barcode_start'];
-			$validatedData['barcode'] = $_POST['id_master_barcode'];
+			//$validatedData['barcode'] = $_POST['id_master_barcode'];
 			$validatedData['note'] = $_POST['id_master_products'];
 			$validatedData['waste'] = $_POST['waste'];
 			$validatedData['keterangan'] = $_POST['keterangan'];
@@ -969,7 +1016,7 @@ class ProductionReportBagMakingController extends Controller
 			unset($validatedData["start"]);
 			unset($validatedData["finish"]);
 			unset($validatedData["id_master_barcode_start"]);
-			unset($validatedData["id_master_barcode"]);
+			//unset($validatedData["id_master_barcode"]);
 			unset($validatedData["id_master_products"]);
 			
 			$validatedData['id_report_sfs'] = $data_slitting[0]->id_report_sfs;
@@ -988,24 +1035,18 @@ class ProductionReportBagMakingController extends Controller
 			->update($updatedData);
 			*/
 			if ($response){
-					
-				//$instock_type = $type_wo[0] == 'WIP' ? 'In Stock SLT WIP' : 'In Stock SLT FG';			
-				$updatedData['status'] = 'In Stock BAG';
-			
+				/*
+				$updatedData['status'] = 'In Stock BAG';			
 				$response_barcode = DB::table('barcode_detail')
 					->where('barcode_number', $validatedData['barcode'])
 					->update($updatedData);
 				
-				if($validatedData['barcode'] <> $data[0]->barcode){	
-					
+				if($validatedData['barcode'] <> $data[0]->barcode){						
 					DB::table('barcode_detail')
 					->where('barcode_number', $data[0]->barcode)
-					//->update(['status' => 'Un Used']);
-					//Jika Barcode Bisa Digunakan Lagi, Sesuaikan status data barcode menjadi NULL
-					->update(['status' => null]);
-					
+					->update(['status' => null]);					
 				}
-				
+				*/
 				//Audit Log		
 				$username= auth()->user()->email; 
 				$ipAddress=$_SERVER['REMOTE_ADDR'];
@@ -1014,40 +1055,45 @@ class ProductionReportBagMakingController extends Controller
 				$activity='Save Edit Detail Production Result Entry Report Bag Making '.$data[0]->id;
 				$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
 				
-				return Redirect::to('/production-ent-report-bag-making-detail/'.$response_id_rb)->with('pesan', 'Update Successfuly.');  
+				return Redirect::to('/production-entry-report-bag-making-detail-production-result-edit/'.$response_id_rb.'/'.$response_id_rb_pr)->with('pesan', 'Update Successfuly.');  
 			}else{
-				return Redirect::to('/production-ent-report-bag-making-detail/'.$response_id_rb)->with('pesan', 'There Is An Error.');
+				return Redirect::to('/production-entry-report-bag-making-detail-production-result-edit/'.$response_id_rb.'/'.$response_id_rb_pr)->with('pesan', 'There Is An Error.');
 			}
 		}else{
-			return Redirect::to('/production-ent-report-bag-making-detail/'.$response_id_rb)->with('pesan', 'There Is An Error.');
+			return Redirect::to('/production-entry-report-bag-making-detail-production-result-edit/'.$response_id_rb.'/'.$response_id_rb_pr)->with('pesan', 'There Is An Error.');
 		}
 		
     }
 	public function production_entry_report_bag_making_detail_production_result_delete(Request $request){	
-		//print_r($_POST);exit;
-		
 		$id_rb = $_POST['token_rb'];
 		$id = $_POST['hapus_detail'];
 		
 		$data = ProductionEntryReportBagMakingProductionResult::select("*")
 				->whereRaw( "sha1(id) = '$id'")
                 ->get();
-		$barcode = $data[0]->barcode;
+		//$barcode = $data[0]->barcode;
 		
 		if(!empty($data[0])){
-			
+			$data_detail = ProductionEntryReportBagMakingProductionResultDetail::select("*")
+				->whereRaw( "sha1(id_report_bags) = '$id_rb'")
+				->whereRaw( "sha1(id_report_bag_production_results) = '$id'")
+                ->get();
+				
 			$delete = ProductionEntryReportBagMakingProductionResult::whereRaw( "sha1(id) = '$id'" )->delete();
 			//echo $delete; exit;
 			
 			if($delete){
 				//Jika Barcode Bisa Digunakan Lagi, Sesuaikan status data barcode menjadi NULL
 				$updatedData['status'] = null;
-				
-				//$updatedData['status'] = 'Un Used';
-				
-				DB::table('barcode_detail')
-				->where('barcode_number', $barcode)
-				->update($updatedData);
+					
+				foreach($data_detail as $data_details){
+					if(!empty($data_details->barcode)){
+						DB::table('barcode_detail')
+						->where('barcode_number', $data_details->barcode)
+						->update($updatedData);
+					}
+					ProductionEntryReportBagMakingProductionResultDetail::whereRaw( "id = '$data_details->id'" )->delete();
+				}
 				
 				//Audit Log		
 				$username= auth()->user()->email; 
@@ -1227,21 +1273,21 @@ class ProductionReportBagMakingController extends Controller
 			//		->whereRaw( "sha1(id_report_blows) = '$response_id'")
 			//		->get();      
 			$data_detail_production = DB::table('report_bag_production_results as a')
-					->leftJoin('report_sf_production_results as b', 'a.barcode_start', '=', 'b.barcode')//disesuaikan ke table sfs
+					//->leftJoin('report_sf_production_results as b', 'a.barcode_start', '=', 'b.barcode')//disesuaikan ke table sfs BARCODE NYA HILANG DI TABLE PRODUCTION SESUAIKAN KEMBALI
 					->leftJoin('report_sfs as c', 'a.id_report_sfs', '=', 'c.id')//disesuaikan ke table sfs
 					->leftJoin('work_orders as d', 'a.id_work_orders', '=', 'd.id')
 					->whereRaw( "sha1(a.id_report_bags) = '$response_id'")
-					->select('b.note as order_name_sf', 'b.weight as weight_sf', 'd.wo_number', 'a.*')
+					//->select('b.note as order_name_sf', 'b.weight as weight_sf', 'd.wo_number', 'a.*')
+					->select('d.wo_number', 'a.*')
 					->groupBy('a.id')
 					->get();//PERBAIKI QUERY DETAIL UNTUK GET WO DAN PRODUCT
-			/*		
-			$table_product = $order_name[0] == 'WIP' ? 'master_wips' : 'master_product_fgs';
-			
-			$data_product = DB::table($table_product)
-					->select('*')
-					->where('id', $order_name[1])
-					->get();
-			*/
+					
+			foreach($data_detail_production as $data_for){
+				$data_detail_production['detail_pr'] = ProductionEntryReportBagMakingProductionResultDetail::where('id_report_bag_production_results', $data_for->id)
+				->where('id_report_bags', $data_for->id_report_bags)
+				->get();
+			}
+			//print_r($data_detail_production);exit;
 			
 			$order_name = explode('|', $data_detail_production[0]->note);
 			
@@ -1264,9 +1310,6 @@ class ProductionReportBagMakingController extends Controller
 		
     }
 	public function production_entry_report_bag_making_update_stock($response_id){
-		//echo $response_id;exit;
-		//print_r($_POST);exit;
-		
 		$id_rb = $response_id;
 		
 		$data_update = ProductionEntryReportBagMakingProductionResult::select('b.report_number','report_bag_production_results.id_report_bags', 'report_bag_production_results.id', 'report_bag_production_results.note')
@@ -1276,60 +1319,72 @@ class ProductionReportBagMakingController extends Controller
 				->whereRaw( "sha1(report_bag_production_results.id_report_bags) = '$id_rb'")
 				->groupBy('id_report_bags')
 				->groupBy('report_bag_production_results.note')
-                ->get();			
-		
-		if(!empty($data_update[0])){
-			foreach($data_update as $data_for){
-				$order_name = explode('|', $data_for->note);
+                ->get();	
 				
-				$data_product = DB::table('master_product_fgs')
-					->select('*')
-					->whereRaw( "id = '".$order_name[1]."'")
-					->get();
-				//print_r($data_product);exit;
-				if(!empty($data_product[0])){	
+		$cek_detail_result = DB::table('report_bag_production_result_details')				
+				->selectRaw('SUM(wrap_pcs) AS sum_wrap_pcs_pr')				
+				->whereRaw( "sha1(id_report_bags) = '$id_rb'")
+				->groupBy('id_report_bags')
+				->get();			
+			
+		if($data_update[0]->amount == $cek_detail_result[0]->sum_wrap_pcs_pr){
+			
+			if(!empty($data_update[0])){
+				foreach($data_update as $data_for){
+					$order_name = explode('|', $data_for->note);
 					
-					$validatedData = ([
-						'id_good_receipt_notes_details' => $data_for->report_number,
-						'type_product' => $order_name[0],
-						'id_master_products' => $order_name[1],
-						'qty' => $data_for->amount,
-						'type_stock' => 'IN',
-						'date' => date("Y-m-d"),
-						'remarks' => 'Product : '.$data_for->note
-					]);	
-					$responseHistory = HistoryStock::create($validatedData);
+					$data_product = DB::table('master_product_fgs')
+						->select('*')
+						->whereRaw( "id = '".$order_name[1]."'")
+						->get();
+					//print_r($data_product);exit;
+					if(!empty($data_product[0])){	
 						
-					
-					if($responseHistory){		
-						$stock_akhir = $data_product[0]->stock + $data_for->amount;				
+						$validatedData = ([
+							'id_good_receipt_notes_details' => $data_for->report_number,
+							'type_product' => $order_name[0],
+							'id_master_products' => $order_name[1],
+							'qty' => $data_for->amount,
+							'type_stock' => 'IN',
+							'date' => date("Y-m-d"),
+							'remarks' => 'Product : '.$data_for->note
+						]);	
+						$responseHistory = HistoryStock::create($validatedData);
+							
 						
-						DB::table('master_product_fgs')->where('id', $order_name[1])->update(array('stock' => $stock_akhir, 'updated_at' => date('Y-m-d H:i:s'))); 						
+						if($responseHistory){		
+							$stock_akhir = $data_product[0]->stock + $data_for->amount;				
+							
+							DB::table('master_product_fgs')->where('id', $order_name[1])->update(array('stock' => $stock_akhir, 'updated_at' => date('Y-m-d H:i:s'))); 						
+							
+						}
 						
+					}else{
+						return Redirect::to('/production-ent-report-bag-making')->with('pesan_danger', 'There Is An Error. Data Produk Not Found.');
 					}
-				}else{
-					return Redirect::to('/production-ent-report-bag-making')->with('pesan_danger', 'There Is An Error. Data Produk Not Found.');
 				}
-			}
-			
-			$validatedData = ([
-				'status' => 'Closed',
-			]);				
-			
-			ProductionEntryReportBagMaking::where('report_number', $data_update[0]->report_number)
-				->update($validatedData);
-			
-			//Audit Log
-			$username= auth()->user()->email; 
-			$ipAddress=$_SERVER['REMOTE_ADDR'];
-			$location='0';
-			$access_from=Browser::browserName();
-			$activity='Update Histori Stock Bag Making Report Number ="'.$data_update[0]->report_number.'"';
-			$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
 				
-			return Redirect::to('/production-ent-report-bag-making')->with('pesan', 'Update Stock Successfuly.');
+				$validatedData = ([
+					'status' => 'Closed',
+				]);				
+				
+				ProductionEntryReportBagMaking::where('report_number', $data_update[0]->report_number)
+					->update($validatedData);
+				
+				//Audit Log
+				$username= auth()->user()->email; 
+				$ipAddress=$_SERVER['REMOTE_ADDR'];
+				$location='0';
+				$access_from=Browser::browserName();
+				$activity='Update Histori Stock Bag Making Report Number ="'.$data_update[0]->report_number.'"';
+				$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+					
+				return Redirect::to('/production-ent-report-bag-making')->with('pesan', 'Update Stock Successfuly.');
+			}else{
+				return Redirect::to('/production-ent-report-bag-making')->with('pesan_danger', 'There Is An Error.');
+			}
 		}else{
-			return Redirect::to('/production-ent-report-bag-making')->with('pesan_danger', 'There Is An Error.');
+			return Redirect::to('/production-ent-report-bag-making')->with('pesan_danger', 'Total wrap pcs pada detail production result tidak sesuai dengan amount result. Silahkan cek kembali data detail production result.');
 		}
     }
 	public function production_entry_report_bag_making_unposted($response_id){
@@ -1421,22 +1476,31 @@ class ProductionReportBagMakingController extends Controller
 				
 			if($data_detail&&(!empty($data_update[0]->note))){
 				
+				$data_detail_pr = DB::table('report_bag_production_result_details as a')
+					->select('a.*')
+					->whereRaw( "sha1(a.id_report_bags) = '$id_rb'")
+					->get();
+				$barcode = $data_detail_pr[0]->barcode;
+				
 				$deleteHistori = HistoryStock::whereRaw( "id_good_receipt_notes_details = '".$data_update[0]->report_number."'" )->delete();
 				
 				$deleteHygiene = ProductionEntryReportBagMakingHygiene::whereRaw( "id_report_bags = '".$data_update[0]->id_rb."'" )->delete();
 				$deletePreparation = ProductionEntryReportBagMakingPreparation::whereRaw( "id_report_bags = '".$data_update[0]->id_rb."'" )->delete();
 				$deleteProductionResult = ProductionEntryReportBagMakingProductionResult::whereRaw( "id_report_bags = '".$data_update[0]->id_rb."'" )->delete();
+				$deleteProductionResultDetail = ProductionEntryReportBagMakingProductionResultDetail::whereRaw( "id_report_bags = '".$data_update[0]->id_rb."'" )->delete();
 				$deleteProductionWaste = ProductionEntryReportBagMakingWaste::whereRaw( "id_report_bags = '".$data_update[0]->id_rb."'" )->delete();
 				$deleteBagMaking = ProductionEntryReportBagMaking::whereRaw( "id = '".$data_update[0]->id_rb."'" )->delete();
 				
 				if($deleteBagMaking){
-					$updatedData['status'] = null;	
-					
-					foreach($data_detail as $data){
-						DB::table('barcode_detail')
-							->where('barcode_number', $data->barcode)
-							->update($updatedData);
-					}			
+					if(!empty($barcode)){
+						$updatedData['status'] = null;
+						
+						foreach($data_detail_pr as $data){
+							DB::table('barcode_detail')
+								->where('barcode_number', $data->barcode)
+								->update($updatedData);
+						}	
+					}
 					
 					//Audit Log
 					$username= auth()->user()->email; 
@@ -1488,5 +1552,170 @@ class ProductionReportBagMakingController extends Controller
 			}
 		}
     }
+		
+	public function production_entry_report_bag_making_wrap_add(Request $request){
+		//print_r($_POST);exit;
+		if ($request->has('savemore')) {
+            return "Tombol Save & Add More diklik.";
+        } elseif ($request->has('save')) {
+			$response_id_rb = $_POST['token_rb'];
+			$response_id_rb_pr = $_POST['token_rb_pr'];
+			
+			$data = DB::table('report_bag_production_results as a')
+			->select('a.id_report_bags','a.id as id_report_bag_production_results')
+			->whereRaw( "sha1(a.id_report_bags) = '$response_id_rb'")
+			->whereRaw( "sha1(a.id) = '$response_id_rb_pr'")
+			->get();
+			
+			//print_r($data[0]);exit;
+			
+            $pesan = [
+                'id_master_barcode.required' => 'Cannot Be Empty',
+                'wrap_pcs.required' => 'Cannot Be Empty',         
+            ];
+
+            $validatedData = $request->validate([
+                'id_master_barcode' => 'required',
+                'wrap_pcs' => 'required',
+
+            ], $pesan);			
+			
+			$validatedData['barcode'] = $_POST['id_master_barcode'];
+			$validatedData['id_report_bags'] = $data[0]->id_report_bags;
+			$validatedData['id_report_bag_production_results'] = $data[0]->id_report_bag_production_results;
+			$validatedData['keterangan'] = $_POST['keterangan'];
+			
+			unset($validatedData["id_master_barcode"]);
+			
+            $response = ProductionEntryReportBagMakingProductionResultDetail::create($validatedData);
+			
+			if(!empty($response)){
+				//SCRIPT UPDATE STATUS BARCODE-Nya
+				$updatedData['status'] = 'In Stock BAG';
+				
+				DB::table('barcode_detail')
+				->where('barcode_number', $response->barcode)
+				->update($updatedData);
+				
+				//Audit Log		
+				$username= auth()->user()->email; 
+				$ipAddress=$_SERVER['REMOTE_ADDR'];
+				$location='0';
+				$access_from=Browser::browserName();
+				$activity='Add PR Detail Entry Report Bag Making ID ="'.$response->id.'"';
+				$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+				
+				return Redirect::to('/production-entry-report-bag-making-detail-production-result-edit/'.$response_id_rb.'/'.$response_id_rb_pr)->with('pesan', 'Add Successfuly.');
+			}else{
+				return Redirect::to('/production-entry-report-bag-making-detail-production-result-edit/'.$response_id_rb.'/'.$response_id_rb_pr)->with('pesan_danger', 'There Is An Error.');
+			}
+        }
+    }
+	public function production_entry_report_bag_making_wrap_edit(Request $request){
+		$response_id_rb = $_POST['token_rb'];
+		$response_id_rb_pr = $_POST['token_rb_pr'];
+		$response_id_rb_pr_detail = $_POST['token_rb_pr_detail'];
+		
+		$data = DB::table('report_bag_production_result_details as a')
+			->select('a.*')
+			->whereRaw( "sha1(a.id) = '$response_id_rb_pr_detail'")
+			->get();
+			
+		if(!empty($data[0])){	
+			$pesan = [
+                'id_master_barcode_edit.required' => 'Cannot Be Empty',
+                'wrap_pcs.required' => 'Cannot Be Empty',         
+            ];
+
+            $validatedData = $request->validate([
+                'id_master_barcode_edit' => 'required',
+                'wrap_pcs' => 'required',
+
+            ], $pesan);			
+			
+			$validatedData['barcode'] = $_POST['id_master_barcode_edit'];
+			$validatedData['keterangan'] = $_POST['keterangan'];
+			
+			unset($validatedData["id_master_barcode_edit"]);			
+			
+			$response = ProductionEntryReportBagMakingProductionResultDetail::where('id', $data[0]->id)
+				->where('id', $data[0]->id)
+				->update($validatedData);
+			
+			if ($response){
+				
+				$updatedData['status'] = 'In Stock BAG';			
+				$response_barcode = DB::table('barcode_detail')
+					->where('barcode_number', $validatedData['barcode'])
+					->update($updatedData);
+				
+				if($validatedData['barcode'] <> $data[0]->barcode){						
+					DB::table('barcode_detail')
+					->where('barcode_number', $data[0]->barcode)
+					->update(['status' => null]);					
+				}
+				
+				//Audit Log		
+				$username= auth()->user()->email; 
+				$ipAddress=$_SERVER['REMOTE_ADDR'];
+				$location='0';
+				$access_from=Browser::browserName();
+				$activity='Edit PR Detail Entry Report Bag Making ID ='.$data[0]->id;
+				$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+				
+				return Redirect::to('/production-entry-report-bag-making-detail-production-result-edit/'.$response_id_rb.'/'.$response_id_rb_pr)->with('pesan', 'Update Successfuly.');  
+			}else{
+				return Redirect::to('/production-entry-report-bag-making-detail-production-result-edit/'.$response_id_rb.'/'.$response_id_rb_pr)->with('pesan', 'There Is An Error.');
+			}
+		}else{
+			return Redirect::to('/production-entry-report-bag-making-detail-production-result-edit/'.$response_id_rb.'/'.$response_id_rb_pr)->with('pesan', 'There Is An Error.');
+		}
+		
+    }
+	public function production_entry_report_bag_making_wrap_delete(Request $request){	
+		//print_r($_POST);exit;
+		
+		$response_id_rb = $_POST['token_rb'];
+		$response_id_rb_pr = $_POST['token_rb_pr'];
+		$response_id_rb_pr_detail = $_POST['token_rb_pr_detail'];
+		
+		$data = DB::table('report_bag_production_result_details as a')
+			->select('a.*')
+			->whereRaw( "sha1(a.id) = '$response_id_rb_pr_detail'")
+			->get();
+		$barcode = $data[0]->barcode;
+		
+		if(!empty($data[0])){
+			
+			$delete = ProductionEntryReportBagMakingProductionResultDetail::whereRaw( "sha1(id) = '$response_id_rb_pr_detail'" )->delete();
+			//echo $delete; exit;
+			
+			if($delete){
+				if(!empty($barcode)){
+					//Jika Barcode Bisa Digunakan Lagi, Sesuaikan status data barcode menjadi NULL
+					$updatedData['status'] = null;
+					
+					//$updatedData['status'] = 'Un Used';
+					
+					DB::table('barcode_detail')
+					->where('barcode_number', $barcode)
+					->update($updatedData);
+				}
+				//Audit Log		
+				$username= auth()->user()->email; 
+				$ipAddress=$_SERVER['REMOTE_ADDR'];
+				$location='0';
+				$access_from=Browser::browserName();
+				$activity='Delete PR Detail Entry Report Bag Making ID="'.$data[0]->id.'"';
+				$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+				
+				return Redirect::to('/production-entry-report-bag-making-detail-production-result-edit/'.$response_id_rb.'/'.$response_id_rb_pr)->with('pesan', 'Update Successfuly.');  
+			}else{
+				return Redirect::to('/production-entry-report-bag-making-detail-production-result-edit/'.$response_id_rb.'/'.$response_id_rb_pr)->with('pesan', 'There Is An Error.');
+			}
+		}else{
+			return Redirect::to('/production-entry-report-bag-making-detail-production-result-edit/'.$response_id_rb.'/'.$response_id_rb_pr)->with('pesan', 'There Is An Error.');
+		}
+	}
 	//END ENTRY REPORT BLOW
 }

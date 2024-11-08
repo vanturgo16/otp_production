@@ -719,15 +719,8 @@
 												</div>
 											</div> 
 											<div class="row mb-4 field-wrapper required-field">
-												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Wrap Info </label>
-												<div class="col-sm-4">
-													<input type="text" class="form-control" name="wrap_pcs">
-													<div class="text-secondary"><b>Pcs</b></div>
-													@if($errors->has('wrap_pcs'))
-														<div class="text-danger"><b>{{ $errors->first('wrap_pcs') }}</b></div>
-													@endif
-												</div>
-												<div class="col-sm-4">
+												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Wrap </label>
+												<div class="col-sm-8">
 													<input type="text" class="form-control" name="wrap">
 													<div class="text-secondary"><b>Bungkus</b></div>
 													@if($errors->has('wrap'))
@@ -757,7 +750,7 @@
 											
 											
 											
-											<div class="row mb-4 field-wrapper required-field">
+											<!--div class="row mb-4 field-wrapper required-field">
 												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Barcode </label>
 												<div class="col-sm-8">
 													<select class="form-select data-select2" name="id_master_barcode" id="id_master_barcode">
@@ -767,7 +760,7 @@
 														<div class="text-danger"><b>{{ $errors->first('id_master_barcode') }}</b></div>
 													@endif
 												</div>
-											</div> 
+											</div--> 
 											<script>									
 												$(document).ready(function(){
 													//$('#id_work_orders').prop('selectedIndex', 0);
@@ -820,6 +813,10 @@
 									</div>
 									<div class="card-body p-4">
 										@if(!empty($data_detail_production[0]))
+										<div class="alert alert-danger alert-dismissible alert-label-icon label-arrow fade show" role="alert">
+											<i class="mdi mdi-alert-octagon-outline label-icon"></i><strong>Perhatian</strong><br>Jika data detail <b>production result</b> belum disesuaikan. Data stok <b>tidak bisa</b> di update.
+											<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+										</div>
 											<div class="table-responsive">
 												<table id="datatable" class="table table-bordered dt-responsive  nowrap w-100">
 													<thead>
@@ -836,11 +833,28 @@
 															<td>
 																At : <b>{{ $data_detail->start_time }}</b> /												
 																Until : <b>{{ $data_detail->finish_time }}</b>
+																<br><br>
+																
+																Detail <b>Production Result</b> :<br>
+																@if(( $data_detail->count_detail_pr == $data_detail->wrap )&&( $data_detail->sum_wrap_pcs_pr == $data_detail->amount_result ))
+																	<span class="badge bg-success-subtle text-success">
+																		Sudah Di Sesuaikan
+																	</span>
+																@else
+																	<span class="badge bg-danger-subtle text-danger">
+																		Belum Di Sesuaikan
+																	</span>
+																	@if( $data_detail->sum_wrap_pcs_pr != $data_detail->amount_result )
+																	<br>
+																	<code>
+																		<b>amount result</b> dan total <b>wrap pcs</b> <br>tidak sesuai.
+																	</code>
+																	@endif
+																@endif
 															</td>
 															<?php $product = explode('|', $data_detail->note) ; ?>
 															<td><p>
-																Barcode Start : <b>{{ $data_detail->barcode_start }}</b><br>
-																Barcode : <b>{{ $data_detail->barcode }}</b><br><br>
+																Barcode Start : <b>{{ $data_detail->barcode_start }}</b><br><br>
 																Work Orders : <b>{{ $data_detail->wo_number }}</b><br>
 																<footer class="blockquote-footer">Product : <cite><b>{{ $product['2'] }}</b></cite></footer>
 																<footer class="blockquote-footer">Weight Starting : <cite><b>{{  $data_detail->weight_starting }}</b> Kg</cite></footer>
@@ -848,8 +862,10 @@
 																<footer class="blockquote-footer">Waste : <cite><b>{{  $data_detail->waste }}</b> Kg</cite></footer>
 																<?php }; ?>
 																Amount Result : <b>{{ $data_detail->amount_result }}</b> Pcs<br>
-																Wrap Info (Pcs/Bungkus) : <b>{{ $data_detail->wrap_pcs }}/{{ $data_detail->wrap }}</b><br><br>
+																Wrap : <b>{{ $data_detail->wrap }}</b> Bungkus<br><br>
+																<?php if($data_detail->keterangan!=''){ ?>
 																<footer class="blockquote-footer">Keterangan : <cite><b>{{  $data_detail->keterangan }}</b></cite></footer>
+																<?php }; ?>
 																</p>
 															</td>
 															
@@ -863,7 +879,7 @@
 																			<i class="bx bx-trash-alt" title="Delete" ></i>
 																		</button>
 																	</form>	
-																	<a href="/production-entry-report-bag-making-detail-production-result-edit/{{ Request::segment(2) }}/{{ sha1($data_detail->id) }}" class="btn btn-info waves-effect waves-light">
+																	<a target="_blank" href="/production-entry-report-bag-making-detail-production-result-edit/{{ Request::segment(2) }}/{{ sha1($data_detail->id) }}" class="btn btn-info waves-effect waves-light">
 																		<i class="bx bx-edit-alt" title="Edit"></i>
 																	</a>
 																</center>											
