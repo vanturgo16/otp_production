@@ -1273,22 +1273,34 @@ class ProductionReportBagMakingController extends Controller
 			//		->whereRaw( "sha1(id_report_blows) = '$response_id'")
 			//		->get();      
 			$data_detail_production = DB::table('report_bag_production_results as a')
-					//->leftJoin('report_sf_production_results as b', 'a.barcode_start', '=', 'b.barcode')//disesuaikan ke table sfs BARCODE NYA HILANG DI TABLE PRODUCTION SESUAIKAN KEMBALI
+					->leftJoin('report_sf_production_results as b', 'a.barcode_start', '=', 'b.barcode')//disesuaikan ke table sfs BARCODE NYA HILANG DI TABLE PRODUCTION SESUAIKAN KEMBALI
 					->leftJoin('report_sfs as c', 'a.id_report_sfs', '=', 'c.id')//disesuaikan ke table sfs
 					->leftJoin('work_orders as d', 'a.id_work_orders', '=', 'd.id')
 					->whereRaw( "sha1(a.id_report_bags) = '$response_id'")
-					//->select('b.note as order_name_sf', 'b.weight as weight_sf', 'd.wo_number', 'a.*')
-					->select('d.wo_number', 'a.*')
+					->select('b.note as order_name_sf', 'b.weight as weight_sf', 'd.wo_number', 'a.*')
+					//->select('d.wo_number', 'a.*')
 					->groupBy('a.id')
 					->get();//PERBAIKI QUERY DETAIL UNTUK GET WO DAN PRODUCT
 					
+			$data_detail_pr =  DB::table('report_bag_production_result_details as a')
+					//->where('id_report_bag_production_results', $data_detail_production[0]->id)
+					->where('id_report_bags', $data_detail_production[0]->id_report_bags)
+					->groupBy('a.id')
+					->get();
+			/*	
 			foreach($data_detail_production as $data_for){
 				$data_detail_production['detail_pr'] = ProductionEntryReportBagMakingProductionResultDetail::where('id_report_bag_production_results', $data_for->id)
 				->where('id_report_bags', $data_for->id_report_bags)
+				->groupBy('report_bag_production_result_details.id')
 				->get();
 			}
-			//print_r($data_detail_production);exit;
-			
+			*/
+			/*
+			echo "<pre>";
+			print_r($data_detail_pr);
+			echo "</pre>";
+			exit;
+			*/
 			$order_name = explode('|', $data_detail_production[0]->note);
 			
 			if(count($order_name)>1){
@@ -1300,7 +1312,7 @@ class ProductionReportBagMakingController extends Controller
 				$activity='Print Entry Report Bag Making ID="'.$data[0]->id.'"';
 				$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
 
-				return view('production.entry_report_bag_making_print',compact('data','data_detail_preparation','data_detail_hygiene','data_detail_production','data_detail_waste'));
+				return view('production.entry_report_bag_making_print',compact('data','data_detail_preparation','data_detail_hygiene','data_detail_production','data_detail_waste','data_detail_pr'));
 			}else{
 				return Redirect::to('/production-ent-report-bag-making')->with('pesan_danger', 'Data Report Bag Making Versi Aplikasi Sebelumnya Tidak Bisa Di Print');
 			}
