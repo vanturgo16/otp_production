@@ -250,28 +250,21 @@
 				<th colspan="7" class="text-center">Hasil Produksi</th>
             </tr>
             <tr>
-				<th rowspan="2" class="text-center">Mul</th>
-				<th rowspan="2" class="text-center">Sel</th>
-				<th rowspan="2" class="text-center">Ukuran</th>
-				<th rowspan="2" class="text-center">Kg</th>
-				<th rowspan="2" class="text-center">Barcode</th>
-				<th rowspan="2" class="text-center">Ukuran</th>
-				<th rowspan="2" class="text-center">Amount<br/>Result</th>
-				<th colspan="2" class="text-center">Jumlah</th>
-				<th rowspan="2" class="text-center">Waste<br/>(Kg)</th>
-				<th rowspan="2" class="text-center">Barcode</th>
-				<th rowspan="2" class="text-center">No. WO</th>
+				<th class="text-center">Mul</th>
+				<th class="text-center">Sel</th>
+				<th class="text-center">Ukuran</th>
+				<th class="text-center">Kg</th>
+				<th class="text-center">Barcode</th>
+				<th class="text-center">ID Production Result</th>
+				<th class="text-center">Ukuran</th>
+				<th class="text-center">Amount Result<br/>(Pcs)</th>
+				<th class="text-center">Wrap<br/>(Bungkus)</th>
+				<th class="text-center">Waste<br/>(Kg)</th>
             </tr>
-			<tr>
-				<th class="text-center">(Pcs)</th>
-				<th class="text-center">(Bungkus)</th>
-            </tr>
-			<tr>
+			<!--tr>
 				<td class="text-center pt-2 pb-2" colspan="12">Sedang Di Desain Ulang</td>
-			</tr>
+			</tr-->
 			<?php if(!empty($data_detail_production[0])){ ?>
-				<?php exit; ?>
-				<?php print_r($data_detail_production);exit; ?>
 				<?php  $sum_amount_result = 0; $sum_wrap_pcs = 0; $sum_wrap = 0; $sum_waste = 0; ?>
 				@foreach ($data_detail_production as $data_detail)
 				<?php $order_names = explode('|', $data_detail->order_name_sf) ?>
@@ -282,13 +275,11 @@
 					<td class="pl-2">{{ $order_names[3] }}</td>
 					<td class="pl-2">{{ $data_detail->weight_sf }}</td>
 					<td class="pl-2">{{ $data_detail->barcode_start }}</td>
+					<td class="pl-2"><b>{{ $data_detail->id }}</b></td>
 					<td class="pl-2">{{ $note[3] }}</td>
 					<td class="pl-2">{{ $data_detail->amount_result }}</td><?php $sum_amount_result += $data_detail->amount_result; ?>
-					<td class="pl-2">{{ $data_detail->wrap }}</td><?php $sum_wrap_pcs += $data_detail->wrap; ?>
 					<td class="pl-2">{{ $data_detail->wrap }}</td><?php $sum_wrap += $data_detail->wrap; ?>
 					<td class="pl-2">{{ $data_detail->waste>0?$data_detail->waste:0; }}</td><?php $sum_waste += $data_detail->waste; ?>
-					<td class="pl-2">{{ $data_detail->barcode_start }}</td>
-					<td class="pl-2">{{ $data_detail->wo_number }}</td>
 				</tr>
 				@endforeach
 			<?php }else{ ?>
@@ -297,26 +288,59 @@
 				</tr>
 			<?php }; ?>
 			<tr>
-				<th colspan="2" rowspan="2" class="text-center">Jumlah</th>
-				<th colspan="3" rowspan="2"></th>
+				<th colspan="2" rowspan="3"></th>
+				<th colspan="3" rowspan="3"></th>
+				<th colspan="1" rowspan="3" class="text-center">Jumlah</th>
 				<th class="text-right pr-1">Pcs </th>
 				<td class="text-left pl-2"> <b>{{ $sum_amount_result }}<b> </td>
-				<td class="text-left pl-2"> <b>-<b> </td>
 				<td class="text-left pl-2"> <b> - <b> </td>
 				<td class="text-left pl-2"> <b> - <b> </td>
 				<th colspan="2" rowspan="2"></th>
             </tr>
             <tr>
+            	<th class="text-right pr-1">Bungkus </th>
+            	<td class="text-left pl-2"> <b> - <b> </td>
+				<td class="text-left pl-2"> <b>{{ $sum_wrap }}<b> </td>
+            	<td class="text-left pl-2"> <b>-<b> </td>
+            </tr>
+            <tr>
             	<th class="text-right pr-1">Kg </th>
             	<td class="text-left pl-2"> <b> - <b> </td>
-				<td class="text-left pl-2"> <b> - <b> </td>
-            	<td class="text-left pl-2"> <b>{{ $sum_wrap }}<b> </td>
+            	<td class="text-left pl-2"> <b>-<b> </td>
 				<td class="text-left pl-2"> <b>{{ $sum_waste }}<b> </td>
             </tr>
           </table>
         </div>
       </div>
-       
+	  <?php
+		  // Group by 'id_report_bags'
+		  $grouped = [];
+		  foreach ($data_detail_pr as $item) {
+			$grouped[$item->id_report_bag_production_results][] = $item;
+		  }
+	  ?>
+	  <div class="row mt-3">
+      	<div class="col-md-12" style="font-size: 13px;">
+      		<strong>Detail Hasil Produksi</strong>
+		</div>
+	  </div>
+	  <div class="row">
+		@foreach ($grouped as $key => $group) 
+      	<div class="col-md-3" style="font-size: 13px;">
+			<table border="1" cellpadding="0" cellspacing="0" style="table-layout: auto;width: 100%">
+				<tr>
+					<th class="pl-2">ID Production Result </th>
+					<th class="pl-2">{{ $key }}</th>
+				</tr>
+				@foreach ($group as $item) 
+				<tr>
+					<td class="pl-2" colspan="2">Barcode : {{ $item->barcode }}, Jumlah Per Wrap (Bungkus) : {{ $item->wrap_pcs }} Pcs</td>
+				</tr>
+				@endforeach
+			</table>
+      	</div>
+		@endforeach
+      </div>
       <div class="row mt-3">
       	<div class="col-md-4" style="font-size: 13px;">
       		<strong>SISA WIP</strong>
@@ -393,7 +417,7 @@
 				</tr>
 			</table>
       	</div>
-      </div>
+      </div><br>
     </div>
     
     
