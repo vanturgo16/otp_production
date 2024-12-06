@@ -57,9 +57,14 @@
         <div class="col-md-3" style="font-size: 13px;">
           <table>
           	<tr>
+              <td>Ketua Regu</td>
+              <td>
+                : {{ $data[0]->ketua_regu }}
+              </td>
+            </tr>
+            <tr>
               <td>Operator</td>
-              <td>: 
-                                </td>
+              <td>: {{ $data[0]->operator }}</td>
             </tr>
             <tr>
               <td>Regu/Shift</td>
@@ -83,14 +88,14 @@
             <tr>
             	<td class="text-center">{{ $data[0]->engine_shutdown_description }}</td>
             	<td class="text-center">{{ $data[0]->note }}</td>
-            	<td class="text-center"><p style="padding: 10px;"></p></td>
-            	<td class="text-center">{{ $data[0]->nama_know_by }}</td>
+            	<td class="text-center"><p style="padding: 15px;">&nbsp;</p></td>
+            	<td class="text-center"><p style="padding: 15px;">&nbsp;</p></td>
             </tr>
             <tr>
             	<td></td>
             	<td></td>
-              	<th class="text-center">Operator</th>
-              	<th class="text-center">Pengawas</th>
+              	<th class="text-center" style="padding: 5px;">{{ $data[0]->operator }}<br><small> ( Operator )</small></th>
+                <th class="text-center" style="padding: 5px;">{{ $data[0]->pengawas }}<br><small> ( Pengawas )</small></th>
             </tr>
           </table>
         </div>
@@ -332,11 +337,19 @@
 					<th class="pl-2">ID Production Result </th>
 					<th class="pl-2">{{ $key }}</th>
 				</tr>
-				@foreach ($group as $item) 
-				<tr>
-					<td class="pl-2" colspan="2">Barcode : {{ $item->barcode }}, Jumlah Per Wrap (Bungkus) : {{ $item->wrap_pcs }} Pcs</td>
-				</tr>
-				@endforeach
+				
+					@foreach ($group as $item) 
+					<?php if(!empty($item->barcode)){ ?>
+						<tr>
+							<td class="pl-2" colspan="2">Barcode : {{ $item->barcode }}, Jumlah Per Wrap (Bungkus) : {{ $item->wrap_pcs }} Pcs</td>
+						</tr>
+					<?php }else{ ?>
+						<tr>
+							<td class="pt-1 pb-1" colspan="2" align="center">Data Barcode Belum Tersedia</td>
+						</tr>
+					<?php }; ?>	
+					@endforeach
+				
 			</table>
       	</div>
 		@endforeach

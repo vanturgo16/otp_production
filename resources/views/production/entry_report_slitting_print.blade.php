@@ -67,9 +67,15 @@
               <td>Nomer Mesin</td>
               <td>: {{ $data[0]->work_center_code }}</td>
             </tr>
+			<tr>
+              <td>Ketua Regu</td>
+              <td>
+                : {{ $data[0]->ketua_regu }}
+              </td>
+            </tr>
             <tr>
               <td>Operator</td>
-              <td>: </td>
+              <td>: {{ $data[0]->operator }}</td>
             </tr>
           </tbody></table>
         </div>
@@ -82,16 +88,16 @@
               	<th class="text-center">Diketahui</th>
             </tr>
             <tr>
-            	<td></td>
-            	<td></td>
-            	<td class="text-center"><p style="padding: 10px;"></p></td>
-            	<td class="text-center"><p style="padding: 10px;">{{ $data[0]->nama_know_by }}</p></td>
+            	<td><p style="padding: 15px;">&nbsp;</p></td>
+            	<td><p style="padding: 15px;">&nbsp;</p></td>
+            	<td><p style="padding: 15px;">&nbsp;</p></td>
+            	<td><p style="padding: 15px;">&nbsp;</p></td>
             </tr>
             <tr>
             	<td></td>
             	<td></td>
-              	<th class="text-center">Operator</th>
-              	<th class="text-center">Pengawas</th>
+              	<th class="text-center" style="padding: 5px;">{{ $data[0]->operator }}<br><small> ( Operator )</small></th>
+                <th class="text-center" style="padding: 5px;">{{ $data[0]->pengawas }}<br><small> ( Pengawas )</small></th>
             </tr>
           </tbody></table>
         </div>
@@ -186,7 +192,8 @@
       <div class="row mt-3">
         <div class="col-md-12" style="font-size: 13px;">
           <table border="1" cellpadding="0" cellspacing="0" style="table-layout: auto;width: 100%">
-            <tbody><tr>
+            <tbody>
+			<tr>
               <th colspan="2" class="text-center">Jam Kerja</th>
               <th colspan="3" class="text-center">Bahan Awal</th>
               <th colspan="7" class="text-center">Hasil Produksi</th>
@@ -210,9 +217,28 @@
             </tr>
 			
 			<?php if(!empty($data_detail_production[0])){ ?>
+				<?php  $sum_roll_good = 0; $sum_roll_hold = 0; $sum_roll_reject = 0; ?>
+				<?php  $sum_meter_good = 0; $sum_meter_hold = 0; $sum_meter_reject = 0; ?>
+				<?php  $sum_kg_good = 0; $sum_kg_hold = 0; $sum_kg_reject = 0; ?>
 				@foreach ($data_detail_production as $data_detail)
 				<?php $order_name = explode('|', $data_detail->order_name_blow) ?>
 				<?php $note = explode('|', $data_detail->note) ?>
+				<?php $meter = explode(' x ', $note[3]) ?>
+				<?php 
+					$sum_roll_good += $data_detail->status=="Good" ? 1 : 0;
+					$sum_roll_hold += $data_detail->status=="Hold" ? 1 : 0;
+					$sum_roll_reject += $data_detail->status=="Reject" ? 1 : 0;
+				?>
+				<?php 
+					$sum_meter_good += $data_detail->status=="Good" ? $meter[2] : 0;
+					$sum_meter_hold += $data_detail->status=="Hold" ? $meter[2] : 0;
+					$sum_meter_reject += $data_detail->status=="Reject" ? $meter[2] : 0;
+				?>
+				<?php 
+					$sum_kg_good += $data_detail->status=="Good" ? $data_detail->weight : 0;
+					$sum_kg_hold += $data_detail->status=="Hold" ? $data_detail->weight : 0;
+					$sum_kg_reject += $data_detail->status=="Reject" ? $data_detail->weight : 0;
+				?>
 				<tr>
 				</tr>
 				<tr class="text-center">
@@ -248,25 +274,31 @@
               <td rowspan="3" class="text-center"><strong>Kg</strong></td>
               <th rowspan="2">Pemakaian Bahan Awal</th>
               <th colspan="2" rowspan="2">Sisa bahan untuk regu<br>Selanjutnya</th>
-              <td></td>
-              <td></td>
-              <td></td>
-              <th rowspan="3">Roll<br>Mtr<br>Kg</th>
+              <td class="text-center">{{ $sum_roll_good }}</td>
+			  <td class="text-center">{{ $sum_roll_hold }}</td>
+			  <td class="text-center">{{ $sum_roll_reject }}</td>
+			  
+              <th>Roll</th>
+              <!--th rowspan="3">Roll<br>Mtr<br>Kg</th-->
               <th rowspan="3"></th>
               <td rowspan="3" class="text-center"><strong>Kg</strong></td>
               <th rowspan="3"></th>
             </tr>
             
             <tr>
-            	<td></td>
-            	<td></td>
+            	<td class="text-center">{{ $sum_meter_good }}</td>
+            	<td class="text-center">{{ $sum_meter_hold }}</td>
+            	<td class="text-center">{{ $sum_meter_reject }}</td>
+            	<th>Mtr</th>
             </tr>
             <tr>
-              <td class="text-right"><strong>Mtr</strong></td>
+				<td class="text-right"><strong>Mtr</strong></td>
             	<td colspan="2" class="text-right"><strong>Mtr</strong></td>
-            	<td></td>
-            	<td></td>
-            	<td></td>
+            	<td class="text-center">{{ $sum_kg_good }}</td>
+            	<td class="text-center">{{ $sum_kg_hold }}</td>
+            	<td class="text-center">{{ $sum_kg_reject }}</td>
+				
+            	<th>Kg</th>
             </tr>
           </tbody></table>
         </div>

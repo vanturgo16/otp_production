@@ -59,9 +59,11 @@ class ProductionReportFoldingController extends Controller
         $datas = ProductionEntryReportSF::leftJoin('master_regus AS c', 'report_sfs.id_master_regus', '=', 'c.id')
 				->leftJoin('master_work_centers AS d', 'report_sfs.id_master_work_centers', '=', 'd.id')
 				->leftJoin('master_customers AS e', 'report_sfs.id_master_customers', '=', 'e.id')
-				//->leftJoin('report_blows_production_results AS f', 'report_blows.id', '=', 'f.id_report_blows')
-                ->select('report_sfs.*', 'c.regu', 'd.work_center', 'e.name')
-                //->selectRaw('SUM(IF(f.status="Good", 1, 0)) AS good')
+				->leftJoin('users AS f', 'report_sfs.id_cms_users', '=', 'f.id')
+				
+                ->select('report_sfs.*', 'c.regu', 'd.work_center', 'e.name')                
+				->selectRaw('f.name AS operator')
+				
                 ->whereRaw( "left(report_number,2) = 'RF'")
                 ->orderBy('report_sfs.created_at', 'desc')
                 ->get();
@@ -75,9 +77,10 @@ class ProductionReportFoldingController extends Controller
 			->addColumn('order_info', function ($data) {	
 				$order_name = explode('|', $data->order_name);	
 				$order_name = count($order_name)>1?$order_name[2]:$order_name[0];
+				$operator = !empty($data->operator)?'<br><span class="badge bg-success-subtle text-success">Operator : '.$data->operator.'</span>':'';
 				
 				$status = empty($data->status)?"Tidak Tersedia":$data->status;			
-				$order_info = '<p><b>'.$order_name.'</b><br><code>Customer :</code><br>'.$data->name.'<br><footer class="blockquote-footer">Status : <cite>'.$status.'</cite></footer></p>';
+				$order_info = '<p><b>'.$order_name.'</b><br><code>Customer :</code><br>'.$data->name.'<br><footer class="blockquote-footer">Status : <cite>'.$status.'</cite>'.$operator.'</footer></p>';
 				return $order_info;
 			})
 			->addColumn('team', function ($data) {				
@@ -415,7 +418,11 @@ class ProductionReportFoldingController extends Controller
                         ->whereRaw( "a.type_product = 'WIP'")
                         ->get();
 		*/
-		
+		$ms_ketua_regu = DB::table('master_employees')
+                        ->select('id','name')
+                        ->whereRaw( "status = 'Active'")
+                        ->get();
+						
         $ms_known_by = DB::table('master_employees')
                         ->select('id','name')
                         ->whereRaw( "id_master_bagians IN('3','4')")
@@ -431,7 +438,7 @@ class ProductionReportFoldingController extends Controller
         $activity='Add Entry Report Folding';
         $this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
 
-        return view('production.entry_report_folding_add',compact('ms_departements','ms_known_by','formattedCode'));			
+        return view('production.entry_report_folding_add',compact('ms_departements','ms_ketua_regu','ms_known_by','formattedCode'));			
     }
 	private function production_entry_report_folding_create_code(){
 		$lastCode = ProductionEntryReportSF::whereRaw( "left(report_number,2) = 'RF'")
@@ -463,7 +470,8 @@ class ProductionReportFoldingController extends Controller
                 'id_master_customers.required' => 'Cannot Be Empty',
                 'id_master_work_centers.required' => 'Cannot Be Empty',
                 'id_master_regus.required' => 'Cannot Be Empty',                
-                'shift.required' => 'Cannot Be Empty',                
+                'shift.required' => 'Cannot Be Empty',            
+                'id_ketua_regu.required' => 'Cannot Be Empty',             
                 'id_known_by.required' => 'Cannot Be Empty',                
             ];
 
@@ -474,6 +482,7 @@ class ProductionReportFoldingController extends Controller
                 'id_master_work_centers' => 'required',
                 'id_master_regus' => 'required',
                 'shift' => 'required',
+                'id_ketua_regu' => 'required',
                 'id_known_by' => 'required',
 
             ], $pesan);			
@@ -482,6 +491,9 @@ class ProductionReportFoldingController extends Controller
 			$validatedData['report_number'] = $this->production_entry_report_folding_create_code();
 			$validatedData['engine_shutdown_description'] = $_POST['engine_shutdown_description'];
 			$validatedData['note'] = $_POST['note'];
+			$validatedData['ketua_regu'] = $_POST['id_ketua_regu'];
+			//$validatedData['id_cms_users'] =  Auth::user()->id;
+			$validatedData['id_cms_users'] =  $_POST['operator'];
 			$validatedData['know_by'] = $_POST['id_known_by'];
 			$validatedData['type'] = 'Folding';
 			$validatedData['status'] = 'Un Posted';
@@ -578,6 +590,11 @@ class ProductionReportFoldingController extends Controller
 						->whereRaw( "sha1(id_report_sfs) = '$response_id'")
 						->get();
 				
+				$ms_ketua_regu = DB::table('master_employees')
+						->select('id','name')
+						->whereRaw( "status = 'Active'")
+						->get(); 
+						
 				$ms_known_by = DB::table('master_employees')
 						->select('id','name')
 						->whereRaw( "id_master_bagians IN('3','4')")
@@ -591,7 +608,7 @@ class ProductionReportFoldingController extends Controller
 				$activity='Detail Entry Report Folding ID="'.$data[0]->id.'"';
 				$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
 
-				return view('production.entry_report_folding_detail',compact('data','ms_work_orders','data_detail_preparation','data_detail_hygiene','data_detail_production','ms_known_by'));
+				return view('production.entry_report_folding_detail',compact('data','ms_work_orders','data_detail_preparation','data_detail_hygiene','data_detail_production','ms_ketua_regu','ms_known_by'));
 				
 			}else{
 				return Redirect::to('/production-ent-report-folding')->with('pesan_danger', 'There Is An Error.');
@@ -615,7 +632,8 @@ class ProductionReportFoldingController extends Controller
                 'id_master_customers.required' => 'Cannot Be Empty',
                 'id_master_work_centers.required' => 'Cannot Be Empty',
                 'id_master_regus.required' => 'Cannot Be Empty',                
-                'shift.required' => 'Cannot Be Empty',                
+                'shift.required' => 'Cannot Be Empty',            
+				'id_ketua_regu.required' => 'Cannot Be Empty',          
                 'id_known_by.required' => 'Cannot Be Empty',                
             ];
 
@@ -626,6 +644,7 @@ class ProductionReportFoldingController extends Controller
                 'id_master_work_centers' => 'required',
                 'id_master_regus' => 'required',
                 'shift' => 'required',
+				'id_ketua_regu' => 'required',
                 'id_known_by' => 'required',
 
             ], $pesan);			
@@ -635,6 +654,9 @@ class ProductionReportFoldingController extends Controller
 			
 			$validatedData['know_by'] = $_POST['id_known_by'];
 			unset($validatedData["id_known_by"]);
+			
+			$validatedData['ketua_regu'] = $_POST['id_ketua_regu'];
+			unset($validatedData["id_ketua_regu"]);
 			
 			$validatedData['order_name'] = $_POST['id_master_products'];
 			unset($validatedData["id_master_products"]);
@@ -1036,6 +1058,10 @@ class ProductionReportFoldingController extends Controller
 				->leftJoin('master_customers AS c', 'report_sfs.id_master_customers', '=', 'c.id')
 				->leftJoin('master_work_centers AS d', 'report_sfs.id_master_work_centers', '=', 'd.id')
 				->leftJoin('master_employees AS e', 'report_sfs.know_by', '=', 'e.id')
+				->leftJoin('users AS f', 'report_sfs.id_cms_users', '=', 'f.id')
+				->leftJoin('master_employees AS g', 'report_sfs.ketua_regu', '=', 'g.id')
+				
+				->selectRaw('e.name AS pengawas, f.name AS operator, g.name AS ketua_regu')
 				->whereRaw( "sha1(report_sfs.id) = '$response_id'")
                 ->get();
 		//print_r($data);exit;
@@ -1068,21 +1094,24 @@ class ProductionReportFoldingController extends Controller
 					->where('id', $order_name[1])
 					->get();
 			*/
-			
-			$order_name = explode('|', $data_detail_production[0]->note);
-			
-			if(count($order_name)>1){
-			//Audit Log
-				$username= auth()->user()->email; 
-				$ipAddress=$_SERVER['REMOTE_ADDR'];
-				$location='0';
-				$access_from=Browser::browserName();
-				$activity='Print Entry Report Folding ID="'.$data[0]->id.'"';
-				$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+			if(!empty($data_detail_production[0]->note)){	
+				$order_name = explode('|', $data_detail_production[0]->note);
+				
+				if(count($order_name)>1){
+				//Audit Log
+					$username= auth()->user()->email; 
+					$ipAddress=$_SERVER['REMOTE_ADDR'];
+					$location='0';
+					$access_from=Browser::browserName();
+					$activity='Print Entry Report Folding ID="'.$data[0]->id.'"';
+					$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
 
-				return view('production.entry_report_folding_print',compact('data','data_detail_preparation','data_detail_hygiene','data_detail_production'));
+					return view('production.entry_report_folding_print',compact('data','data_detail_preparation','data_detail_hygiene','data_detail_production'));
+				}else{
+					return Redirect::to('/production-ent-report-folding')->with('pesan_danger', 'Data Report Folding Versi Aplikasi Sebelumnya Tidak Bisa Di Print');
+				}
 			}else{
-				return Redirect::to('/production-ent-report-folding')->with('pesan_danger', 'Data Report Folding Versi Aplikasi Sebelumnya Tidak Bisa Di Print');
+				return Redirect::to('/production-ent-report-folding')->with('pesan_danger', 'Data Report Folding Versi Aplikasi Sebelumnya Tidak Bisa Di Print / Data Detail Report Folding Belum Tersedia');
 			}
 		}else{
 			return Redirect::to('/production-ent-report-folding')->with('pesan_danger', 'There Is An Error.');

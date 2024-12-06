@@ -67,8 +67,11 @@ class ProductionReportBagMakingController extends Controller
         $datas = ProductionEntryReportBagMaking::leftJoin('master_regus AS c', 'report_bags.id_master_regus', '=', 'c.id')
 				->leftJoin('master_work_centers AS d', 'report_bags.id_master_work_centers', '=', 'd.id')
 				->leftJoin('master_customers AS e', 'report_bags.id_master_customers', '=', 'e.id')
+				->leftJoin('users AS f', 'report_bags.id_cms_users', '=', 'f.id')
+				
                 ->select('report_bags.*', 'c.regu', 'd.work_center', 'e.name')
-                //->whereRaw( "left(report_number,2) = 'RF'")
+                ->selectRaw('f.name AS operator')
+				
                 ->orderBy('report_bags.created_at', 'desc')
                 ->get();
 		//print_r($datas);exit;
@@ -81,10 +84,11 @@ class ProductionReportBagMakingController extends Controller
 			->addColumn('order_info', function ($data) {	
 				$order_name = explode('|', $data->order_name);	
 				$order_name = count($order_name)>1?$order_name[2]:$order_name[0];
+				$operator = !empty($data->operator)?'<br><span class="badge bg-success-subtle text-success">Operator : '.$data->operator.'</span>':'';
 				
 				$status = empty($data->status)?"Tidak Tersedia":$data->status;			
 				//$order_info = '<p><b>'.$order_name.'</b><br><code>Customer : </code><br>'.$data->name.'<br><footer class="blockquote-footer">Status : <cite>'.$status.'</cite></footer></p>';
-				$order_info = '<p><code>Customer : </code><br>'.$data->name.'<br><footer class="blockquote-footer">Status : <cite>'.$status.'</cite></footer></p>';
+				$order_info = '<p><code>Customer : </code><br>'.$data->name.'<br><footer class="blockquote-footer">Status : <cite>'.$status.'</cite>'.$operator.'</footer></p>';
 				return $order_info;
 			})
 			->addColumn('team', function ($data) {				
@@ -441,7 +445,11 @@ class ProductionReportBagMakingController extends Controller
                         ->whereRaw( "a.type_product = 'WIP'")
                         ->get();
 		*/
-		
+		$ms_ketua_regu = DB::table('master_employees')
+                        ->select('id','name')
+                        ->whereRaw( "status = 'Active'")
+                        ->get();
+						
         $ms_known_by = DB::table('master_employees')
                         ->select('id','name')
                         ->whereRaw( "id_master_bagians IN('3','4')")
@@ -457,7 +465,7 @@ class ProductionReportBagMakingController extends Controller
         $activity='Add Entry Report Bag Making';
         $this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
 
-        return view('production.entry_report_bag_making_add',compact('ms_departements','ms_known_by','formattedCode'));			
+        return view('production.entry_report_bag_making_add',compact('ms_departements','ms_ketua_regu','ms_known_by','formattedCode'));			
     }
 	private function production_entry_report_bag_making_create_code(){
 		$lastCode = ProductionEntryReportBagMaking::whereRaw( "left(report_number,3) = 'RBM'")
@@ -489,7 +497,8 @@ class ProductionReportBagMakingController extends Controller
                 'id_master_customers.required' => 'Cannot Be Empty',
                 'id_master_work_centers.required' => 'Cannot Be Empty',
                 'id_master_regus.required' => 'Cannot Be Empty',                
-                'shift.required' => 'Cannot Be Empty',                
+                'shift.required' => 'Cannot Be Empty',       
+                'id_ketua_regu.required' => 'Cannot Be Empty',                
                 'id_known_by.required' => 'Cannot Be Empty',                
             ];
 
@@ -500,6 +509,7 @@ class ProductionReportBagMakingController extends Controller
                 'id_master_work_centers' => 'required',
                 'id_master_regus' => 'required',
                 'shift' => 'required',
+                'id_ketua_regu' => 'required',
                 'id_known_by' => 'required',
 
             ], $pesan);			
@@ -508,6 +518,9 @@ class ProductionReportBagMakingController extends Controller
 			$validatedData['report_number'] = $this->production_entry_report_bag_making_create_code();
 			$validatedData['engine_shutdown_description'] = $_POST['engine_shutdown_description'];
 			$validatedData['note'] = $_POST['note'];
+			$validatedData['ketua_regu'] = $_POST['id_ketua_regu'];
+			//$validatedData['id_cms_users'] =  Auth::user()->id;
+			$validatedData['id_cms_users'] =  $_POST['operator'];
 			$validatedData['known_by'] = $_POST['id_known_by'];
 			//$validatedData['type'] = 'Folding';
 			$validatedData['status'] = 'Un Posted';
@@ -622,7 +635,12 @@ class ProductionReportBagMakingController extends Controller
 							->select('report_bag_wastes.*')
 							->whereRaw( "sha1(id_report_bags) = '$response_id'")
 							->get(); 
-							
+				
+				$ms_ketua_regu = DB::table('master_employees')
+						->select('id','name')
+						->whereRaw( "status = 'Active'")
+						->get(); 
+						
 				$ms_known_by = DB::table('master_employees')
 						->select('id','name')
 						->whereRaw( "id_master_bagians IN('3','4')")
@@ -636,7 +654,7 @@ class ProductionReportBagMakingController extends Controller
 				$activity='Detail Entry Report Bag Making ID="'.$data[0]->id.'"';
 				$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
 
-				return view('production.entry_report_bag_making_detail',compact('data','ms_work_orders','data_detail_preparation','data_detail_hygiene','data_detail_production','data_detail_waste','ms_known_by'));
+				return view('production.entry_report_bag_making_detail',compact('data','ms_work_orders','data_detail_preparation','data_detail_hygiene','data_detail_production','data_detail_waste','ms_ketua_regu','ms_known_by'));
 				
 			}else{
 				return Redirect::to('/production-ent-report-bag-making')->with('pesan_danger', 'There Is An Error.');
@@ -660,7 +678,8 @@ class ProductionReportBagMakingController extends Controller
                 'id_master_customers.required' => 'Cannot Be Empty',
                 'id_master_work_centers.required' => 'Cannot Be Empty',
                 'id_master_regus.required' => 'Cannot Be Empty',                
-                'shift.required' => 'Cannot Be Empty',                
+                'shift.required' => 'Cannot Be Empty',          
+				'id_ketua_regu.required' => 'Cannot Be Empty',             
                 'id_known_by.required' => 'Cannot Be Empty',                
             ];
 
@@ -671,6 +690,7 @@ class ProductionReportBagMakingController extends Controller
                 'id_master_work_centers' => 'required',
                 'id_master_regus' => 'required',
                 'shift' => 'required',
+				'id_ketua_regu' => 'required',
                 'id_known_by' => 'required',
 
             ], $pesan);			
@@ -680,6 +700,9 @@ class ProductionReportBagMakingController extends Controller
 			
 			$validatedData['known_by'] = $_POST['id_known_by'];
 			unset($validatedData["id_known_by"]);
+			
+			$validatedData['ketua_regu'] = $_POST['id_ketua_regu'];
+			unset($validatedData["id_ketua_regu"]);
 			
 			//$validatedData['order_name'] = $_POST['id_master_products'];
 			//unset($validatedData["id_master_products"]);
@@ -1251,6 +1274,10 @@ class ProductionReportBagMakingController extends Controller
 				->leftJoin('master_customers AS c', 'report_bags.id_master_customers', '=', 'c.id')
 				->leftJoin('master_work_centers AS d', 'report_bags.id_master_work_centers', '=', 'd.id')
 				->leftJoin('master_employees AS e', 'report_bags.known_by', '=', 'e.id')
+				->leftJoin('users AS f', 'report_bags.id_cms_users', '=', 'f.id')
+				->leftJoin('master_employees AS g', 'report_bags.ketua_regu', '=', 'g.id')
+				
+				->selectRaw('e.name AS pengawas, f.name AS operator, g.name AS ketua_regu')
 				->whereRaw( "sha1(report_bags.id) = '$response_id'")
                 ->get();
 		//print_r($data);exit;
@@ -1301,20 +1328,25 @@ class ProductionReportBagMakingController extends Controller
 			echo "</pre>";
 			exit;
 			*/
-			$order_name = explode('|', $data_detail_production[0]->note);
-			
-			if(count($order_name)>1){
-			//Audit Log
-				$username= auth()->user()->email; 
-				$ipAddress=$_SERVER['REMOTE_ADDR'];
-				$location='0';
-				$access_from=Browser::browserName();
-				$activity='Print Entry Report Bag Making ID="'.$data[0]->id.'"';
-				$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+			if(!empty($data_detail_production[0]->note)){
+				
+				$order_name = explode('|', $data_detail_production[0]->note);
+				
+				if(count($order_name)>1){
+				//Audit Log
+					$username= auth()->user()->email; 
+					$ipAddress=$_SERVER['REMOTE_ADDR'];
+					$location='0';
+					$access_from=Browser::browserName();
+					$activity='Print Entry Report Bag Making ID="'.$data[0]->id.'"';
+					$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
 
-				return view('production.entry_report_bag_making_print',compact('data','data_detail_preparation','data_detail_hygiene','data_detail_production','data_detail_waste','data_detail_pr'));
+					return view('production.entry_report_bag_making_print',compact('data','data_detail_preparation','data_detail_hygiene','data_detail_production','data_detail_waste','data_detail_pr'));
+				}else{
+					return Redirect::to('/production-ent-report-bag-making')->with('pesan_danger', 'Data Report Bag Making Versi Aplikasi Sebelumnya Tidak Bisa Di Print');
+				}
 			}else{
-				return Redirect::to('/production-ent-report-bag-making')->with('pesan_danger', 'Data Report Bag Making Versi Aplikasi Sebelumnya Tidak Bisa Di Print');
+				return Redirect::to('/production-ent-report-bag-making')->with('pesan_danger', 'Data Report Bag Making Versi Aplikasi Sebelumnya Tidak Bisa Di Print / Data Detail Report Bag Making Belum Tersedia');
 			}
 		}else{
 			return Redirect::to('/production-ent-report-bag-making')->with('pesan_danger', 'There Is An Error.');
