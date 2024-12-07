@@ -318,7 +318,22 @@
 											
 										});
 									</script>
-									
+									<div class="row mb-4 field-wrapper required-field">
+										<label for="horizontal-password-input" class="col-sm-3 col-form-label">Ketua Regu </label>
+										<div class="col-sm-9">
+											<select class="form-select data-select2" name="id_ketua_regu" id="id_ketua_regu" required>
+												<option value="">** Please Select A Ketua Regu</option>
+												@foreach ($ms_ketua_regu as $data_for)
+													<option value="{{ $data_for->id }}" {{ $data_for->id == $data[0]->ketua_regu ? 'selected' : '' }} >{{ $data_for->name}}</option>
+												@endforeach
+											</select>
+											@if($errors->has('id_ketua_regu'))
+												<div class="text-danger"><b>{{ $errors->first('id_ketua_regu') }}</b></div>
+											@endif
+											
+											<input type="hidden" name="operator" class="form-control" value="{{ Auth::user()->id }}">
+										</div>
+									</div>	
 									<div class="row mb-4 field-wrapper required-field">
 										<label for="horizontal-password-input" class="col-sm-3 col-form-label">Known By </label>
 										<div class="col-sm-9">

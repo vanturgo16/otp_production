@@ -32,7 +32,7 @@
                         <div class="row justify-content-center mt-3">
                             <div class="col-12">
                                 <div class="text-center">
-                                    <h5>Welcome to the "Dashboard Production"</h5>
+                                    <h5>Welcome to the "Dashboard Production" {{ Auth::user()->id }}</h5>
                                     <p class="text-muted">Here you can Manage Production on the system PT Olefina Tifaplas Polikemindo</p>
                                 </div>
                             </div>

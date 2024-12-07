@@ -71,7 +71,7 @@
           </tbody>
         </table>
       </div>
-      <div class="col-md-5" style="font-size: 13px;">
+      <div class="col-md-4" style="font-size: 13px;">
         <table>
           <tbody>
             <tr>
@@ -87,16 +87,22 @@
               <td>: {{ $data[0]->work_center_code }}</td>
             </tr>
             <tr>
+              <td>Ketua Regu</td>
+              <td>
+                : {{ $data[0]->ketua_regu }}
+              </td>
+            </tr>
+            <tr>
               <td>Operator</td>
               <td>
-                :
+                : {{ $data[0]->operator }}
               </td>
             </tr>
           </tbody>
         </table>
       </div>
-      <div class="col-md-2" style="font-size: 13px;">
-        <table border="1" cellpadding="0" cellspacing="0" style="table-layout: auto;width: 100%">
+      <div class="col-md-3" style="font-size: 13px;">
+        <table border="1" cellpadding="0" cellspacing="0" style="width: 100%">
           <tbody>
             <tr>
               <th class="text-center">Dibuat</th>
@@ -104,13 +110,13 @@
             </tr>
             <tr>
               <td>
-                <p style="padding: 10px;">&nbsp;</p>
+                <p style="padding: 15px;">&nbsp;</p>
               </td>
               <td></td>
             </tr>
             <tr>
-              <th class="text-center">Operator</th>
-              <th class="text-center">Pengawas</th>
+              <th class="text-center" style="padding: 5px;">{{ $data[0]->operator }}<br><small> ( Operator )</small></th>
+              <th class="text-center" style="padding: 5px;">{{ $data[0]->pengawas }}<br><small> ( Pengawas )</small></th>
             </tr>
           </tbody>
         </table>
@@ -287,6 +293,7 @@
               <th class="text-center">Keterangan</th>
             </tr>
 			<?php if(!empty($data_detail_production[0])){ ?>
+				<?php  $sum_weight_standar = 0; $sum_weight_hasil_produksi = 0; ?>
 				<tr>
 				</tr>
 				@foreach ($data_detail_production as $data_detail)
@@ -309,7 +316,9 @@
 				  </td>
 				  <td class="pl-2">
 					Ukuran Standar : <b>{{ $data_product[0]->weight }}</b><br>
+					<?php $sum_weight_standar += $data_product[0]->weight; ?>
 					Hasil Produksi : <b>{{ $data_detail->weight }}</b>
+					<?php $sum_weight_hasil_produksi += $data_detail->weight; ?>
 				  </td>
 				  <td class="pl-2">{{ $data_detail->barcode }}</td>
 				  <!--td class="pl-2 text-danger">301.76</td-->
@@ -317,11 +326,25 @@
 				  
 				</tr>
 				@endforeach
+			<tr>
+              <th colspan="2" class="text-center">Jumlah</th>
+              <td>&nbsp;</td>
+              <td>&nbsp;</td>
+              <td>&nbsp;</td>
+              <td>&nbsp;</td>
+              <td>&nbsp;</td>
+              <th class="pl-2">
+					Ukuran Standar : <b>{{ $sum_weight_standar }}</b><br>
+					Hasil Produksi : <b>{{ $sum_weight_hasil_produksi }}</b>
+			  </th>
+              <td>&nbsp;</td>
+            </tr>	
 			<?php }else{ ?>
 				<tr>
 					<td class="pt-3 pb-3" colspan="10" align="center">Belum Ada Data Detail Yang Ditambahkan</td>
 				</tr>
 			<?php }; ?>
+			
           </tbody>
         </table>
       </div>
