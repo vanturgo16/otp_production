@@ -136,10 +136,24 @@
 										@if($errors->has('id_ketua_regu'))
 											<div class="text-danger"><b>{{ $errors->first('id_ketua_regu') }}</b></div>
 										@endif
-										
-										<input type="hidden" name="operator" class="form-control" value="{{ Auth::user()->id }}">
 									</div>
 								</div>	
+								<div class="row mb-4 field-wrapper required-field">
+									<label for="horizontal-password-input" class="col-sm-3 col-form-label">Operator </label>
+									<div class="col-sm-9">
+										<select class="form-select data-select2" name="id_operator" id="id_operator" required>
+											<option value="">** Please Select A Operator</option>
+											@foreach ($ms_operator as $data)
+												<option value="{{ $data->id }}">{{ $data->name }}</option>
+											@endforeach
+										</select>
+										@if($errors->has('id_operator'))
+											<div class="text-danger"><b>{{ $errors->first('id_operator') }}</b></div>
+										@endif
+										
+										<input type="hidden" name="id_cms_user" class="form-control" value="{{ Auth::user()->id }}">
+									</div>
+								</div>
 								<div class="row mb-4 field-wrapper required-field">
 									<label for="horizontal-password-input" class="col-sm-3 col-form-label">Known By </label>
 									<div class="col-sm-9">

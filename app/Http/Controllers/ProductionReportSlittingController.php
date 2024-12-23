@@ -59,7 +59,7 @@ class ProductionReportSlittingController extends Controller
         $datas = ProductionEntryReportSF::leftJoin('master_regus AS c', 'report_sfs.id_master_regus', '=', 'c.id')
 				->leftJoin('master_work_centers AS d', 'report_sfs.id_master_work_centers', '=', 'd.id')
 				->leftJoin('master_customers AS e', 'report_sfs.id_master_customers', '=', 'e.id')
-				->leftJoin('users AS f', 'report_sfs.id_cms_users', '=', 'f.id')
+				->leftJoin('master_employees AS f', 'report_sfs.operator', '=', 'f.id')
                 
 				->select('report_sfs.*', 'c.regu', 'd.work_center', 'e.name')
 				->selectRaw('f.name AS operator')
@@ -416,6 +416,11 @@ class ProductionReportSlittingController extends Controller
                         ->whereRaw( "status = 'Active'")
                         ->get();
 						
+		$ms_operator = DB::table('master_employees')
+                        ->select('id','name')
+                        ->whereRaw( "status = 'Active'")
+                        ->get();
+						
         $ms_known_by = DB::table('master_employees')
                         ->select('id','name')
                         ->whereRaw( "id_master_bagians IN('3','4')")
@@ -431,7 +436,7 @@ class ProductionReportSlittingController extends Controller
         $activity='Add Entry Report Slitting';
         $this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
 
-        return view('production.entry_report_slitting_add',compact('ms_departements','ms_tool_auxiliaries','ms_ketua_regu', 'ms_known_by','formattedCode'));			
+        return view('production.entry_report_slitting_add',compact('ms_departements','ms_tool_auxiliaries','ms_ketua_regu', 'ms_operator', 'ms_known_by','formattedCode'));			
     }
 	private function production_entry_report_slitting_create_code(){
 		$lastCode = ProductionEntryReportSF::whereRaw( "left(report_number,2) = 'RS'")
@@ -463,7 +468,8 @@ class ProductionReportSlittingController extends Controller
                 'id_master_work_centers.required' => 'Cannot Be Empty',
                 'id_master_regus.required' => 'Cannot Be Empty',                
                 'shift.required' => 'Cannot Be Empty',              
-                'id_ketua_regu.required' => 'Cannot Be Empty',         
+                'id_ketua_regu.required' => 'Cannot Be Empty',                   
+                'id_operator.required' => 'Cannot Be Empty',       
                 'id_known_by.required' => 'Cannot Be Empty',                
             ];
 
@@ -474,6 +480,7 @@ class ProductionReportSlittingController extends Controller
                 'id_master_regus' => 'required',
                 'shift' => 'required',
                 'id_ketua_regu' => 'required',
+                'id_operator' => 'required',
                 'id_known_by' => 'required',
 
             ], $pesan);			
@@ -483,7 +490,8 @@ class ProductionReportSlittingController extends Controller
 			$validatedData['note'] = $_POST['note'];
 			$validatedData['ketua_regu'] = $_POST['id_ketua_regu'];
 			//$validatedData['id_cms_users'] =  Auth::user()->id;
-			$validatedData['id_cms_users'] =  $_POST['operator'];
+			$validatedData['operator'] =  $_POST['id_operator'];
+			$validatedData['id_cms_users'] =  $_POST['id_cms_user'];
 			$validatedData['know_by'] = $_POST['id_known_by'];
 			$validatedData['type'] = 'Slitting';
 			$validatedData['status'] = 'Un Posted';
@@ -537,6 +545,7 @@ class ProductionReportSlittingController extends Controller
 						->leftJoin('work_orders AS b', 'a.id_work_orders', '=', 'b.id')
 						->select('a.*','b.wo_number')
 						->whereRaw( "sha1(a.id_report_sfs) = '$response_id'")
+						->orderBy('a.id', 'asc')
 						->get();
 				// Tinggal tambahkan query where nya jika detail sudah ada, wo yg tampil tidak boleh berbeda	
 				//echo empty($data_detail_production[0])?"kosong":"isi";exit;
@@ -574,6 +583,10 @@ class ProductionReportSlittingController extends Controller
 						->select('id','name')
 						->whereRaw( "status = 'Active'")
 						->get(); 
+				$ms_operator = DB::table('master_employees')
+							->select('id','name')
+							->whereRaw( "status = 'Active'")
+							->get();       		
 				$ms_known_by = DB::table('master_employees')
 						->select('id','name')
 						->whereRaw( "id_master_bagians IN('3','4')")
@@ -587,7 +600,7 @@ class ProductionReportSlittingController extends Controller
 				$activity='Detail Entry Report Slitting ID="'.$data[0]->id.'"';
 				$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
 
-				return view('production.entry_report_slitting_detail',compact('data','ms_work_orders','data_detail_preparation','data_detail_hygiene','data_detail_production','ms_ketua_regu','ms_known_by'));
+				return view('production.entry_report_slitting_detail',compact('data','ms_work_orders','data_detail_preparation','data_detail_hygiene','data_detail_production','ms_ketua_regu','ms_operator','ms_known_by'));
 				
 			}else{
 				return Redirect::to('/production-ent-report-slitting')->with('pesan_danger', 'There Is An Error.');
@@ -611,7 +624,8 @@ class ProductionReportSlittingController extends Controller
                 'id_master_work_centers.required' => 'Cannot Be Empty',
                 'id_master_regus.required' => 'Cannot Be Empty',                
                 'shift.required' => 'Cannot Be Empty',                
-				'id_ketua_regu.required' => 'Cannot Be Empty', 
+				'id_ketua_regu.required' => 'Cannot Be Empty',              
+                'id_operator.required' => 'Cannot Be Empty',    
                 'id_known_by.required' => 'Cannot Be Empty',                
             ];
 
@@ -622,19 +636,23 @@ class ProductionReportSlittingController extends Controller
                 'id_master_regus' => 'required',
                 'shift' => 'required',
 				'id_ketua_regu' => 'required',
+                'id_operator' => 'required',
                 'id_known_by' => 'required',
 
             ], $pesan);			
 			
 			$validatedData['engine_shutdown_description'] = $_POST['engine_shutdown_description'];
 			$validatedData['note'] = $_POST['note'];
-			$validatedData['id_cms_users'] =  $_POST['operator'];
+			$validatedData['id_cms_users'] =  $_POST['id_cms_user'];
 			
 			$validatedData['know_by'] = $_POST['id_known_by'];
 			unset($validatedData["id_known_by"]);
 			
 			$validatedData['ketua_regu'] = $_POST['id_ketua_regu'];
 			unset($validatedData["id_ketua_regu"]);
+						
+			$validatedData['operator'] = $_POST['id_operator'];
+			unset($validatedData["id_operator"]);
 			
             ProductionEntryReportSF::where('id', $data[0]->id)
 				->update($validatedData);
@@ -803,6 +821,8 @@ class ProductionReportSlittingController extends Controller
 				$validatedData['id_report_blow_production_result'] = $data_blow[0]->id;
 				$validatedData['type_result'] = 'Slitting';
 				
+				//print_r($validatedData);exit;
+				
 				$response = ProductionEntryReportSFProductionResult::create($validatedData);
 				
 				if(!empty($response)){
@@ -815,6 +835,17 @@ class ProductionReportSlittingController extends Controller
 					->where('barcode_number', $response->barcode)
 					->update($updatedData);
 					
+					if(empty($_POST['used_next_shift']) || isset($_POST['join'])){
+						if(empty($_POST['used_next_shift'])){
+							$updatedDataBS['used_next_shift'] = '0';						
+						}
+						if(isset($_POST['join'])){
+							$updatedDataBS['join'] = $_POST['join'];	
+						}
+						DB::table('barcode_detail')
+						->where('barcode_number', $response->barcode_start)
+						->update($updatedDataBS);
+					}
 					
 					//Audit Log		
 					$username= auth()->user()->email; 
@@ -838,7 +869,8 @@ class ProductionReportSlittingController extends Controller
 		//print_r($_POST);exit;
 		$data = DB::table('report_sf_production_results as a')
 			->leftJoin('report_sfs as b', 'a.id_report_sfs', '=', 'b.id')
-			->select('a.*')
+			->leftJoin('barcode_detail as c', 'a.barcode_start', '=', 'c.barcode_number')
+			->select('a.*', 'c.used_next_shift', 'c.join')
 			->whereRaw( "sha1(a.id_report_sfs) = '$response_id_rs'")
 			->whereRaw( "sha1(a.id) = '$response_id_rs_pr'")
 			->get();
@@ -872,6 +904,7 @@ class ProductionReportSlittingController extends Controller
 			->get();
 			
 		$barcode_start = $_POST['id_master_barcode_start'];
+		
 		$data_blow = ProductionEntryReportBlowProductionResult::whereRaw( "report_blow_production_results.barcode = '$barcode_start'")
 			->select('*')
 			->get();
@@ -925,13 +958,15 @@ class ProductionReportSlittingController extends Controller
 			
 			$validatedData['id_report_blows'] = $data_blow[0]->id_report_blows;
 			$validatedData['id_report_blow_production_result'] = $data_blow[0]->id;
+			
+			//print_r($validatedData);exit;
 			/*
 			$response = ProductionEntryReportSFProductionResult::where('id', $data[0]->id)
 				->where('id_report_blows', $data[0]->id_report_blows)
 				->update($validatedData);
 			*/	
 			$response = ProductionEntryReportSFProductionResult::where('id', $data[0]->id)
-				->where('id', $data[0]->id)
+				//->where('id', $data[0]->id)
 				->update($validatedData);
 				
 			/*
@@ -951,14 +986,28 @@ class ProductionReportSlittingController extends Controller
 					->where('barcode_number', $validatedData['barcode'])
 					->update($updatedData);
 				
-				if($validatedData['barcode'] <> $data[0]->barcode){	
-					
+				if(empty($_POST['used_next_shift']) || isset($_POST['join'])){
+					if(empty($_POST['used_next_shift'])){
+						$updatedDataBS['used_next_shift'] = '0';						
+					}
+					if(isset($_POST['join'])){
+						$updatedDataBS['join'] = $_POST['join']==''?'-':$_POST['join'];	
+					}
+					DB::table('barcode_detail')
+					->where('barcode_number', $validatedData['barcode_start'])
+					->update($updatedDataBS);
+				}
+				
+				if($validatedData['barcode'] <> $data[0]->barcode){						
 					DB::table('barcode_detail')
 					->where('barcode_number', $data[0]->barcode)
-					//->update(['status' => 'Un Used']);
-					//Jika Barcode Bisa Digunakan Lagi, Sesuaikan status data barcode menjadi NULL
-					->update(['status' => null]);
-					
+					->update(['status' => null]);					
+				}
+				
+				if($validatedData['barcode_start'] <> $data[0]->barcode_start){						
+					DB::table('barcode_detail')
+					->where('barcode_number', $data[0]->barcode_start)
+					->update(['used_next_shift' => '1', 'join' => '-']);					
 				}
 				
 				//Audit Log		
@@ -988,6 +1037,7 @@ class ProductionReportSlittingController extends Controller
 				->whereRaw( "sha1(id) = '$id'")
                 ->get();
 		$barcode = $data[0]->barcode;
+		$barcode_start = $data[0]->barcode_start;
 		
 		if(!empty($data[0])){
 			
@@ -998,11 +1048,16 @@ class ProductionReportSlittingController extends Controller
 				//Jika Barcode Bisa Digunakan Lagi, Sesuaikan status data barcode menjadi NULL
 				$updatedData['status'] = null;
 				
-				//$updatedData['status'] = 'Un Used';
-				
 				DB::table('barcode_detail')
 				->where('barcode_number', $barcode)
 				->update($updatedData);
+				
+				$updatedDataBS['used_next_shift'] = '1';
+				$updatedDataBS['join'] = '-';
+				
+				DB::table('barcode_detail')
+				->where('barcode_number', $barcode_start)
+				->update($updatedDataBS);
 				
 				//Audit Log		
 				$username= auth()->user()->email; 
@@ -1032,8 +1087,9 @@ class ProductionReportSlittingController extends Controller
 				->leftJoin('master_employees AS e', 'report_sfs.know_by', '=', 'e.id')
 				->leftJoin('users AS f', 'report_sfs.id_cms_users', '=', 'f.id')
 				->leftJoin('master_employees AS g', 'report_sfs.ketua_regu', '=', 'g.id')
+				->leftJoin('master_employees AS h', 'report_sfs.operator', '=', 'h.id')
 				
-				->selectRaw('e.name AS pengawas, f.name AS operator, g.name AS ketua_regu')
+				->selectRaw('e.name AS pengawas, f.name AS data_entry, h.name AS operator, g.name AS ketua_regu')
 				->whereRaw( "sha1(report_sfs.id) = '$response_id'")
                 ->get();
 		

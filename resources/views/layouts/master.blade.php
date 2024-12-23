@@ -6,6 +6,8 @@
     <title>Production | PT. OTP</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+	<!-- choices css -->
+	<link href="{{ asset('assets/libs/choices.js/public/assets/styles/choices.min.css') }}" rel="stylesheet" type="text/css" />
     <!-- App favicon -->
     <link rel="shortcut icon" href="{{ asset('assets/images/icon-otp.png') }}">
     <!-- plugin css -->
@@ -29,7 +31,8 @@
     <link href="{{ asset('assets/css/app.min.css') }}" id="app-style" rel="stylesheet" type="text/css" />
     {{-- Custom --}}
     <link href="{{ asset('assets/css/custom.css') }}" id="app-style" rel="stylesheet" type="text/css" />
-    <link href="{{ asset('assets/libs/choices.js/public/assets/styles/choices.min.css') }}" id="app-style" rel="stylesheet" type="text/css" />
+    <!-- choices css -->
+	<link href="{{ asset('assets/libs/choices.js/public/assets/styles/choices.min.css') }}" id="app-style" rel="stylesheet" type="text/css" />
 	
     {{-- Jquery --}}
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -40,6 +43,7 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <link rel="stylesheet" href="{{ asset('assets/css/production/style.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/production/toggle.css') }}">
     
 
     <style>

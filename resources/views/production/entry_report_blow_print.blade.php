@@ -98,6 +98,12 @@
                 : {{ $data[0]->operator }}
               </td>
             </tr>
+            <tr>
+              <td>Data Entry</td>
+              <td>
+                : {{ $data[0]->data_entry }}
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -255,12 +261,17 @@
               <th class="text-center">Kg</th>
               <th class="text-center">Penyebab Waste</th>
             </tr>
+			<?php  $sum_waste = 0;  ?>
 			@foreach ($data_detail_waste as $data_detail)
             <tr>
-              <td class="pl-2 text-center"> - </td>
+              <td class="text-center"> {{ $data_detail->waste }} </td><?php $sum_waste += $data_detail->waste; ?>
               <td class="pl-2"> {{ $data_detail->cause_waste }} </td>
             </tr>
 			@endforeach
+			<tr>
+              <th class="text-center">{{ $sum_waste }}</th>
+              <th class="text-center">Jumlah</th>
+            </tr>
             <!-- <tr>
               <th>Kg</th>
               <th>Kg</th>
@@ -293,7 +304,7 @@
               <th class="text-center">Keterangan</th>
             </tr>
 			<?php if(!empty($data_detail_production[0])){ ?>
-				<?php  $sum_weight_standar = 0; $sum_weight_hasil_produksi = 0; ?>
+				<?php  $sum_roll = 0; $sum_weight_standar = 0; $sum_weight_hasil_produksi = 0; ?>
 				<tr>
 				</tr>
 				@foreach ($data_detail_production as $data_detail)
@@ -301,7 +312,10 @@
 				  <td class="pl-2">{{ $data_detail->start_time }}</td>
 				  <td class="pl-2">{{ $data_detail->finish_time }}</td>
 				  <td></td>
-				  <td class="pl-2"></td>
+				  <td class="text-center">
+					{{ $data_detail->roll }}
+					<?php $sum_roll += $data_detail->roll; ?>
+				  </td>
 				  <td class="pl-2">
 					Ukuran Standar : <b>{{ $data_product[0]->thickness }}</b><br>
 					Hasil Produksi : <b>{{ $data_detail->thickness }}</b>
@@ -322,14 +336,17 @@
 				  </td>
 				  <td class="pl-2">{{ $data_detail->barcode }}</td>
 				  <!--td class="pl-2 text-danger">301.76</td-->
-				  <td class="pl-2"></td>
+				  <td class="pl-2">
+					{{ $data_detail->note }}<br>
+					Status : {{ $data_detail->status }}
+				  </td>
 				  
 				</tr>
 				@endforeach
 			<tr>
               <th colspan="2" class="text-center">Jumlah</th>
               <td>&nbsp;</td>
-              <td>&nbsp;</td>
+              <th class="text-center">{{ $sum_roll }}</th>
               <td>&nbsp;</td>
               <td>&nbsp;</td>
               <td>&nbsp;</td>

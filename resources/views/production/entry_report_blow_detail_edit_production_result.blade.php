@@ -212,6 +212,15 @@
 													@endif
 												</div>
 											</div> 
+											<div class="row mb-4 field-wrapper">
+												<label for="horizontal-firstname-input" class="col-sm-2 col-form-label">Keterangan </label>
+												<div class="col-sm-10">
+													<input type="text" class="form-control" name="note" value="{{ $data[0]->note }}">
+													@if($errors->has('note'))
+														<div class="text-danger"><b>{{ $errors->first('note') }}</b></div>
+													@endif
+												</div>
+											</div> 
 											
 											<input type="hidden" class="form-control" name="token_rb" value="{{ Request::segment(2) }}">
 											<input type="hidden" class="form-control" name="token_rb_pr" value="{{ sha1($data[0]->id); }}">

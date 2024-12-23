@@ -258,6 +258,28 @@
 										</div>
 									</div>
 									<div class="row mb-4 field-wrapper required-field">
+										<label for="horizontal-firstname-input" class="col-sm-3 col-form-label">Sisa Campuran</label>
+										<div class="col-sm-9">
+											<input class="form-control" name="sisa_campuran" id="sisa_campuran" type="text">
+											<p class="card-title-desc"><code>.Kg</code></p>
+											@if($errors->has('sisa_campuran'))
+												<div class="text-danger"><b>{{ $errors->first('sisa_campuran') }}</b></div>
+											@endif
+										</div>
+									</div>
+									<script>
+										$(document).ready(function(){
+											$("#sisa_campuran").keyup(function() {
+												var n_taking = parseFloat(document.getElementById('taking').value);
+												var n_sisa_campuran = parseFloat(document.getElementById('sisa_campuran').value);
+
+												if (!isNaN(n_taking) && !isNaN(n_sisa_campuran) && n_sisa_campuran > n_taking) {
+													document.getElementById('sisa_campuran').value = n_taking;
+												}
+											});
+										});
+									</script>
+									<div class="row mb-4 field-wrapper required-field">
 										<label for="horizontal-firstname-input" class="col-sm-3 col-form-label">Taking</label>
 										<div class="col-sm-9">
 											<input class="form-control" name="taking" id="taking" type="text">
@@ -301,28 +323,7 @@
 											});
 										});
 									</script>
-									<div class="row mb-4 field-wrapper required-field">
-										<label for="horizontal-firstname-input" class="col-sm-3 col-form-label">Sisa Campuran</label>
-										<div class="col-sm-9">
-											<input class="form-control" name="sisa_campuran" id="sisa_campuran" type="text">
-											<p class="card-title-desc"><code>.Kg</code></p>
-											@if($errors->has('sisa_campuran'))
-												<div class="text-danger"><b>{{ $errors->first('sisa_campuran') }}</b></div>
-											@endif
-										</div>
-									</div>
-									<script>
-										$(document).ready(function(){
-											$("#sisa_campuran").keyup(function() {
-												var n_taking = parseFloat(document.getElementById('taking').value);
-												var n_sisa_campuran = parseFloat(document.getElementById('sisa_campuran').value);
-
-												if (!isNaN(n_taking) && !isNaN(n_sisa_campuran) && n_sisa_campuran > n_taking) {
-													document.getElementById('sisa_campuran').value = n_taking;
-												}
-											});
-										});
-									</script>
+									
 									<div class="row mb-4 field-wrapper">
 										<label for="horizontal-firstname-input" class="col-sm-3 col-form-label">Remaining</label>
 										<div class="col-sm-9">

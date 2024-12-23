@@ -52,6 +52,30 @@
 									<input type="hidden" class="form-control" name="token_rm_detail" value="{{ Request::segment(3) }}">
 									
 									<div class="row mb-4 field-wrapper required-field">
+										<label for="horizontal-firstname-input" class="col-sm-3 col-form-label">Sisa Campuran</label>
+										<div class="col-sm-9">
+											<input class="form-control" name="sisa_campuran" id="sisa_campuran" type="text" value="{{ $data[0]->sisa_camp }}">
+											<p class="card-title-desc"><code>.Kg</code></p>
+											@if($errors->has('sisa_campuran'))
+												<div class="text-danger"><b>{{ $errors->first('sisa_campuran') }}</b></div>
+											@endif
+										</div>
+									</div>
+									<script>
+										
+										$(document).ready(function(){
+											$("#sisa_campuran").keyup(function() {
+												var n_taking = {{ $data[0]->taking }};
+												var n_sisa_campuran = parseFloat(document.getElementById('sisa_campuran').value);
+
+												if (!isNaN(n_taking) && !isNaN(n_sisa_campuran) && n_sisa_campuran > n_taking) {
+													document.getElementById('sisa_campuran').value = n_taking;
+												}
+											});
+										});
+										
+									</script>
+									<div class="row mb-4 field-wrapper required-field">
 										<label for="horizontal-password-input" class="col-sm-3 col-form-label">Barcode  </label>										
 										<div class="col-sm-9">
 											<div>
@@ -83,30 +107,6 @@
 
 												if (!isNaN(n_taking) && !isNaN(n_usage) && n_usage > n_taking) {
 													document.getElementById('usage').value = n_taking;
-												}
-											});
-										});
-										
-									</script>
-									<div class="row mb-4 field-wrapper required-field">
-										<label for="horizontal-firstname-input" class="col-sm-3 col-form-label">Sisa Campuran</label>
-										<div class="col-sm-9">
-											<input class="form-control" name="sisa_campuran" id="sisa_campuran" type="text" value="{{ $data[0]->sisa_camp }}">
-											<p class="card-title-desc"><code>.Kg</code></p>
-											@if($errors->has('sisa_campuran'))
-												<div class="text-danger"><b>{{ $errors->first('sisa_campuran') }}</b></div>
-											@endif
-										</div>
-									</div>
-									<script>
-										
-										$(document).ready(function(){
-											$("#sisa_campuran").keyup(function() {
-												var n_taking = {{ $data[0]->taking }};
-												var n_sisa_campuran = parseFloat(document.getElementById('sisa_campuran').value);
-
-												if (!isNaN(n_taking) && !isNaN(n_sisa_campuran) && n_sisa_campuran > n_taking) {
-													document.getElementById('sisa_campuran').value = n_taking;
 												}
 											});
 										});
