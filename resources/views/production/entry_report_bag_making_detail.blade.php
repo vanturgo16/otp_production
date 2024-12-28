@@ -228,10 +228,24 @@
 											@if($errors->has('id_ketua_regu'))
 												<div class="text-danger"><b>{{ $errors->first('id_ketua_regu') }}</b></div>
 											@endif
-											
-											<input type="hidden" name="operator" class="form-control" value="{{ Auth::user()->id }}">
 										</div>
-									</div>										
+									</div>			
+									<div class="row mb-4 field-wrapper required-field">
+										<label for="horizontal-password-input" class="col-sm-3 col-form-label">Operator </label>
+										<div class="col-sm-9">
+											<select class="form-select data-select2" name="id_operator" id="id_operator" required>
+												<option value="">** Please Select A Operator</option>
+												@foreach ($ms_operator as $data_for)
+													<option value="{{ $data_for->id }}" {{ $data_for->id == $data[0]->operator ? 'selected' : '' }}>{{ $data_for->name }}</option>
+												@endforeach
+											</select>
+											@if($errors->has('id_operator'))
+												<div class="text-danger"><b>{{ $errors->first('id_operator') }}</b></div>
+											@endif
+											
+											<input type="hidden" name="id_cms_user" class="form-control" value="{{ Auth::user()->id }}">
+										</div>
+									</div>	
 									<div class="row mb-4 field-wrapper required-field">
 										<label for="horizontal-password-input" class="col-sm-3 col-form-label">Known By </label>
 										<div class="col-sm-9">
@@ -714,7 +728,36 @@
 													@endif
 												</div>
 											</div> 		
-											
+											<div class="row mb-4 field-wrapper">
+												<label for="horizontal-password-input" class="col-sm-4 col-form-label">Join  </label>
+												<div class="col-sm-8">
+													<select class="form-select data-select2" name="join" id="join">
+														<option value="">** Please Select A Join</option>
+														<option value="1">1</option>
+														<option value="2">2</option>
+														<option value="3">3</option>
+													</select>
+													@if($errors->has('join'))
+														<div class="text-danger"><b>{{ $errors->first('join') }}</b></div>
+													@endif
+												</div>
+											</div>													
+											<div class="row mb-4 field-wrapper">
+												<label for="horizontal-password-input" class="col-sm-4 col-form-label">Used Next Shift </label>
+												<div class="col-sm-8">
+													<label class="toggleSwitch nolabel" onclick="">
+														<input type="checkbox" name="used_next_shift"/>
+														<a></a>
+														<span>
+															<span class="left-span">No</span>
+															<span class="right-span">Yes</span>
+														</span>											
+													</label>
+													@if($errors->has('used_next_shift'))
+														<div class="text-danger"><b>{{ $errors->first('used_next_shift') }}</b></div>
+													@endif
+												</div>
+											</div>
 											<div class="row mb-4 field-wrapper required-field">
 												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Weight Starting </label>
 												<div class="col-sm-8">

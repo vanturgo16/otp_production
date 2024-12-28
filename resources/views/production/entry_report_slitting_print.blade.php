@@ -77,6 +77,12 @@
               <td>Operator</td>
               <td>: {{ $data[0]->operator }}</td>
             </tr>
+			<tr>
+              <td>Data Entry</td>
+              <td>
+                : {{ $data[0]->data_entry }}
+              </td>
+            </tr>
           </tbody></table>
         </div>
         <div class="col-md-6" style="font-size: 13px;">
@@ -220,6 +226,8 @@
 				<?php  $sum_roll_good = 0; $sum_roll_hold = 0; $sum_roll_reject = 0; ?>
 				<?php  $sum_meter_good = 0; $sum_meter_hold = 0; $sum_meter_reject = 0; ?>
 				<?php  $sum_kg_good = 0; $sum_kg_hold = 0; $sum_kg_reject = 0; ?>
+				<?php  $sum_kg_bahan_awal = 0; ?>
+				<?php  $sum_kg_waste_hasil_produksi = 0; ?>
 				@foreach ($data_detail_production as $data_detail)
 				<?php $order_name = explode('|', $data_detail->order_name_blow) ?>
 				<?php $note = explode('|', $data_detail->note) ?>
@@ -239,16 +247,20 @@
 					$sum_kg_hold += $data_detail->status=="Hold" ? $data_detail->weight : 0;
 					$sum_kg_reject += $data_detail->status=="Reject" ? $data_detail->weight : 0;
 				?>
+				<?php 
+					$sum_kg_bahan_awal += $data_detail->weight_blow ;
+					$sum_kg_waste_hasil_produksi += $data_detail->waste ;
+				?>
 				<tr>
 				</tr>
 				<tr class="text-center">
 					<td class="pl-2">{{ $data_detail->start_time }}</td>
 					<td class="pl-2">{{ $data_detail->finish_time }}</td>
 					<td class="pl-2">{{ $order_name[3] }}</td>
-					<td class="pl-2">{{ $data_detail->weight_blow }}</td>
+					<td>{{ $data_detail->weight_blow }}</td>
 					<td class="pl-2">{{ $data_detail->barcode_start }}</td>
 					<td class="pl-2">{{ $note[3] }}</td>
-					<td class="pl-2">{{ $data_detail->weight }}</td>
+					<td>{{ $data_detail->weight }}</td>
 					
 					<td class="text-center"> {{ $data_detail->status=="Good"?'✓':''; }} </td>
 					<td class="text-center"> {{ $data_detail->status=="Hold"?'✓':''; }} </td>
@@ -256,7 +268,7 @@
 				  
 					<td class="pl-2">{{ $data_detail->barcode }}</td>
 					<td class="pl-2">{{ $data_detail->wo_number }}</td>
-					<td class="pl-2">{{ $data_detail->waste }}</td>
+					<td>{{ $data_detail->waste }}</td>
 					<td class="pl-2">{{ $data_detail->cause_waste }}</td>
 				</tr>
 
@@ -271,9 +283,9 @@
             <tr>
               <th colspan="2" rowspan="3" class="text-center">Jumlah</th>
               <th rowspan="3"></th>
-              <td rowspan="3" class="text-center"><strong>Kg</strong></td>
-              <th rowspan="2">Pemakaian Bahan Awal</th>
-              <th colspan="2" rowspan="2">Sisa bahan untuk regu<br>Selanjutnya</th>
+              <td rowspan="3" class="text-center"><strong>{{ $sum_kg_bahan_awal; }}</strong></td>
+              <th rowspan="2" class="pl-2">Pemakaian Bahan Awal</th>
+              <th colspan="2" rowspan="2" class="pl-2">Sisa bahan untuk regu<br>Selanjutnya</th>
               <td class="text-center">{{ $sum_roll_good }}</td>
 			  <td class="text-center">{{ $sum_roll_hold }}</td>
 			  <td class="text-center">{{ $sum_roll_reject }}</td>
@@ -281,7 +293,7 @@
               <th>Roll</th>
               <!--th rowspan="3">Roll<br>Mtr<br>Kg</th-->
               <th rowspan="3"></th>
-              <td rowspan="3" class="text-center"><strong>Kg</strong></td>
+              <td rowspan="3" class="text-center"><strong>{{ $sum_kg_waste_hasil_produksi }}</strong></td>
               <th rowspan="3"></th>
             </tr>
             

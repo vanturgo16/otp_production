@@ -1398,7 +1398,7 @@ class ProductionController extends Controller
 				->leftJoin('master_regus AS c', 'report_blows.id_master_regus', '=', 'c.id')
 				->leftJoin('master_work_centers AS d', 'report_blows.id_master_work_centers', '=', 'd.id')
 				->leftJoin('master_customers AS e', 'report_blows.id_master_customers', '=', 'e.id')
-				->leftJoin('users AS f', 'report_blows.id_cms_users', '=', 'f.id')
+				->leftJoin('master_employees AS f', 'report_blows.operator', '=', 'f.id')
 				
                 ->select('report_blows.*','b.wo_number','c.regu','d.work_center','e.name')
                 ->selectRaw('f.name AS operator')
@@ -1791,6 +1791,10 @@ class ProductionController extends Controller
                         ->select('id','name')
                         ->whereRaw( "status = 'Active'")
                         ->get();
+        $ms_operator = DB::table('master_employees')
+                        ->select('id','name')
+                        ->whereRaw( "status = 'Active'")
+                        ->get();
         $ms_known_by = DB::table('master_employees')
                         ->select('id','name')
                         ->whereRaw( "id_master_bagians IN('3','4')")
@@ -1807,7 +1811,7 @@ class ProductionController extends Controller
         $activity='Add Entry Report Blow';
         $this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
 
-        return view('production.entry_report_blow_add',compact('ms_departements','ms_tool_auxiliaries','ms_work_orders','ms_ketua_regu', 'ms_known_by','formattedCode'));			
+        return view('production.entry_report_blow_add',compact('ms_departements','ms_tool_auxiliaries','ms_work_orders','ms_ketua_regu', 'ms_operator','ms_known_by','formattedCode'));			
     }
 	private function production_entry_report_blow_create_code(){
 		$lastCode = ProductionEntryReportBlow::orderBy('created_at', 'desc')
@@ -1830,25 +1834,26 @@ class ProductionController extends Controller
         $id_master_products = request()->get('id_master_products');
         $modul = !empty(request()->get('modul'))?request()->get('modul'):'';
         
-		$table = $type_product=='FG'?'master_product_fgs':'master_wips';
+		$table = $type_product=='FG'?'master_product_fgs AS a':'master_wips AS a';
 		
 		if($id_master_products!=''){
 			
 			if($modul=='folding'){
-				$datas = DB::table($table)
-					->select('*')
+				$datas = DB::table($table) 
+					//->leftJoin('master_units as b', 'a.id_report_sfs', '=', 'b.id')
+					->select('a.*')
 					->get();
 			}else{
 				
 				$datas = DB::table($table)
-					->select('*')
-					->whereRaw( "id = '$id_master_products'")
+					->select('a.*')
+					->whereRaw( "a.id = '$id_master_products'")
 					->get();
 			}
 			
 		}else{
 			$datas = DB::table($table)
-				->select('*')
+				->select('a.*')
 				->get();
 		}
 		
@@ -1856,11 +1861,16 @@ class ProductionController extends Controller
 		foreach($datas as $data){
 			$ukuran = $type_product=="FG"?$data->thickness." x ".$data->width." x ".$data->height:$data->thickness." x ".$data->width." x ".$data->length;
 			$selected = $data->id==$id_master_products?'selected':'';
-			$lists .= "<option value='".$type_product.'|'.$data->id.'|'.$data->description.'|'.$ukuran."' ".$selected.">".$data->description."</option>";
+			$perforasi = !empty($data->perforasi)&&$data->perforasi!="-"?$data->perforasi:'-';
+			$lists .= "<option value='".$type_product.'|'.$data->id.'|'.$data->description.'|'.$ukuran."' ".$selected.">".$data->description." | Perforasi : ".$perforasi."</option>";
 			//HARUS DIPERBAIKI TAMBAHKAN SIZE UNTUK DISPLAY UKURAN DI REPORT SLITTING
 		}
 		
-		$callback = array('list_products'=>$lists);
+		$callback = array(
+			'list_products'=> $lists
+			//'thickness'=> $data->thickness,
+			//'thickness_unit'=> $type_product=="FG" ? '<b>Meter '.$data->thickness.'</b>' : '<b>Meter</b>'
+		);
 		echo json_encode($callback);			
     }
 	public function jsonGetCustomers()
@@ -1900,7 +1910,15 @@ class ProductionController extends Controller
 				->select('a.*')
 				->whereRaw($where_query)
 				->get();				
-		}else if($where == "SLITTING START"){			
+		}else if($where == "SLITTING START"){
+			$where_query = "e.status = 'Closed' AND a.status = 'In Stock BLW' AND ( a.used_next_shift = '1' ";
+			
+			if(!empty($key)){
+				$where_query .= " OR a.barcode_number = '$key'";
+			}
+			
+			$where_query .= " )";
+			
 			$datas = DB::table('barcode_detail as a')
 				->leftJoin('barcodes as b', 'a.id_barcode', '=', 'b.id')
 				->leftJoin('report_sf_production_results as c', function($join) {
@@ -1914,9 +1932,11 @@ class ProductionController extends Controller
 				//Cek Status Report BLW START
 				->leftJoin('report_blow_production_results as d', 'a.barcode_number', '=', 'd.barcode')
 				->leftJoin('report_blows as e', 'd.id_report_blows', '=', 'e.id')
-				->where('e.status', 'Closed')
+				//->where('e.status', 'Closed')
 				//Cek Status Report BLW END
-				->where('a.status', 'In Stock BLW')
+				//->where('a.status', 'In Stock BLW')
+				//->where('a.used_next_shift', '1')
+				->whereRaw($where_query)
 				->select('a.*')
 				->get();
 		}else if($where == "SLITTING"){
@@ -1933,7 +1953,15 @@ class ProductionController extends Controller
 				->select('a.*')
 				->whereRaw($where_query)
 				->get();	
-		}else if($where == "FOLDING START"){			
+		}else if($where == "FOLDING START"){
+			$where_query = "e.status = 'Closed' AND a.status = 'In Stock SLT WIP' AND ( a.used_next_shift = '1' ";
+			
+			if(!empty($key)){
+				$where_query .= " OR a.barcode_number = '$key'";
+			}
+			
+			$where_query .= " )";
+			
 			$datas = DB::table('barcode_detail as a')				
 				->leftJoin('report_sf_production_results as c', function($join) {
 					$join->on('a.barcode_number', '=', 'c.barcode_start')
@@ -1952,10 +1980,11 @@ class ProductionController extends Controller
 				->leftJoin('report_sfs as e', function($join) {
 					$join->on('d.id_report_sfs', '=', 'e.id');
 				})
-				->where('e.status', 'Closed')
-				//Cek Status Report SLT END
-				
-				->where('a.status', '=', 'In Stock SLT WIP')
+				//->where('e.status', 'Closed')
+				//Cek Status Report SLT END				
+				//->where('a.status', '=', 'In Stock SLT WIP')
+				//->where('a.used_next_shift', '1')
+				->whereRaw($where_query)
 				->select('a.*')
 				->get();
 		}else if($where == "FOLDING"){
@@ -1975,7 +2004,13 @@ class ProductionController extends Controller
 		}else if($where == "BAG START"){	
 			//$jns_wo = substr($wo, 2, 3);			
 			//$where = ($jns_wo=="SLT")?"In Stock SLT FG":"In Stock FLD";
-			$where_query = "a.status IN('In Stock SLT FG','In Stock FLD')";
+			$where_query = "a.status IN('In Stock SLT FG','In Stock FLD') AND ( a.used_next_shift = '1' ";
+			
+			if(!empty($key)){
+				$where_query .= " OR a.barcode_number = '$key'";
+			}
+			
+			$where_query .= " )";
 			
 			$datas = DB::table('barcode_detail as a')
 				->leftJoin('barcodes as b', 'a.id_barcode', '=', 'b.id')
@@ -1987,11 +2022,12 @@ class ProductionController extends Controller
 						 });
 						 //->where('c.type_result', '=', 'Slitting');
 				})
-				//Cek Status Report BLW START
+				//Cek Status Report FLD START
 				->leftJoin('report_sf_production_results as d', 'a.barcode_number', '=', 'd.barcode')
-				->leftJoin('report_sfs as e', 'd.id_report_blows', '=', 'e.id')
+				->leftJoin('report_sfs as e', 'd.id_report_sfs', '=', 'e.id')
 				->where('e.status', 'Closed')
-				//Cek Status Report BLW END
+				//->where('a.used_next_shift', '1')
+				//Cek Status Report FLD END
 				//->where('a.status', $where)
 				->whereRaw($where_query)
 				->groupBy('a.barcode_number')
@@ -2041,6 +2077,7 @@ class ProductionController extends Controller
                 'id_master_regus.required' => 'Cannot Be Empty',                
                 'shift.required' => 'Cannot Be Empty',                
                 'id_ketua_regu.required' => 'Cannot Be Empty',                
+                'id_operator.required' => 'Cannot Be Empty',                
                 'id_known_by.required' => 'Cannot Be Empty',                
             ];
 
@@ -2053,6 +2090,7 @@ class ProductionController extends Controller
                 'id_master_regus' => 'required',
                 'shift' => 'required',
                 'id_ketua_regu' => 'required',
+                'id_operator' => 'required',
                 'id_known_by' => 'required',
 
             ], $pesan);			
@@ -2061,10 +2099,13 @@ class ProductionController extends Controller
 			$validatedData['know_by'] = $_POST['id_known_by'];
 			$validatedData['ketua_regu'] = $_POST['id_ketua_regu'];
 			//$validatedData['id_cms_users'] =  Auth::user()->id;
-			$validatedData['id_cms_users'] =  $_POST['operator'];
+			$validatedData['operator'] =  $_POST['id_operator'];
+			$validatedData['id_cms_users'] =  $_POST['id_cms_user'];
 			$validatedData['order_name'] = $_POST['id_master_products'];
 			$validatedData['type'] = $_POST['type'];
 			$validatedData['status'] = 'Un Posted';
+			
+			//print_r($validatedData);exit;
 			
             $response = ProductionEntryReportBlow::create($validatedData);
 			
@@ -2165,6 +2206,10 @@ class ProductionController extends Controller
 					$ms_ketua_regu = DB::table('master_employees')
 							->select('id','name')
 							->whereRaw( "status = 'Active'")
+							->get();        
+					$ms_operator = DB::table('master_employees')
+							->select('id','name')
+							->whereRaw( "status = 'Active'")
 							->get();       
 					$ms_known_by = DB::table('master_employees')
 							->select('id','name')
@@ -2180,7 +2225,7 @@ class ProductionController extends Controller
 					$activity='Detail Entry Report Blow ID="'.$data[0]->id.'"';
 					$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
 
-					return view('production.entry_report_blow_detail',compact('data','ms_work_orders','data_detail_preparation','data_detail_hygiene','data_detail_production','data_detail_waste','ms_ketua_regu','ms_known_by'));
+					return view('production.entry_report_blow_detail',compact('data','ms_work_orders','data_detail_preparation','data_detail_hygiene','data_detail_production','data_detail_waste','ms_ketua_regu','ms_operator','ms_known_by'));
 				}else{
 					return Redirect::to('/production-ent-report-blow')->with('pesan_danger', 'Data Report Blow Versi Aplikasi Sebelumnya Tidak Bisa Menampilkan Detail');
 				}
@@ -2209,6 +2254,7 @@ class ProductionController extends Controller
                 'id_master_regus.required' => 'Cannot Be Empty',                
                 'shift.required' => 'Cannot Be Empty',                
                 'id_ketua_regu.required' => 'Cannot Be Empty',                
+                'id_operator.required' => 'Cannot Be Empty',                
                 'id_known_by.required' => 'Cannot Be Empty',                
             ];
 
@@ -2221,6 +2267,7 @@ class ProductionController extends Controller
                 'id_master_regus' => 'required',
                 'shift' => 'required',
                 'id_ketua_regu' => 'required',
+                'id_operator' => 'required',
                 'id_known_by' => 'required',
 
             ], $pesan);			
@@ -2228,9 +2275,11 @@ class ProductionController extends Controller
 			$validatedData['know_by'] = $_POST['id_known_by'];		
 			$validatedData['order_name'] = $_POST['id_master_products'];
 			$validatedData['ketua_regu'] = $_POST['id_ketua_regu'];
-			$validatedData['id_cms_users'] =  $_POST['operator'];
+			$validatedData['operator'] = $_POST['id_operator'];
+			$validatedData['id_cms_users'] =  $_POST['id_cms_user'];
 			
 			unset($validatedData["id_ketua_regu"]);
+			unset($validatedData["id_operator"]);
 			unset($validatedData["id_known_by"]);
 			unset($validatedData["id_master_products"]);
 			
@@ -2426,7 +2475,9 @@ class ProductionController extends Controller
 			
 			$validatedData['start_time'] = $_POST['start'];		
 			$validatedData['finish_time'] = $_POST['finish'];		
-			$validatedData['barcode'] = $_POST['id_master_barcode'];		
+			$validatedData['barcode'] = $_POST['id_master_barcode'];				
+			$validatedData['note'] = $_POST['note'];
+			
 			unset($validatedData["start"]);
 			unset($validatedData["finish"]);
 			unset($validatedData["id_master_barcode"]);
@@ -2510,7 +2561,9 @@ class ProductionController extends Controller
 			
 			$validatedData['start_time'] = $_POST['start'];		
 			$validatedData['finish_time'] = $_POST['finish'];		
-			$validatedData['barcode'] = $_POST['id_master_barcode'];		
+			$validatedData['barcode'] = $_POST['id_master_barcode'];			
+			$validatedData['note'] = $_POST['note'];
+			
 			unset($validatedData["start"]);
 			unset($validatedData["finish"]);
 			unset($validatedData["id_master_barcode"]);		
@@ -2735,8 +2788,9 @@ class ProductionController extends Controller
 				->leftJoin('master_employees AS e', 'report_blows.know_by', '=', 'e.id')
 				->leftJoin('users AS f', 'report_blows.id_cms_users', '=', 'f.id')
 				->leftJoin('master_employees AS g', 'report_blows.ketua_regu', '=', 'g.id')
+				->leftJoin('master_employees AS h', 'report_blows.operator', '=', 'h.id')
 				
-                ->selectRaw('e.name AS pengawas, f.name AS operator, g.name AS ketua_regu')
+                ->selectRaw('e.name AS pengawas, f.name AS data_entry, h.name AS operator, g.name AS ketua_regu')
 				->whereRaw( "sha1(report_blows.id) = '$response_id'")
                 ->get();
 		$order_name = explode('|', $data[0]->order_name);
@@ -2757,7 +2811,7 @@ class ProductionController extends Controller
 							->get();
 					*/
 					$data_detail_preparation = DB::table('report_blow_preparation_checks')
-							->select('report_blow_preparation_checks.*')
+							->select('report_blow_preparation_checks.*')							
 							->whereRaw( "sha1(id_report_blows) = '$response_id'")
 							->get();
 					$data_detail_hygiene = DB::table('report_blow_hygiene_checks')
@@ -2770,6 +2824,7 @@ class ProductionController extends Controller
 							->get();      
 					$data_detail_production = DB::table('report_blow_production_results')
 							->select('report_blow_production_results.*')
+							->selectRaw('"1" AS roll')
 							->whereRaw( "sha1(id_report_blows) = '$response_id'")
 							->get();
 							
@@ -2909,7 +2964,8 @@ class ProductionController extends Controller
 		
 		$order_name = explode('|', $data_update[0]->order_name);			
 				
-		if(!empty($data_update[0])){	
+		if(!empty($data_update[0])){	//biar bisa push
+			
 			$data_product = DB::table('master_wips')
 				->select('*')
 				->whereRaw( "id = '".$order_name[1]."'")

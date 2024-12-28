@@ -149,7 +149,37 @@
 														}
 													});
 												});
-											</script>												
+											</script>	
+											<div class="row mb-4 field-wrapper">
+												<label for="horizontal-password-input" class="col-sm-2 col-form-label">Join  </label>
+												<div class="col-sm-10">
+													<select class="form-select data-select2" name="join" id="join">
+														<option value="">** Please Select A Join</option>
+														<option value="1" {{ $data[0]->join=='1'?'selected':'' }}>1</option>
+														<option value="2" {{ $data[0]->join=='2'?'selected':'' }}>2</option>
+														<option value="3" {{ $data[0]->join=='3'?'selected':'' }}>3</option>
+													</select>
+													@if($errors->has('join'))
+														<div class="text-danger"><b>{{ $errors->first('join') }}</b></div>
+													@endif
+												</div>
+											</div>
+											<div class="row mb-4 field-wrapper">
+												<label for="horizontal-password-input" class="col-sm-2 col-form-label">Used Next Shift </label>
+												<div class="col-sm-10">
+													<label class="toggleSwitch nolabel" onclick="">
+														<input type="checkbox" name="used_next_shift" <?= $data[0]->used_next_shift == '1' ? 'checked' : '' ?>/>
+														<a></a>
+														<span>
+															<span class="left-span">No</span>
+															<span class="right-span">Yes</span>
+														</span>											
+													</label>
+													@if($errors->has('used_next_shift'))
+														<div class="text-danger"><b>{{ $errors->first('used_next_shift') }}</b></div>
+													@endif
+												</div>
+											</div>			
 											<div class="row mb-4 field-wrapper required-field">
 												<label for="horizontal-password-input" class="col-sm-2 col-form-label">Work Orders </label>
 												<div class="col-sm-10">

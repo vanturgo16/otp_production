@@ -67,7 +67,7 @@ class ProductionReportBagMakingController extends Controller
         $datas = ProductionEntryReportBagMaking::leftJoin('master_regus AS c', 'report_bags.id_master_regus', '=', 'c.id')
 				->leftJoin('master_work_centers AS d', 'report_bags.id_master_work_centers', '=', 'd.id')
 				->leftJoin('master_customers AS e', 'report_bags.id_master_customers', '=', 'e.id')
-				->leftJoin('users AS f', 'report_bags.id_cms_users', '=', 'f.id')
+				->leftJoin('master_employees AS f', 'report_bags.operator', '=', 'f.id')
 				
                 ->select('report_bags.*', 'c.regu', 'd.work_center', 'e.name')
                 ->selectRaw('f.name AS operator')
@@ -449,6 +449,11 @@ class ProductionReportBagMakingController extends Controller
                         ->select('id','name')
                         ->whereRaw( "status = 'Active'")
                         ->get();
+		
+		$ms_operator = DB::table('master_employees')
+                        ->select('id','name')
+                        ->whereRaw( "status = 'Active'")
+                        ->get();	
 						
         $ms_known_by = DB::table('master_employees')
                         ->select('id','name')
@@ -465,7 +470,7 @@ class ProductionReportBagMakingController extends Controller
         $activity='Add Entry Report Bag Making';
         $this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
 
-        return view('production.entry_report_bag_making_add',compact('ms_departements','ms_ketua_regu','ms_known_by','formattedCode'));			
+        return view('production.entry_report_bag_making_add',compact('ms_departements','ms_ketua_regu','ms_operator','ms_known_by','formattedCode'));			
     }
 	private function production_entry_report_bag_making_create_code(){
 		$lastCode = ProductionEntryReportBagMaking::whereRaw( "left(report_number,3) = 'RBM'")
@@ -496,7 +501,8 @@ class ProductionReportBagMakingController extends Controller
                 //'id_master_products.required' => 'Cannot Be Empty',
                 'id_master_customers.required' => 'Cannot Be Empty',
                 'id_master_work_centers.required' => 'Cannot Be Empty',
-                'id_master_regus.required' => 'Cannot Be Empty',                
+                'id_master_regus.required' => 'Cannot Be Empty',                       
+                'id_operator.required' => 'Cannot Be Empty',                
                 'shift.required' => 'Cannot Be Empty',       
                 'id_ketua_regu.required' => 'Cannot Be Empty',                
                 'id_known_by.required' => 'Cannot Be Empty',                
@@ -510,6 +516,7 @@ class ProductionReportBagMakingController extends Controller
                 'id_master_regus' => 'required',
                 'shift' => 'required',
                 'id_ketua_regu' => 'required',
+                'id_operator' => 'required',
                 'id_known_by' => 'required',
 
             ], $pesan);			
@@ -520,7 +527,8 @@ class ProductionReportBagMakingController extends Controller
 			$validatedData['note'] = $_POST['note'];
 			$validatedData['ketua_regu'] = $_POST['id_ketua_regu'];
 			//$validatedData['id_cms_users'] =  Auth::user()->id;
-			$validatedData['id_cms_users'] =  $_POST['operator'];
+			$validatedData['operator'] =  $_POST['id_operator'];
+			$validatedData['id_cms_users'] =  $_POST['id_cms_user'];
 			$validatedData['known_by'] = $_POST['id_known_by'];
 			//$validatedData['type'] = 'Folding';
 			$validatedData['status'] = 'Un Posted';
@@ -640,7 +648,10 @@ class ProductionReportBagMakingController extends Controller
 						->select('id','name')
 						->whereRaw( "status = 'Active'")
 						->get(); 
-						
+				$ms_operator = DB::table('master_employees')
+						->select('id','name')
+						->whereRaw( "status = 'Active'")
+						->get(); 
 				$ms_known_by = DB::table('master_employees')
 						->select('id','name')
 						->whereRaw( "id_master_bagians IN('3','4')")
@@ -654,7 +665,7 @@ class ProductionReportBagMakingController extends Controller
 				$activity='Detail Entry Report Bag Making ID="'.$data[0]->id.'"';
 				$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
 
-				return view('production.entry_report_bag_making_detail',compact('data','ms_work_orders','data_detail_preparation','data_detail_hygiene','data_detail_production','data_detail_waste','ms_ketua_regu','ms_known_by'));
+				return view('production.entry_report_bag_making_detail',compact('data','ms_work_orders','data_detail_preparation','data_detail_hygiene','data_detail_production','data_detail_waste','ms_operator','ms_ketua_regu','ms_known_by'));
 				
 			}else{
 				return Redirect::to('/production-ent-report-bag-making')->with('pesan_danger', 'There Is An Error.');
@@ -679,7 +690,8 @@ class ProductionReportBagMakingController extends Controller
                 'id_master_work_centers.required' => 'Cannot Be Empty',
                 'id_master_regus.required' => 'Cannot Be Empty',                
                 'shift.required' => 'Cannot Be Empty',          
-				'id_ketua_regu.required' => 'Cannot Be Empty',             
+				'id_ketua_regu.required' => 'Cannot Be Empty',                        
+                'id_operator.required' => 'Cannot Be Empty',          
                 'id_known_by.required' => 'Cannot Be Empty',                
             ];
 
@@ -691,6 +703,7 @@ class ProductionReportBagMakingController extends Controller
                 'id_master_regus' => 'required',
                 'shift' => 'required',
 				'id_ketua_regu' => 'required',
+                'id_operator' => 'required',
                 'id_known_by' => 'required',
 
             ], $pesan);			
@@ -704,8 +717,8 @@ class ProductionReportBagMakingController extends Controller
 			$validatedData['ketua_regu'] = $_POST['id_ketua_regu'];
 			unset($validatedData["id_ketua_regu"]);
 			
-			//$validatedData['order_name'] = $_POST['id_master_products'];
-			//unset($validatedData["id_master_products"]);
+			$validatedData['operator'] = $_POST['id_operator'];
+			unset($validatedData["id_operator"]);
 			
             ProductionEntryReportBagMaking::where('id', $data[0]->id)
 				->update($validatedData);
@@ -913,6 +926,19 @@ class ProductionReportBagMakingController extends Controller
 						->where('barcode_number', $response->barcode)
 						->update($updatedData);
 						*/
+						
+						if(empty($_POST['used_next_shift']) || isset($_POST['join'])){
+							if(empty($_POST['used_next_shift'])){
+								$updatedDataBS['used_next_shift'] = '0';						
+							}
+							if(isset($_POST['join'])){
+								$updatedDataBS['join'] = $_POST['join'];	
+							}
+							DB::table('barcode_detail')
+							->where('barcode_number', $response->barcode_start)
+							->update($updatedDataBS);
+						}
+						
 						foreach($data_barcode as $datas){
 							$data_detail = array(
 									'id_report_bags' => $data[0]->id,
@@ -952,9 +978,11 @@ class ProductionReportBagMakingController extends Controller
 		
 		$data = DB::table('report_bag_production_results as a')
 			->leftJoin('report_bags as b', 'a.id_report_bags', '=', 'b.id')
-			->select('a.*', 'b.id_master_customers')
+			->leftJoin('barcode_detail as c', 'a.barcode_start', '=', 'c.barcode_number')
+			->select('a.*', 'b.id_master_customers', 'c.used_next_shift', 'c.join')
 			->whereRaw( "sha1(a.id_report_bags) = '$response_id_rb'")
 			->whereRaw( "sha1(a.id) = '$response_id_rb_pr'")
+			->groupBy('a.id')
 			->get();
 			
 		$id_master_customers = $data[0]->id_master_customers;
@@ -969,6 +997,7 @@ class ProductionReportBagMakingController extends Controller
 			->get();	
 		
 		//print_r($data);exit;
+		
 		if(!empty($data[0])){			
 			$data_detail= DB::table('report_bag_production_result_details AS a')
 				//->leftJoin('work_orders AS b', 'a.id_work_orders', '=', 'b.id')
@@ -1070,6 +1099,22 @@ class ProductionReportBagMakingController extends Controller
 					->update(['status' => null]);					
 				}
 				*/
+				if(empty($_POST['used_next_shift']) || isset($_POST['join'])){
+					if(empty($_POST['used_next_shift'])){
+						$updatedDataBS['used_next_shift'] = '0';						
+					}
+					if(isset($_POST['join'])){
+						$updatedDataBS['join'] = $_POST['join']==''?'-':$_POST['join'];	
+					}
+					DB::table('barcode_detail')
+					->where('barcode_number', $validatedData['barcode_start'])
+					->update($updatedDataBS);
+				}
+				if($validatedData['barcode_start'] <> $data[0]->barcode_start){						
+					DB::table('barcode_detail')
+					->where('barcode_number', $data[0]->barcode_start)
+					->update(['used_next_shift' => '1', 'join' => '-']);					
+				}
 				//Audit Log		
 				$username= auth()->user()->email; 
 				$ipAddress=$_SERVER['REMOTE_ADDR'];
