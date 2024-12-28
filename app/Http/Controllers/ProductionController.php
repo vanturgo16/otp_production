@@ -2964,7 +2964,8 @@ class ProductionController extends Controller
 		
 		$order_name = explode('|', $data_update[0]->order_name);			
 				
-		if(!empty($data_update[0])){	
+		if(!empty($data_update[0])){	//biar bisa push
+			
 			$data_product = DB::table('master_wips')
 				->select('*')
 				->whereRaw( "id = '".$order_name[1]."'")
