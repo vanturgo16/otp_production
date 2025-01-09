@@ -1409,9 +1409,18 @@ class ProductionReportBagMakingController extends Controller
 				->groupBy('id_report_bags')
 				->groupBy('report_bag_production_results.note')
                 ->get();	
-				
+		/*QUERY LAMA SEBELUM INSERT BARCODE DENGAN GROUP CONCAT
 		$cek_detail_result = DB::table('report_bag_production_result_details')				
 				->selectRaw('SUM(wrap_pcs) AS sum_wrap_pcs_pr')				
+				->whereRaw( "sha1(id_report_bags) = '$id_rb'")
+				->groupBy('id_report_bags')
+				->get();
+		*/
+		$cek_detail_result = DB::table('report_bag_production_result_details')
+				->select(
+					DB::raw('SUM(wrap_pcs) AS sum_wrap_pcs_pr'),
+					DB::raw('GROUP_CONCAT(barcode SEPARATOR ", ") AS barcode')
+				)
 				->whereRaw( "sha1(id_report_bags) = '$id_rb'")
 				->groupBy('id_report_bags')
 				->get();			
@@ -1436,6 +1445,7 @@ class ProductionReportBagMakingController extends Controller
 							'qty' => $data_for->amount,
 							'type_stock' => 'IN',
 							'date' => date("Y-m-d"),
+							'barcode' => $cek_detail_result[0]->barcode,
 							'remarks' => 'Product : '.$data_for->note
 						]);	
 						$responseHistory = HistoryStock::create($validatedData);
@@ -1487,6 +1497,21 @@ class ProductionReportBagMakingController extends Controller
 				->groupBy('id_report_bags')
 				->groupBy('report_bag_production_results.note')
                 ->get();	
+		/*QUERY LAMA SEBELUM INSERT BARCODE DENGAN GROUP CONCAT
+		$cek_detail_result = DB::table('report_bag_production_result_details')				
+				->selectRaw('SUM(wrap_pcs) AS sum_wrap_pcs_pr')				
+				->whereRaw( "sha1(id_report_bags) = '$id_rb'")
+				->groupBy('id_report_bags')
+				->get();
+		*/
+		$cek_detail_result = DB::table('report_bag_production_result_details')
+				->select(
+					DB::raw('SUM(wrap_pcs) AS sum_wrap_pcs_pr'),
+					DB::raw('GROUP_CONCAT(barcode SEPARATOR ", ") AS barcode')
+				)
+				->whereRaw( "sha1(id_report_bags) = '$id_rb'")
+				->groupBy('id_report_bags')
+				->get();
 				
 		if(!empty($data_update[0])){
 			if(!empty($data_update[0]->note)){				
@@ -1507,6 +1532,7 @@ class ProductionReportBagMakingController extends Controller
 							'qty' => $data_for->amount,
 							'type_stock' => 'Un Posted',
 							'date' => date("Y-m-d"),
+							'barcode' => $cek_detail_result[0]->barcode,
 							'remarks' => 'Product : '.$data_for->note
 						]);	
 						$responseHistory = HistoryStock::create($validatedData);
@@ -1538,7 +1564,7 @@ class ProductionReportBagMakingController extends Controller
 				$activity='Un Posted Histori Stock Bag Making Report Number ="'.$data_update[0]->report_number.'"';
 				$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
 					
-				return Redirect::to('/production-ent-report-bag-making')->with('pesan', 'Update Stock Successfuly.');
+				return Redirect::to('/production-ent-report-bag-making')->with('pesan', 'Un Posted Successfuly.');
 			}else{
 				return Redirect::to('/production-ent-report-bag-making')->with('pesan_danger', 'Data Report Bag Making Versi Aplikasi Sebelumnya Tidak Bisa Di Un Posted.');
 			}
@@ -1569,8 +1595,7 @@ class ProductionReportBagMakingController extends Controller
 					->select('a.*')
 					->whereRaw( "sha1(a.id_report_bags) = '$id_rb'")
 					->get();
-				$barcode = $data_detail_pr[0]->barcode;
-				
+									
 				$deleteHistori = HistoryStock::whereRaw( "id_good_receipt_notes_details = '".$data_update[0]->report_number."'" )->delete();
 				
 				$deleteHygiene = ProductionEntryReportBagMakingHygiene::whereRaw( "id_report_bags = '".$data_update[0]->id_rb."'" )->delete();
@@ -1581,7 +1606,8 @@ class ProductionReportBagMakingController extends Controller
 				$deleteBagMaking = ProductionEntryReportBagMaking::whereRaw( "id = '".$data_update[0]->id_rb."'" )->delete();
 				
 				if($deleteBagMaking){
-					if(!empty($barcode)){
+					
+					if(!empty($data_detail_pr[0]->barcode)){
 						$updatedData['status'] = null;
 						
 						foreach($data_detail_pr as $data){
@@ -1602,7 +1628,7 @@ class ProductionReportBagMakingController extends Controller
 					return Redirect::to('/production-ent-report-bag-making')->with('pesan', 'Delete Successfuly.');
 				}else{
 					return Redirect::to('/production-ent-report-bag-making')->with('pesan_danger', 'There Is An Error.');
-				}						
+				}	
 			}else{
 				return Redirect::to('/production-ent-report-bag-making')->with('pesan_danger', 'There Is An Error.');
 			}
