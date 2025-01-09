@@ -373,8 +373,7 @@
 							<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 						</div>
 						@endif
-						@if(!empty($data_detail[0]))
-							@if(count($data_detail) < $data[0]->wrap)							
+						@if(count($data_detail) < $data[0]->wrap)							
 							<button data-bs-toggle="modal" data-bs-target="#addItemModal" class="mb-3 btn btn-success waves-effect waves-light" name="tambah" id="tambah">
 								<i class="bx bx-plus" title="Tambah"></i>
 							</button>
@@ -450,7 +449,9 @@
 									</div>
 								</div>
 							</div>
-							@endif
+						@endif
+						@if(count($data_detail)>0)
+							
 							<div class="table-responsive">
 								<table id="datatable" class="table table-bordered dt-responsive  nowrap w-100">
 									<thead>

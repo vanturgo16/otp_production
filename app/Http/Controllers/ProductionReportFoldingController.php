@@ -1175,6 +1175,7 @@ class ProductionReportFoldingController extends Controller
 	public function production_entry_report_folding_update_stock($response_id){
 		$id_rf = $response_id;
 		
+		/*QUERY LAMA SEBELUM INSERT BARCODE DENGAN GROUP CONCAT
 		$data_update = ProductionEntryReportSFProductionResult::select('b.report_number','c.type_product','b.order_name','report_sf_production_results.id_report_sfs', 'report_sf_production_results.id', 'report_sf_production_results.note')
 			->selectRaw('SUM(IF(report_sf_production_results.status="Good", 1, 0)) AS good')
 			->selectRaw('SUM(IF(report_sf_production_results.status="Hold", 1, 0)) AS hold')
@@ -1184,6 +1185,30 @@ class ProductionReportFoldingController extends Controller
 			->whereRaw( "sha1(report_sf_production_results.id_report_sfs) = '$id_rf'")
 			->groupBy('report_sf_production_results.id_report_sfs')
 			->get();
+		*/
+		
+		$data_update = DB::table('report_sf_production_results AS a')
+			->rightJoin('report_sfs AS b', 'a.id_report_sfs', '=', 'b.id')
+			->rightJoin('work_orders AS c', 'a.id_work_orders', '=', 'c.id')
+			->select(
+				'b.report_number',
+				'c.type_product',
+				'b.order_name',
+				'a.id_report_sfs',
+				'a.id',
+				'a.note',
+				DB::raw('SUM(IF(a.status="Good", 1, 0)) AS good'),
+				DB::raw('SUM(IF(a.status="Hold", 1, 0)) AS hold'),
+				DB::raw('SUM(IF(a.status="Reject", 1, 0)) AS reject'),
+				DB::raw('GROUP_CONCAT(CASE WHEN a.status="Good" THEN barcode END SEPARATOR ", ") AS barcode_good'),
+				DB::raw('GROUP_CONCAT(CASE WHEN a.status="Hold" THEN barcode END SEPARATOR ", ") AS barcode_hold'),
+				DB::raw('GROUP_CONCAT(CASE WHEN a.status="Reject" THEN barcode END SEPARATOR ", ") AS barcode_reject')
+			)
+			->whereRaw( "sha1(a.id_report_sfs) = '$id_rf'")
+			->groupBy('a.id_report_sfs')
+			->get();
+			
+		//print_r($data_update);exit;
 			
 		$order_name = explode('|', $data_update[0]->note);			
 		$master_table = $data_update[0]->type_product=="WIP"?'master_wips':'master_product_fgs';
@@ -1203,6 +1228,7 @@ class ProductionReportFoldingController extends Controller
 						'qty' => $data_update[0]->good,
 						'type_stock' => 'IN',
 						'date' => date("Y-m-d"),
+						'barcode' => $data_update[0]->barcode_good,
 					]);	
 					$responseGood = HistoryStock::create($validatedData);
 					
@@ -1216,6 +1242,7 @@ class ProductionReportFoldingController extends Controller
 						'qty' => $data_update[0]->hold,
 						'type_stock' => 'HOLD',
 						'date' => date("Y-m-d"),
+						'barcode' => $data_update[0]->barcode_hold,
 					]);	
 					$responseHold = HistoryStock::create($validatedData);
 				}
@@ -1227,6 +1254,7 @@ class ProductionReportFoldingController extends Controller
 						'qty' => $data_update[0]->reject,
 						'type_stock' => 'REJECT',
 						'date' => date("Y-m-d"),
+						'barcode' => $data_update[0]->barcode_reject,
 					]);	
 					$responseReject = HistoryStock::create($validatedData);
 				}
@@ -1268,101 +1296,138 @@ class ProductionReportFoldingController extends Controller
 	
 		$id_rf = $response_id;
 		
-		$data_update = ProductionEntryReportSFProductionResult::select('b.report_number','c.type_product','b.order_name','report_sf_production_results.id_report_sfs', 'report_sf_production_results.id', 'report_sf_production_results.note')
-			->selectRaw('SUM(IF(report_sf_production_results.status="Good", 1, 0)) AS good')
-			->selectRaw('SUM(IF(report_sf_production_results.status="Hold", 1, 0)) AS hold')
-			->selectRaw('SUM(IF(report_sf_production_results.status="Reject", 1, 0)) AS reject')
-			->rightJoin('report_sfs AS b', 'report_sf_production_results.id_report_sfs', '=', 'b.id')
-			->rightJoin('work_orders AS c', 'report_sf_production_results.id_work_orders', '=', 'c.id')
+		$data_check = ProductionEntryReportSFProductionResult::select('report_sf_production_results.*')
+			->rightJoin('report_bag_production_results AS b', 'report_sf_production_results.barcode', '=', 'b.barcode_start')
 			->whereRaw( "sha1(report_sf_production_results.id_report_sfs) = '$id_rf'")
-			->groupBy('report_sf_production_results.id_report_sfs')
 			->get();
 				
-		
-		if(!empty($data_update[0])){
+		if($data_check->isNotEmpty()){
+			return Redirect::to('/production-ent-report-folding')->with('pesan_danger', 'Report Tidak Dapat Di Unposted, Terdapat Report Bag Making Yang Menggunakan Barcode Production Result Report Ini.');
+		}else{
 			
-			$master_table = $data_update[0]->type_product=="WIP"?'master_wips':'master_product_fgs';
-			$order_name = explode('|', $data_update[0]->note);	
+			/*QUERY LAMA SEBELUM INSERT BARCODE DENGAN GROUP CONCAT
+			$data_update = ProductionEntryReportSFProductionResult::select('b.report_number','c.type_product','b.order_name','report_sf_production_results.id_report_sfs', 'report_sf_production_results.id', 'report_sf_production_results.note')
+				->selectRaw('SUM(IF(report_sf_production_results.status="Good", 1, 0)) AS good')
+				->selectRaw('SUM(IF(report_sf_production_results.status="Hold", 1, 0)) AS hold')
+				->selectRaw('SUM(IF(report_sf_production_results.status="Reject", 1, 0)) AS reject')
+				->rightJoin('report_sfs AS b', 'report_sf_production_results.id_report_sfs', '=', 'b.id')
+				->rightJoin('work_orders AS c', 'report_sf_production_results.id_work_orders', '=', 'c.id')
+				->whereRaw( "sha1(report_sf_production_results.id_report_sfs) = '$id_rf'")
+				->groupBy('report_sf_production_results.id_report_sfs')
+				->get();
+			*/
 			
-			if(count($order_name)>1){
-				$data_product = DB::table($master_table)
-					->select('*')
-					->whereRaw( "id = '".$order_name[1]."'")
-					->get();
+			$data_update = DB::table('report_sf_production_results AS a')
+				->rightJoin('report_sfs AS b', 'a.id_report_sfs', '=', 'b.id')
+				->rightJoin('work_orders AS c', 'a.id_work_orders', '=', 'c.id')
+				->select(
+					'b.report_number',
+					'c.type_product',
+					'b.order_name',
+					'a.id_report_sfs',
+					'a.id',
+					'a.note',
+					DB::raw('SUM(IF(a.status="Good", 1, 0)) AS good'),
+					DB::raw('SUM(IF(a.status="Hold", 1, 0)) AS hold'),
+					DB::raw('SUM(IF(a.status="Reject", 1, 0)) AS reject'),
+					DB::raw('GROUP_CONCAT(CASE WHEN a.status="Good" THEN barcode END SEPARATOR ", ") AS barcode_good'),
+					DB::raw('GROUP_CONCAT(CASE WHEN a.status="Hold" THEN barcode END SEPARATOR ", ") AS barcode_hold'),
+					DB::raw('GROUP_CONCAT(CASE WHEN a.status="Reject" THEN barcode END SEPARATOR ", ") AS barcode_reject')
+				)
+				->whereRaw( "sha1(a.id_report_sfs) = '$id_rf'")
+				->groupBy('a.id_report_sfs')
+				->get();
 				
-				if(!empty($data_product[0])){	
-					if($data_update[0]->good>0){
-						$validatedData = ([
-							'id_good_receipt_notes_details' => $data_update[0]->report_number,
-							'type_product' => $data_update[0]->type_product,
-							'id_master_products' => $order_name[1],
-							'qty' => $data_update[0]->good,
-							'type_stock' => 'Un Posted',
-							'date' => date("Y-m-d"),
-							'remarks' => 'From GOOD Posted'
-						]);	
-						$responseGood = HistoryStock::create($validatedData);
-						
-						if($responseGood){					
-							$stock_akhir = $data_product[0]->stock - $data_update[0]->good;				
-							
-							DB::table($master_table)->where('id', $order_name[1])->update(array('stock' => $stock_akhir, 'updated_at' => date('Y-m-d H:i:s'))); 						
-						}
-					}
-					if($data_update[0]->hold>0){
-						$validatedData = ([
-							'id_good_receipt_notes_details' => $data_update[0]->report_number,
-							'type_product' => $data_update[0]->type_product,
-							'id_master_products' => $order_name[1],
-							'qty' => $data_update[0]->hold,
-							'type_stock' => 'Un Posted',
-							'date' => date("Y-m-d"),
-							'remarks' => 'From HOLD Posted'
-						]);	
-						$responseHold = HistoryStock::create($validatedData);
-					}
-					if($data_update[0]->reject>0){
-						$validatedData = ([
-							'id_good_receipt_notes_details' => $data_update[0]->report_number,
-							'type_product' => $data_update[0]->type_product,
-							'id_master_products' => $order_name[1],
-							'qty' => $data_update[0]->reject,
-							'type_stock' => 'Un Posted',
-							'date' => date("Y-m-d"),
-							'remarks' => 'From REJECT Posted'
-						]);	
-						$responseReject = HistoryStock::create($validatedData);
-					}
+			//print_r($data_update);exit;
+			
+			if(!empty($data_update[0])){
+				
+				$master_table = $data_update[0]->type_product=="WIP"?'master_wips':'master_product_fgs';
+				$order_name = explode('|', $data_update[0]->note);	
+				
+				if(count($order_name)>1){
+					$data_product = DB::table($master_table)
+						->select('*')
+						->whereRaw( "id = '".$order_name[1]."'")
+						->get();
 					
-					if($responseGood or $responseHold or $responseReject){
-						
-						$validatedData = ([
-							'status' => 'Un Posted',
-						]);				
-						
-						ProductionEntryReportSF::where('report_number', $data_update[0]->report_number)
-							->update($validatedData);
-						
-						//Audit Log
-						$username= auth()->user()->email; 
-						$ipAddress=$_SERVER['REMOTE_ADDR'];
-						$location='0';
-						$access_from=Browser::browserName();
-						$activity='Un Posted Histori Stock Folding Report Number ="'.$data_update[0]->report_number.'" (Good : '.$data_update[0]->good.', Hold : '.$data_update[0]->hold.', Reject : '.$data_update[0]->reject.')';
-						$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+					if(!empty($data_product[0])){	
+						if($data_update[0]->good>0){
+							$validatedData = ([
+								'id_good_receipt_notes_details' => $data_update[0]->report_number,
+								'type_product' => $data_update[0]->type_product,
+								'id_master_products' => $order_name[1],
+								'qty' => $data_update[0]->good,
+								'type_stock' => 'Un Posted',
+								'date' => date("Y-m-d"),
+								'barcode' => $data_update[0]->barcode_good,
+								'remarks' => 'From GOOD Posted'
+							]);	
+							$responseGood = HistoryStock::create($validatedData);
 							
-						return Redirect::to('/production-ent-report-folding')->with('pesan', 'Un Posted Successfuly.');
+							if($responseGood){					
+								$stock_akhir = $data_product[0]->stock - $data_update[0]->good;				
+								
+								DB::table($master_table)->where('id', $order_name[1])->update(array('stock' => $stock_akhir, 'updated_at' => date('Y-m-d H:i:s'))); 						
+							}
+						}
+						if($data_update[0]->hold>0){
+							$validatedData = ([
+								'id_good_receipt_notes_details' => $data_update[0]->report_number,
+								'type_product' => $data_update[0]->type_product,
+								'id_master_products' => $order_name[1],
+								'qty' => $data_update[0]->hold,
+								'type_stock' => 'Un Posted',
+								'date' => date("Y-m-d"),
+								'barcode' => $data_update[0]->barcode_hold,
+								'remarks' => 'From HOLD Posted'
+							]);	
+							$responseHold = HistoryStock::create($validatedData);
+						}
+						if($data_update[0]->reject>0){
+							$validatedData = ([
+								'id_good_receipt_notes_details' => $data_update[0]->report_number,
+								'type_product' => $data_update[0]->type_product,
+								'id_master_products' => $order_name[1],
+								'qty' => $data_update[0]->reject,
+								'type_stock' => 'Un Posted',
+								'date' => date("Y-m-d"),
+								'barcode' => $data_update[0]->barcode_reject,
+								'remarks' => 'From REJECT Posted'
+							]);	
+							$responseReject = HistoryStock::create($validatedData);
+						}
+						
+						if($responseGood or $responseHold or $responseReject){
+							
+							$validatedData = ([
+								'status' => 'Un Posted',
+							]);				
+							
+							ProductionEntryReportSF::where('report_number', $data_update[0]->report_number)
+								->update($validatedData);
+							
+							//Audit Log
+							$username= auth()->user()->email; 
+							$ipAddress=$_SERVER['REMOTE_ADDR'];
+							$location='0';
+							$access_from=Browser::browserName();
+							$activity='Un Posted Histori Stock Folding Report Number ="'.$data_update[0]->report_number.'" (Good : '.$data_update[0]->good.', Hold : '.$data_update[0]->hold.', Reject : '.$data_update[0]->reject.')';
+							$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+								
+							return Redirect::to('/production-ent-report-folding')->with('pesan', 'Un Posted Successfuly.');
+						}else{
+							return Redirect::to('/production-ent-report-folding')->with('pesan_danger', 'There Is An Error.');
+						}
 					}else{
-						return Redirect::to('/production-ent-report-folding')->with('pesan_danger', 'There Is An Error.');
+						return Redirect::to('/production-ent-report-folding')->with('pesan_danger', 'There Is An Error. Data Produk Not Found.');
 					}
 				}else{
-					return Redirect::to('/production-ent-report-folding')->with('pesan_danger', 'There Is An Error. Data Produk Not Found.');
+					return Redirect::to('/production-ent-report-folding')->with('pesan_danger', 'Data Report Folding Versi Aplikasi Sebelumnya Tidak Bisa Di Unposted');
 				}
 			}else{
-				return Redirect::to('/production-ent-report-folding')->with('pesan_danger', 'Data Report Folding Versi Aplikasi Sebelumnya Tidak Bisa Di Unposted');
+				return Redirect::to('/production-ent-report-folding')->with('pesan_danger', 'There Is An Error. May Be It Is Old Data.');
 			}
-		}else{
-			return Redirect::to('/production-ent-report-folding')->with('pesan_danger', 'There Is An Error. May Be It Is Old Data.');
 		}
     }
 	public function production_entry_report_folding_delete($response_id){
