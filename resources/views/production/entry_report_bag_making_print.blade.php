@@ -277,14 +277,29 @@
 				<tr>
 					<td class="pl-2">{{ $data_detail->start_time }}</td>
 					<td class="pl-2">{{ $data_detail->finish_time }}</td>
-					<td class="pl-2">{{ $order_names[3] }}</td>
+					<td class="pl-2">
+						<?php 
+							if(!empty($order_names[0])){
+								echo $order_names[3];
+							}else{
+								echo '-';
+							}
+						?>
+					</td>
 					<td class="pl-2">{{ $data_detail->weight_sf }}</td>
 					<td class="pl-2">{{ $data_detail->barcode_start }}</td>
 					<td class="pl-2"><b>{{ $data_detail->id }}</b></td>
 					<td class="pl-2">{{ $note[3] }}</td>
 					<td class="pl-2">{{ $data_detail->amount_result }}</td><?php $sum_amount_result += $data_detail->amount_result; ?>
 					<td class="pl-2">{{ $data_detail->wrap }}</td><?php $sum_wrap += $data_detail->wrap; ?>
-					<td class="pl-2">{{ $data_detail->waste>0?$data_detail->waste:0; }}</td><?php $sum_waste += $data_detail->waste; ?>
+					<td class="pl-2">{{ $data_detail->waste>0?$data_detail->waste:0; }}</td>
+					<?php 
+						if(!empty($data_detail->waste)){
+							$sum_waste += $data_detail->waste; 
+						}else{
+							$sum_waste = 0;
+						}
+					?>
 				</tr>
 				@endforeach
 			<?php }else{ ?>
