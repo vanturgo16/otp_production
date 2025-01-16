@@ -1338,6 +1338,7 @@ class ProductionReportBagMakingController extends Controller
 					->get();
 			$data_detail_waste = DB::table('report_bag_wastes')
 					->select('report_bag_wastes.*')
+					//->selectRaw('IF(report_bag_wastes.waste IS NULL, 0, report_bag_wastes.waste) AS waste')
 					->whereRaw( "sha1(id_report_bags) = '$response_id'")
 					->get();
 			//$data_detail_waste = DB::table('report_blow_wastes')
@@ -1353,12 +1354,13 @@ class ProductionReportBagMakingController extends Controller
 					//->select('d.wo_number', 'a.*')
 					->groupBy('a.id')
 					->get();//PERBAIKI QUERY DETAIL UNTUK GET WO DAN PRODUCT
-					
-			$data_detail_pr =  DB::table('report_bag_production_result_details as a')
-					//->where('id_report_bag_production_results', $data_detail_production[0]->id)
-					->where('id_report_bags', $data_detail_production[0]->id_report_bags)
-					->groupBy('a.id')
-					->get();
+			if(!empty($data_detail_production[0]->id_report_bags)){
+				$data_detail_pr =  DB::table('report_bag_production_result_details as a')
+						//->where('id_report_bag_production_results', $data_detail_production[0]->id)
+						->where('id_report_bags', $data_detail_production[0]->id_report_bags)
+						->groupBy('a.id')
+						->get();
+			}
 			/*	
 			foreach($data_detail_production as $data_for){
 				$data_detail_production['detail_pr'] = ProductionEntryReportBagMakingProductionResultDetail::where('id_report_bag_production_results', $data_for->id)

@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 
 //PRODUCTION LOGIN
+
 class AuthController extends Controller
 {
     public function login(Request $request){
