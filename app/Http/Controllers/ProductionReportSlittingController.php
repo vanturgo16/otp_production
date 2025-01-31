@@ -834,7 +834,7 @@ class ProductionReportSlittingController extends Controller
 					DB::table('barcode_detail')
 					->where('barcode_number', $response->barcode)
 					->update($updatedData);
-					
+					/*OLD
 					if(empty($_POST['used_next_shift']) || isset($_POST['join'])){
 						if(empty($_POST['used_next_shift'])){
 							$updatedDataBS['used_next_shift'] = '0';						
@@ -846,7 +846,21 @@ class ProductionReportSlittingController extends Controller
 						->where('barcode_number', $response->barcode_start)
 						->update($updatedDataBS);
 					}
-					
+					*/
+					if(!isset($_POST['used_next_shift']) || isset($_POST['used_next_shift']) || isset($_POST['join'])){
+						if(!isset($_POST['used_next_shift'])){
+							$updatedDataBS['used_next_shift'] = '0';						
+						}
+						if(isset($_POST['used_next_shift'])){
+							$updatedDataBS['used_next_shift'] = '1';						
+						}
+						if(isset($_POST['join'])){
+							$updatedDataBS['join'] = $_POST['join'];	
+						}
+						DB::table('barcode_detail')
+						->where('barcode_number', $response->barcode_start)
+						->update($updatedDataBS);
+					}
 					//Audit Log		
 					$username= auth()->user()->email; 
 					$ipAddress=$_SERVER['REMOTE_ADDR'];
@@ -986,9 +1000,12 @@ class ProductionReportSlittingController extends Controller
 					->where('barcode_number', $validatedData['barcode'])
 					->update($updatedData);
 				
-				if(empty($_POST['used_next_shift']) || isset($_POST['join'])){
-					if(empty($_POST['used_next_shift'])){
+				if(!isset($_POST['used_next_shift']) || isset($_POST['used_next_shift']) || isset($_POST['join'])){
+					if(!isset($_POST['used_next_shift'])){
 						$updatedDataBS['used_next_shift'] = '0';						
+					}
+					if(isset($_POST['used_next_shift'])){
+						$updatedDataBS['used_next_shift'] = '1';						
 					}
 					if(isset($_POST['join'])){
 						$updatedDataBS['join'] = $_POST['join']==''?'-':$_POST['join'];	

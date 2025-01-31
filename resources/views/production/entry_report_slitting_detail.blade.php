@@ -618,7 +618,7 @@
 											<div class="row mb-4 field-wrapper">
 												<label for="horizontal-password-input" class="col-sm-4 col-form-label">Used Next Shift </label>
 												<div class="col-sm-8">
-													<label class="toggleSwitch nolabel" onclick="">
+													<label class="toggleSwitch nolabel" onclick="" checked >
 														<input type="checkbox" name="used_next_shift"/>
 														<a></a>
 														<span>

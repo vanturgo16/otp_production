@@ -926,10 +926,25 @@ class ProductionReportBagMakingController extends Controller
 						->where('barcode_number', $response->barcode)
 						->update($updatedData);
 						*/
-						
+						/*OLD
 						if(empty($_POST['used_next_shift']) || isset($_POST['join'])){
 							if(empty($_POST['used_next_shift'])){
 								$updatedDataBS['used_next_shift'] = '0';						
+							}
+							if(isset($_POST['join'])){
+								$updatedDataBS['join'] = $_POST['join'];	
+							}
+							DB::table('barcode_detail')
+							->where('barcode_number', $response->barcode_start)
+							->update($updatedDataBS);
+						}
+						*/
+						if(!isset($_POST['used_next_shift']) || isset($_POST['used_next_shift']) || isset($_POST['join'])){
+							if(!isset($_POST['used_next_shift'])){
+								$updatedDataBS['used_next_shift'] = '0';						
+							}
+							if(isset($_POST['used_next_shift'])){
+								$updatedDataBS['used_next_shift'] = '1';						
 							}
 							if(isset($_POST['join'])){
 								$updatedDataBS['join'] = $_POST['join'];	
@@ -1086,6 +1101,9 @@ class ProductionReportBagMakingController extends Controller
 			->where('barcode_number', $data->barcode)
 			->update($updatedData);
 			*/
+			
+			//print_r($_POST);exit;
+			
 			if ($response){
 				/*
 				$updatedData['status'] = 'In Stock BAG';			
@@ -1099,9 +1117,12 @@ class ProductionReportBagMakingController extends Controller
 					->update(['status' => null]);					
 				}
 				*/
-				if(empty($_POST['used_next_shift']) || isset($_POST['join'])){
-					if(empty($_POST['used_next_shift'])){
+				if(!isset($_POST['used_next_shift']) || isset($_POST['used_next_shift']) || isset($_POST['join'])){
+					if(!isset($_POST['used_next_shift'])){
 						$updatedDataBS['used_next_shift'] = '0';						
+					}
+					if(isset($_POST['used_next_shift'])){
+						$updatedDataBS['used_next_shift'] = '1';						
 					}
 					if(isset($_POST['join'])){
 						$updatedDataBS['join'] = $_POST['join']==''?'-':$_POST['join'];	
