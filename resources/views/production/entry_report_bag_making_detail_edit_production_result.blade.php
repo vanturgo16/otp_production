@@ -426,7 +426,6 @@
 										<form action="/production-entry-report-bag-making-wrap-add" method="POST">
 											@csrf
 											<div class="modal-body">
-												
 												<div class="mb-3 required-field">
 													<label for="description" class="form-label">Jumlah Per Bungkus (Wrap)</label>
 													<input type="text" class="form-control" name="wrap_pcs">

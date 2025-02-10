@@ -1656,7 +1656,7 @@ class ProductionReportBagMakingController extends Controller
 				$deleteBagMaking = ProductionEntryReportBagMaking::whereRaw( "id = '".$data_update[0]->id_rb."'" )->delete();
 				
 				if($deleteBagMaking){
-					
+					/*
 					if(!empty($data_detail_pr[0]->barcode)){
 						$updatedData['status'] = null;
 						
@@ -1666,7 +1666,7 @@ class ProductionReportBagMakingController extends Controller
 								->update($updatedData);
 						}	
 					}
-					
+					*/
 					//Audit Log
 					$username= auth()->user()->email; 
 					$ipAddress=$_SERVER['REMOTE_ADDR'];
