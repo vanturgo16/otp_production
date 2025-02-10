@@ -263,6 +263,44 @@
 												</div>
 											</div>	
 											<div class="row mb-4 field-wrapper required-field">
+												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Barcode </label>
+												<div class="col-sm-8">
+													<select class="form-select data-select2" name="id_master_barcode" id="id_master_barcode">
+														<option value="">** Please Select A Barcodes</option>
+													</select>
+													@if($errors->has('id_master_barcode'))
+														<div class="text-danger"><b>{{ $errors->first('id_master_barcode') }}</b></div>
+													@endif
+												</div>
+											</div> 
+											<script>									
+												$(document).ready(function(){
+													//$('#id_work_orders').prop('selectedIndex', 0);
+													//$('#id_master_work_centers').prop('selectedIndex', 0);
+													//$('#id_master_regus').prop('selectedIndex', 0);
+													//$('#shift').prop('selectedIndex', 0);
+													$.ajax({
+														type: "GET",
+														url: "/json_get_barcode",
+														data: { where : 'BAG', barcode_number : {!! "'".$data[0]->barcode."'" !!} },
+														dataType: "json",
+														beforeSend: function(e) {
+															if(e && e.overrideMimeType) {
+																e.overrideMimeType("application/json;charset=UTF-8");
+															}
+														},
+														success: function(response){
+															$("#id_master_barcode").html(response.list_barcode).show();
+															//$('#id_master_regus').prop('selectedIndex', 0);
+															//$('#shift').prop('selectedIndex', 0);
+														},
+														error: function (xhr, ajaxOptions, thrownError) {
+															alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
+														}
+													});
+												});
+											</script>
+											<div class="row mb-4 field-wrapper required-field">
 												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Weight Starting </label>
 												<div class="col-sm-8">
 													<input type="text" class="form-control" name="weight_starting" value="{{ $data[0]->weight_starting; }}">
@@ -369,7 +407,7 @@
 					<div class="card-body p-4">
 						@if(count($data_detail)!=$data[0]->wrap)
 						<div class="alert alert-danger alert-dismissible alert-label-icon label-arrow fade show" role="alert">
-							<i class="mdi mdi-alert-octagon-outline label-icon"></i><strong>Perhatian</strong><br>Terdapat ketidaksesuaian data <b>WRAP Detail</b> dengan jumlah <b>WRAP</b>. Silahkan perbaharui data.
+							<i class="mdi mdi-alert-octagon-outline label-icon"></i><strong>Perhatian</strong><br>Terdapat ketidaksesuaian data <b>WRAP Detail ( {{count($data_detail)}} )</b> dengan jumlah <b>WRAP ( {{$data[0]->wrap}} )</b>. Silahkan perbaharui data.
 							<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 						</div>
 						@endif
@@ -388,42 +426,7 @@
 										<form action="/production-entry-report-bag-making-wrap-add" method="POST">
 											@csrf
 											<div class="modal-body">
-												<div class="mb-3 required-field">
-													<label for="name" class="form-label">Barcode</label>
-													<select class="form-select" name="id_master_barcode" id="id_master_barcode">
-														<option value="">** Please Select A Barcodes</option>
-													</select>
-													<script>		
-														$('#addItemModal').on('shown.bs.modal', function () {
-															$('#id_master_barcode').select2({
-																dropdownParent: $('#addItemModal') // Gunakan ini untuk memastikan dropdown Select2 muncul di dalam modal
-															});
-														});
-														//$(document).ready(function(){
-														document.getElementById("tambah").addEventListener("click", () => {	
-															$.ajax({
-																type: "GET",
-																url: "/json_get_barcode",
-																data: { where : 'BAG', barcode_number : {!! "'".$data[0]->barcode."'" !!} },
-																dataType: "json",
-																beforeSend: function(e) {
-																	if(e && e.overrideMimeType) {
-																		e.overrideMimeType("application/json;charset=UTF-8");
-																	}
-																},
-																success: function(response){
-																	$("#id_master_barcode").html(response.list_barcode).show();
-																	//$('#id_master_barcode').select2();	
-																	//$('#id_master_regus').prop('selectedIndex', 0);
-																	//$('#shift').prop('selectedIndex', 0);
-																},
-																error: function (xhr, ajaxOptions, thrownError) {
-																	alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
-																}
-															});
-														});
-													</script>
-												</div>
+												
 												<div class="mb-3 required-field">
 													<label for="description" class="form-label">Jumlah Per Bungkus (Wrap)</label>
 													<input type="text" class="form-control" name="wrap_pcs">
@@ -457,18 +460,13 @@
 									<thead>
 										<tr>
 										<tr>
-											<th width="20%">Barcode</th>
-											<th width="40%">Jumlah Per Bungkus (Wrap)</th>
+											<th width="60%">Jumlah Per Bungkus (Wrap)</th>
 											<th width="10%">Aksi</th>
 										</tr>
 									</thead>
 									<tbody>
 										@foreach ($data_detail as $data_detail)
 										<tr>
-											<td>
-												<?php echo !empty($data_detail->barcode)?"Kode : <b>".$data_detail->barcode."</b>":'<div class="btn btn-warning waves-effect waves-light">Belum Tersedia</div>' ?>
-												<?php echo !empty($data_detail->keterangan)?"<br><code>Keterangan : <b>".$data_detail->keterangan."</b></code>":'' ?>
-											</td>
 											<td>
 												<div class="btn btn-{{ !empty($data_detail->wrap_pcs)?"dark":"warning" }} waves-effect waves-light">
 												{{ !empty($data_detail->wrap_pcs)?$data_detail->wrap_pcs:"0" }} Pcs
@@ -508,42 +506,6 @@
 													<form action="/production-entry-report-bag-making-wrap-edit" method="POST">
 														@csrf
 														<div class="modal-body">
-															<div class="mb-3 required-field">
-																<label for="name" class="form-label">Barcode</label>
-																<select class="form-select" name="id_master_barcode_edit" id="id_master_barcode_edit{{$data_detail->id}}">
-																	<option value="">** Please Select A Barcodes</option>
-																</select>
-																<script>		
-																	$('#editItemModal{{$data_detail->id}}').on('shown.bs.modal', function () {
-																		$('#id_master_barcode_edit{{$data_detail->id}}').select2({
-																			dropdownParent: $('#editItemModal{{$data_detail->id}}') // Gunakan ini untuk memastikan dropdown Select2 muncul di dalam modal
-																		});
-																	});
-																	//$(document).ready(function(){
-																	document.getElementById("edit{{$data_detail->id}}").addEventListener("click", () => {	
-																		$.ajax({
-																			type: "GET",
-																			url: "/json_get_barcode",
-																			data: { where : 'BAG', barcode_number : {!! "'".$data_detail->barcode."'" !!} },
-																			dataType: "json",
-																			beforeSend: function(e) {
-																				if(e && e.overrideMimeType) {
-																					e.overrideMimeType("application/json;charset=UTF-8");
-																				}
-																			},
-																			success: function(response){
-																				$("#id_master_barcode_edit{{$data_detail->id}}").html(response.list_barcode).show();
-																				//$('#id_master_barcode').select2();	
-																				//$('#id_master_regus').prop('selectedIndex', 0);
-																				//$('#shift').prop('selectedIndex', 0);
-																			},
-																			error: function (xhr, ajaxOptions, thrownError) {
-																				alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
-																			}
-																		});
-																	});
-																</script>
-															</div>
 															<div class="mb-3 required-field">
 																<label for="description" class="form-label">Jumlah Per Bungkus (Wrap)</label>
 																<input type="text" class="form-control" name="wrap_pcs" value="{{ $data_detail->wrap_pcs }}">

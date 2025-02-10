@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Auth;
 
 // Model
 use App\Models\User;
-
+/*
 //PRODUCTION LOGIN
 class AuthController extends Controller
 {
@@ -50,7 +50,7 @@ class AuthController extends Controller
         }
     }
 }
-/*
+*/
 //DEV
 class AuthController extends Controller
 {
@@ -85,4 +85,3 @@ class AuthController extends Controller
         return redirect()->route('login')->with('success','Success Logout');
     }
 }
-*/
