@@ -251,16 +251,18 @@
           <table border="1" cellpadding="0" cellspacing="0" style="table-layout: auto;width: 100%">
             <tr>
 				<th colspan="2" class="text-center">Jam Kerja</th>
-				<th colspan="3" class="text-center">Bahan Awal</th>
+				<th colspan="5" class="text-center">Bahan Awal</th>
 				<th colspan="7" class="text-center">Hasil Produksi</th>
             </tr>
             <tr>
 				<th class="text-center">Mul</th>
 				<th class="text-center">Sel</th>
+				<th class="text-center">Roll</th>
 				<th class="text-center">Ukuran</th>
 				<th class="text-center">Kg</th>
 				<th class="text-center">Barcode</th>
-				<th class="text-center">ID Production Result</th>
+				<th class="text-center">Used Next Shift</th>
+				<th class="text-center">No. Work Order</th>
 				<th class="text-center">Ukuran</th>
 				<th class="text-center">Amount Result<br/>(Pcs)</th>
 				<th class="text-center">Wrap<br/>(Bungkus)</th>
@@ -277,6 +279,7 @@
 				<tr>
 					<td class="pl-2">{{ $data_detail->start_time }}</td>
 					<td class="pl-2">{{ $data_detail->finish_time }}</td>
+					<td class="pl-2">1</td>
 					<td class="pl-2">
 						<?php 
 							if(!empty($order_names[0])){
@@ -288,7 +291,8 @@
 					</td>
 					<td class="pl-2">{{ $data_detail->weight_sf }}</td>
 					<td class="pl-2">{{ $data_detail->barcode_start }}</td>
-					<td class="pl-2"><b>{{ $data_detail->id }}</b></td>
+					<td class="pl-2">{{ $data_detail->used_next_shift=='1'?'Yes':'No' }}</td>
+					<td class="text-center"><b>{{ $data_detail->wo_number }}</b></td>
 					<td class="pl-2">{{ $note[3] }}</td>
 					<td class="pl-2">{{ $data_detail->amount_result }}</td><?php $sum_amount_result += $data_detail->amount_result; ?>
 					<td class="pl-2">{{ $data_detail->wrap }}</td><?php $sum_wrap += $data_detail->wrap; ?>
@@ -309,7 +313,7 @@
 			<?php }; ?>
 			<tr>
 				<th colspan="2" rowspan="3"></th>
-				<th colspan="3" rowspan="3"></th>
+				<th colspan="4" rowspan="3"></th>
 				<th colspan="1" rowspan="3" class="text-center">Jumlah</th>
 				<th class="text-right pr-1">Pcs </th>
 				<td class="text-left pl-2"> <b>{{ $sum_amount_result }}<b> </td>
@@ -332,120 +336,7 @@
           </table>
         </div>
       </div>
-	  <?php
-		  // Group by 'id_report_bags'
-		  $grouped = [];
-		  foreach ($data_detail_pr as $item) {
-			$grouped[$item->id_report_bag_production_results][] = $item;
-		  }
-	  ?>
-	  <div class="row mt-3">
-      	<div class="col-md-12" style="font-size: 13px;">
-      		<strong>Detail Hasil Produksi</strong>
-		</div>
-	  </div>
-	  <div class="row">
-		@foreach ($grouped as $key => $group) 
-      	<div class="col-md-3" style="font-size: 13px;">
-			<table border="1" cellpadding="0" cellspacing="0" style="table-layout: auto;width: 100%">
-				<tr>
-					<th class="pl-2">ID Production Result </th>
-					<th class="pl-2">{{ $key }}</th>
-				</tr>
-				
-					@foreach ($group as $item) 
-					<?php if(!empty($item->barcode)){ ?>
-						<tr>
-							<td class="pl-2" colspan="2">Barcode : {{ $item->barcode }}, Jumlah Per Wrap (Bungkus) : {{ $item->wrap_pcs }} Pcs</td>
-						</tr>
-					<?php }else{ ?>
-						<tr>
-							<td class="pt-1 pb-1" colspan="2" align="center">Data Barcode Belum Tersedia</td>
-						</tr>
-					<?php }; ?>	
-					@endforeach
-				
-			</table>
-      	</div>
-		@endforeach
-      </div>
-      <div class="row mt-3">
-      	<div class="col-md-4" style="font-size: 13px;">
-      		<strong>SISA WIP</strong>
-			<table border="1" cellpadding="0" cellspacing="0" style="table-layout: auto;width: 100%">
-				<tr>
-					<td class="pl-2">No.</td>
-					<td>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</td>
-					<th>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</th>
-				</tr>
-				<tr>
-					<td class="pl-2">Ukuran</td>
-					<td>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</td>
-					<th>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</th>
-				</tr>
-				<tr>
-					<td class="pl-2">Berat</td>
-					<td>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</td>
-					<th>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</th>
-				</tr>
-				<tr>
-					<td class="pl-2">Barcode</td>
-					<td>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</td>
-					<th>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</th>
-				</tr>
-			</table>
-      	</div>
-      	<div class="col-md-4" style="font-size: 13px;">
-      		<strong>SISA WIP</strong>
-			<table border="1" cellpadding="0" cellspacing="0" style="table-layout: auto;width: 100%">
-				<tr>
-					<td class="pl-2">No.</td>
-					<td>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</td>
-					<th>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</th>
-				</tr>
-				<tr>
-					<td class="pl-2">Ukuran</td>
-					<td>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</td>
-					<th>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</th>
-				</tr>
-				<tr>
-					<td class="pl-2">Berat</td>
-					<td>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</td>
-					<th>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</th>
-				</tr>
-				<tr>
-					<td class="pl-2">Barcode</td>
-					<td>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</td>
-					<th>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</th>
-				</tr>
-			</table>
-      	</div>
-      	<div class="col-md-4" style="font-size: 13px;">
-      		<strong>SISA WIP</strong>
-			<table border="1" cellpadding="0" cellspacing="0" style="table-layout: auto;width: 100%">
-				<tr>
-					<td class="pl-2">No.</td>
-					<td>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</td>
-					<th>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</th>
-				</tr>
-				<tr>
-					<td class="pl-2">Ukuran</td>
-					<td>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</td>
-					<th>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</th>
-				</tr>
-				<tr>
-					<td class="pl-2">Berat</td>
-					<td>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</td>
-					<th>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</th>
-				</tr>
-				<tr>
-					<td class="pl-2">Barcode</td>
-					<td>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</td>
-					<th>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</th>
-				</tr>
-			</table>
-      	</div>
-      </div><br>
+      
     </div>
     
     

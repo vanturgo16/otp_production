@@ -639,27 +639,6 @@
 																alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
 															}
 														});
-														
-														$.ajax({
-															type: "GET",
-															url: "/json_get_barcode",
-															data: { where : 'BAG START', wo_number : $('#id_work_orders option:selected').attr('data-wo_number') },
-															dataType: "json",
-															beforeSend: function(e) {
-																if(e && e.overrideMimeType) {
-																	e.overrideMimeType("application/json;charset=UTF-8");
-																}
-															},
-															success: function(response){
-																$("#id_master_barcode_start").html(response.list_barcode).show();
-																//$('#id_master_regus').prop('selectedIndex', 0);
-																//$('#shift').prop('selectedIndex', 0);
-															},
-															error: function (xhr, ajaxOptions, thrownError) {
-																alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
-															}
-														});
-														
 													});
 													
 												});
@@ -727,7 +706,30 @@
 														<div class="text-danger"><b>{{ $errors->first('id_master_barcode_start') }}</b></div>
 													@endif
 												</div>
-											</div> 		
+											</div> 
+											<script>									
+												$(document).ready(function(){
+													$.ajax({
+														type: "GET",
+														url: "/json_get_barcode",
+														data: { where : 'BAG START', wo_number : $('#id_work_orders option:selected').attr('data-wo_number') },
+														dataType: "json",
+														beforeSend: function(e) {
+															if(e && e.overrideMimeType) {
+																e.overrideMimeType("application/json;charset=UTF-8");
+															}
+														},
+														success: function(response){
+															$("#id_master_barcode_start").html(response.list_barcode).show();
+															//$('#id_master_regus').prop('selectedIndex', 0);
+															//$('#shift').prop('selectedIndex', 0);
+														},
+														error: function (xhr, ajaxOptions, thrownError) {
+															alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
+														}
+													});
+												});
+											</script>											
 											<div class="row mb-4 field-wrapper">
 												<label for="horizontal-password-input" class="col-sm-4 col-form-label">Join  </label>
 												<div class="col-sm-8">
@@ -758,6 +760,44 @@
 													@endif
 												</div>
 											</div>
+											<div class="row mb-4 field-wrapper required-field">
+												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Barcode </label>
+												<div class="col-sm-8">
+													<select class="form-select data-select2" name="id_master_barcode" id="id_master_barcode">
+														<option value="">** Please Select A Barcodes</option>
+													</select>
+													@if($errors->has('id_master_barcode'))
+														<div class="text-danger"><b>{{ $errors->first('id_master_barcode') }}</b></div>
+													@endif
+												</div>
+											</div> 
+											<script>									
+												$(document).ready(function(){
+													//$('#id_work_orders').prop('selectedIndex', 0);
+													//$('#id_master_work_centers').prop('selectedIndex', 0);
+													//$('#id_master_regus').prop('selectedIndex', 0);
+													//$('#shift').prop('selectedIndex', 0);
+													$.ajax({
+														type: "GET",
+														url: "/json_get_barcode",
+														data: { where : 'BAG' },
+														dataType: "json",
+														beforeSend: function(e) {
+															if(e && e.overrideMimeType) {
+																e.overrideMimeType("application/json;charset=UTF-8");
+															}
+														},
+														success: function(response){
+															$("#id_master_barcode").html(response.list_barcode).show();
+															//$('#id_master_regus').prop('selectedIndex', 0);
+															//$('#shift').prop('selectedIndex', 0);
+														},
+														error: function (xhr, ajaxOptions, thrownError) {
+															alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
+														}
+													});
+												});
+											</script>
 											<div class="row mb-4 field-wrapper required-field">
 												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Weight Starting </label>
 												<div class="col-sm-8">
@@ -809,44 +849,7 @@
 											
 											
 											
-											<!--div class="row mb-4 field-wrapper required-field">
-												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Barcode </label>
-												<div class="col-sm-8">
-													<select class="form-select data-select2" name="id_master_barcode" id="id_master_barcode">
-														<option value="">** Please Select A Barcodes</option>
-													</select>
-													@if($errors->has('id_master_barcode'))
-														<div class="text-danger"><b>{{ $errors->first('id_master_barcode') }}</b></div>
-													@endif
-												</div>
-											</div--> 
-											<script>									
-												$(document).ready(function(){
-													//$('#id_work_orders').prop('selectedIndex', 0);
-													//$('#id_master_work_centers').prop('selectedIndex', 0);
-													//$('#id_master_regus').prop('selectedIndex', 0);
-													//$('#shift').prop('selectedIndex', 0);
-													$.ajax({
-														type: "GET",
-														url: "/json_get_barcode",
-														data: { where : 'BAG' },
-														dataType: "json",
-														beforeSend: function(e) {
-															if(e && e.overrideMimeType) {
-																e.overrideMimeType("application/json;charset=UTF-8");
-															}
-														},
-														success: function(response){
-															$("#id_master_barcode").html(response.list_barcode).show();
-															//$('#id_master_regus').prop('selectedIndex', 0);
-															//$('#shift').prop('selectedIndex', 0);
-														},
-														error: function (xhr, ajaxOptions, thrownError) {
-															alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
-														}
-													});
-												});
-											</script>	
+												
 											
 											<input type="hidden" class="form-control" name="request_id" value="{{ Request::segment(2) }}">
 											
@@ -892,8 +895,7 @@
 															<td>
 																At : <b>{{ $data_detail->start_time }}</b> /												
 																Until : <b>{{ $data_detail->finish_time }}</b>
-																<br><br>
-																
+																<br><br>													
 																Detail <b>Production Result</b> :<br>
 																@if(( $data_detail->count_detail_pr == $data_detail->wrap )&&( $data_detail->sum_wrap_pcs_pr == $data_detail->amount_result ))
 																	<span class="badge bg-success-subtle text-success">
@@ -913,7 +915,8 @@
 															</td>
 															<?php $product = explode('|', $data_detail->note) ; ?>
 															<td><p>
-																Barcode Start : <b>{{ $data_detail->barcode_start }}</b><br><br>
+																Barcode Start : <b>{{ $data_detail->barcode_start }}</b><br>
+																Barcode : <b>{{ $data_detail->barcode }}</b><br><br>
 																Work Orders : <b>{{ $data_detail->wo_number }}</b><br>
 																<footer class="blockquote-footer">Product : <cite><b>{{ $product['2'] }}</b></cite></footer>
 																<footer class="blockquote-footer">Weight Starting : <cite><b>{{  $data_detail->weight_starting }}</b> Kg</cite></footer>
