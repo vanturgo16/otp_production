@@ -248,8 +248,8 @@
 					$sum_kg_reject += $data_detail->status=="Reject" ? $data_detail->weight : 0;
 				?>
 				<?php 
-					$sum_kg_bahan_awal += $data_detail->weight_blow ;
-					$sum_kg_waste_hasil_produksi += $data_detail->waste ;
+					$sum_kg_bahan_awal += $data_detail->weight_blow > 0 ? $data_detail->weight_blow : 0;
+					$sum_kg_waste_hasil_produksi += $data_detail->waste > 0 ? $data_detail->waste : 0;
 				?>
 				<tr>
 				</tr>

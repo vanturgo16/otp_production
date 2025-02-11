@@ -1887,4 +1887,6 @@ class ProductionReportBagMakingController extends Controller
 		}
 	}
 	//END ENTRY REPORT BLOW
+	
+	
 }

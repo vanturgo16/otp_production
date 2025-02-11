@@ -68,6 +68,7 @@ Route::middleware(['auth', 'clear.permission.cache', 'permission:Produksi|Produk
 	Route::get('/production-ent-report-blow-json', [ProductionController::class, 'production_entry_report_blow_json'])->name('production_entry_report_blow_json');
 	Route::get('/production-ent-report-blow-add', [ProductionController::class, 'production_entry_report_blow_add'])->name('production_entry_report_blow_add');
 	Route::get('/json_get_produk', [ProductionController::class, 'jsonGetProduk'])->name('jsonGetProduk');
+	Route::get('/json_get_produk_autofill', [ProductionController::class, 'jsonGetProdukAutofill'])->name('jsonGetProdukAutofill');
 	Route::get('/json_get_customer', [ProductionController::class, 'jsonGetCustomers'])->name('jsonGetCustomers');
 	Route::post('/production-ent-report-blow-save', [ProductionController::class, 'production_entry_report_blow_save'])->name('production_entry_report_blow_save');
 	Route::get('/production-ent-report-blow-detail/{id}', [ProductionController::class, 'production_entry_report_blow_detail'])->name('production_entry_report_blow_detail');

@@ -1131,6 +1131,7 @@ class ProductionReportSlittingController extends Controller
 					->whereRaw( "sha1(id_report_sfs) = '$response_id'")
 					->select('c.order_name as order_name_blow', 'b.weight as weight_blow', 'd.wo_number', 'a.*')
 					->get();//PERBAIKI QUERY DETAIL UNTUK GET WO DAN PRODUCT
+			//print_r($data_detail_production);exit;
 			/*		
 			$table_product = $order_name[0] == 'WIP' ? 'master_wips' : 'master_product_fgs';
 			
