@@ -669,7 +669,35 @@
 																alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
 															}
 														});
-														
+														$.ajax({
+															type: "GET",
+															url: "/json_get_produk_autofill",
+															data: { type_product : $('#id_work_orders option:selected').attr('data-type_product'), id_master_products : $('#id_work_orders option:selected').attr('data-id_master_products') },
+															dataType: "json",
+															beforeSend: function(e) {
+																if(e && e.overrideMimeType) {
+																	e.overrideMimeType("application/json;charset=UTF-8");
+																}
+															},
+															success: function(response){
+																//$("#id_master_products_detail").html(response.list_products).show();
+																document.getElementById("thickness").value = response.result[0]['thickness'];
+																
+																document.getElementById("width").value = response.result[0]['width'];
+																document.getElementById("width_unit").textContent = response.result[0]['width_unit_code'];
+																if($('#id_work_orders option:selected').attr('data-type_product')=='FG'){
+																	document.getElementById("length").value = response.result[0]['height'];
+																}else{
+																	document.getElementById("length").value = response.result[0]['length'];
+																}
+																document.getElementById("length_unit").textContent = response.result[0]['length_unit_code'];
+																
+																document.getElementById("weight").value = response.result[0]['weight'];
+															},
+															error: function (xhr, ajaxOptions, thrownError) {
+																alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
+															}
+														});
 														
 													});
 													
@@ -727,7 +755,10 @@
 											<div class="row mb-4 field-wrapper required-field">
 												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Thickness </label>
 												<div class="col-sm-8">
-													<input type="text" class="form-control" name="thickness" id="thickness">
+													<div class="input-group">
+														<input id="thickness" class="form-control" name="thickness" type="text">
+														<div class="input-group-text" style="background-color:rgb(197, 197, 197)">MIC</div>
+													</div>
 													<div class="text-danger" id="thickness_unit"></div>
 													@if($errors->has('thickness'))
 														<div class="text-danger"><b>{{ $errors->first('thickness') }}</b></div>
@@ -737,7 +768,10 @@
 											<div class="row mb-4 field-wrapper required-field">
 												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Length </label>
 												<div class="col-sm-8">
-													<input type="text" class="form-control" name="length">
+													<div class="input-group">
+														<input id="length" class="form-control" name="length" type="text">
+														<div id="length_unit" class="input-group-text" style="background-color:rgb(197, 197, 197)">-</div>
+													</div>
 													@if($errors->has('length'))
 														<div class="text-danger"><b>{{ $errors->first('length') }}</b></div>
 													@endif
@@ -746,7 +780,10 @@
 											<div class="row mb-4 field-wrapper required-field">
 												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Width </label>
 												<div class="col-sm-8">
-													<input type="text" class="form-control" name="width">
+													<div class="input-group">
+														<input id="width" class="form-control" name="width" type="text">
+														<div id="width_unit" class="input-group-text" style="background-color:rgb(197, 197, 197)">-</div>
+													</div>
 													@if($errors->has('width'))
 														<div class="text-danger"><b>{{ $errors->first('width') }}</b></div>
 													@endif
@@ -755,7 +792,10 @@
 											<div class="row mb-4 field-wrapper required-field">
 												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Weight </label>
 												<div class="col-sm-8">
-													<input type="text" class="form-control" name="weight">
+													<div class="input-group">
+														<input id="weight" class="form-control" name="weight" type="text">
+														<div class="input-group-text" style="background-color:rgb(197, 197, 197)">KG</div>
+													</div>
 													@if($errors->has('weight'))
 														<div class="text-danger"><b>{{ $errors->first('weight') }}</b></div>
 													@endif

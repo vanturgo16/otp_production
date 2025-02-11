@@ -1876,6 +1876,36 @@ class ProductionController extends Controller
 		);
 		echo json_encode($callback);			
     }
+	public function jsonGetProdukAutofill()
+    {
+        $type_product = request()->get('type_product');
+        $id_master_products = request()->get('id_master_products');
+        $modul = !empty(request()->get('modul'))?request()->get('modul'):'';
+        
+		$table = $type_product=='FG'?'master_product_fgs AS a':'master_wips AS a';
+		$field_wl = $type_product=='FG'?'a.height_unit':'a.length_unit';
+		
+		$datas = DB::table($table)
+			->select('a.*')
+			->selectRaw('b.unit_code AS width_unit_code')
+			->selectRaw('c.unit_code AS length_unit_code')
+			->leftJoin('master_units AS b', 'a.width_unit', '=', 'b.id')
+			->leftJoin('master_units AS c', $field_wl, '=', 'c.id')
+			->whereRaw( "a.id = '$id_master_products'")
+			->get();
+			
+		/*
+		$lists = "<option value='' disabled='' selected=''>** Please Select A Product</option>";		
+		foreach($datas as $data){
+			$ukuran = $type_product=="FG"?$data->thickness." x ".$data->width." x ".$data->height:$data->thickness." x ".$data->width." x ".$data->length;
+			$selected = $data->id==$id_master_products?'selected':'';
+			$lists .= "<option value='".$type_product.'|'.$data->id.'|'.$data->description.'|'.$ukuran."' ".$selected.">".$data->description."</option>";
+			//HARUS DIPERBAIKI TAMBAHKAN SIZE UNTUK DISPLAY UKURAN DI REPORT SLITTING
+		}
+		*/
+		$callback = array('result' => $datas);
+		echo json_encode($callback);			
+    }
 	public function jsonGetCustomers()
     {
         $id_master_customers = request()->get('id_master_customers');
@@ -2515,7 +2545,7 @@ class ProductionController extends Controller
 		//print_r($_POST);exit;
 		$data = DB::table('report_blow_production_results as a')
 			->leftJoin('report_blows as b', 'a.id_report_blows', '=', 'b.id')
-			->select('a.*')
+			->select('a.*', 'b.order_name')
 			->whereRaw( "sha1(a.id_report_blows) = '$response_id_rb'")
 			->whereRaw( "sha1(a.id) = '$response_id_rb_pr'")
 			->get();

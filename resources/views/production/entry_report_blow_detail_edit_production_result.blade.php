@@ -148,12 +148,37 @@
 															alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
 														}
 													});
+													$.ajax({
+														type: "GET",
+														url: "/json_get_produk_autofill",
+														data: { type_product : {!! "'".explode('|', $data[0]->order_name)[0]."'" !!}, id_master_products : {!! explode('|', $data[0]->order_name)[1] !!} },
+														dataType: "json",
+														beforeSend: function(e) {
+															if(e && e.overrideMimeType) {
+																e.overrideMimeType("application/json;charset=UTF-8");
+															}
+														},
+														success: function(response){
+															//$("#id_master_products_detail").html(response.list_products).show();
+															
+															document.getElementById("width_unit").textContent = response.result[0]['width_unit_code'];
+															
+															document.getElementById("length_unit").textContent = response.result[0]['length_unit_code'];
+															
+														},
+														error: function (xhr, ajaxOptions, thrownError) {
+															alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
+														}
+													});
 												});
 											</script>	
 											<div class="row mb-4 field-wrapper required-field">
 												<label for="horizontal-firstname-input" class="col-sm-2 col-form-label">Thickness </label>
 												<div class="col-sm-10">
-													<input type="text" class="form-control" name="thickness" value="{{ $data[0]->thickness; }}">
+													<div class="input-group">
+														<input class="form-control" name="thickness" type="text" value="{{ $data[0]->thickness; }}">
+														<div class="input-group-text" style="background-color:rgb(197, 197, 197)">MIC</div>
+													</div>
 													@if($errors->has('thickness'))
 														<div class="text-danger"><b>{{ $errors->first('thickness') }}</b></div>
 													@endif
@@ -162,7 +187,10 @@
 											<div class="row mb-4 field-wrapper required-field">
 												<label for="horizontal-firstname-input" class="col-sm-2 col-form-label">Length </label>
 												<div class="col-sm-10">
-													<input type="text" class="form-control" name="length" value="{{ $data[0]->length; }}">
+													<div class="input-group">
+														<input class="form-control" name="length" type="text" value="{{ $data[0]->length; }}">
+														<div id="length_unit" class="input-group-text" style="background-color:rgb(197, 197, 197)">-</div>
+													</div>
 													@if($errors->has('length'))
 														<div class="text-danger"><b>{{ $errors->first('length') }}</b></div>
 													@endif
@@ -171,7 +199,10 @@
 											<div class="row mb-4 field-wrapper required-field">
 												<label for="horizontal-firstname-input" class="col-sm-2 col-form-label">Width </label>
 												<div class="col-sm-10">
-													<input type="text" class="form-control" name="width" value="{{ $data[0]->width; }}">
+													<div class="input-group">
+														<input class="form-control" name="width" type="text" value="{{ $data[0]->width; }}">
+														<div id="width_unit" class="input-group-text" style="background-color:rgb(197, 197, 197)">-</div>
+													</div>
 													@if($errors->has('width'))
 														<div class="text-danger"><b>{{ $errors->first('width') }}</b></div>
 													@endif
@@ -180,7 +211,10 @@
 											<div class="row mb-4 field-wrapper required-field">
 												<label for="horizontal-firstname-input" class="col-sm-2 col-form-label">Weight </label>
 												<div class="col-sm-10">
-													<input type="text" class="form-control" name="weight" value="{{ $data[0]->weight; }}">
+													<div class="input-group">
+														<input class="form-control" name="weight" type="text" value="{{ $data[0]->weight; }}">
+														<div class="input-group-text" style="background-color:rgb(197, 197, 197)">KG</div>
+													</div>
 													@if($errors->has('weight'))
 														<div class="text-danger"><b>{{ $errors->first('weight') }}</b></div>
 													@endif
