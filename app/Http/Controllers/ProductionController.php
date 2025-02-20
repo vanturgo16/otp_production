@@ -1928,7 +1928,8 @@ class ProductionController extends Controller
 		$where = request()->get('where');
 		$key = request()->get('barcode_number');
 		$wo = request()->get('wo_number');
-        
+		$barcode_end = request()->get('barcode_end');
+        //echo $barcode_end;exit;
 		if($where == "BLOW"){
 			$where_query = "a.status IS NULL AND b.id_master_process_productions = '2'";
 			
@@ -2067,10 +2068,13 @@ class ProductionController extends Controller
 				->select('a.*')
 				->get();
 		}else if($where == "BAG"){
-			$where_query = "a.status IS NULL AND b.id_master_process_productions = '1'";
+			$where_query = "a.status IS NULL AND a.used_next_shift = '1' AND b.id_master_process_productions = '1'";
 			
 			if(!empty($key)){
 				$where_query .= " OR a.barcode_number = '$key'";
+			}
+			if(!empty($barcode_end)){
+				$where_query .= " OR (a.barcode_number IN($barcode_end) AND a.used_next_shift = '1' AND b.id_master_process_productions = '1')";
 			}
 			
 			$datas = DB::table('barcode_detail as a')
