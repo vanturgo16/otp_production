@@ -918,30 +918,26 @@ class ProductionReportBagMakingController extends Controller
 					}else{
 						$validatedData['used_next_shift'] = '0';
 					}
+										
+					if(isset($_POST['used_next_shift_barcode'])){
+						$validatedData['used_next_shift_end'] = '1';						
+					}else{
+						$validatedData['used_next_shift_end'] = '0';
+					}
 					
 					$response = ProductionEntryReportBagMakingProductionResult::create($validatedData);
 					
 					if(!empty($response)){
-						//UPDATE STATUS BARCODE
+						
+						//UPDATE STATUS BARCODE Versi OLD
 						$updatedData['status'] = 'In Stock BAG';//pukul rata jenis nya join lagi berdasarkan wo
 					
 						DB::table('barcode_detail')
 						->where('barcode_number', $response->barcode)
 						->update($updatedData);
 						
-						/*OLD
-						if(empty($_POST['used_next_shift']) || isset($_POST['join'])){
-							if(empty($_POST['used_next_shift'])){
-								$updatedDataBS['used_next_shift'] = '0';						
-							}
-							if(isset($_POST['join'])){
-								$updatedDataBS['join'] = $_POST['join'];	
-							}
-							DB::table('barcode_detail')
-							->where('barcode_number', $response->barcode_start)
-							->update($updatedDataBS);
-						}
-						*/
+						
+						//Update Status Used Next Shift Barcode START
 						if(!isset($_POST['used_next_shift']) || isset($_POST['used_next_shift']) || isset($_POST['join'])){
 							if(!isset($_POST['used_next_shift'])){
 								$updatedDataBS['used_next_shift'] = '0';						
@@ -955,6 +951,19 @@ class ProductionReportBagMakingController extends Controller
 							DB::table('barcode_detail')
 							->where('barcode_number', $response->barcode_start)
 							->update($updatedDataBS);
+						}
+						
+						//Update Status Used Next Shift Barcode END
+						if(!isset($_POST['used_next_shift_barcode']) || isset($_POST['used_next_shift_barcode'])){
+							if(!isset($_POST['used_next_shift_barcode'])){
+								$updatedDataBE['used_next_shift'] = '0';						
+							}
+							if(isset($_POST['used_next_shift_barcode'])){
+								$updatedDataBE['used_next_shift'] = '1';						
+							}
+							DB::table('barcode_detail')
+							->where('barcode_number', $response->barcode)
+							->update($updatedDataBE);
 						}
 						
 						for($i = 0; $i < $response->wrap; $i++){
@@ -999,13 +1008,27 @@ class ProductionReportBagMakingController extends Controller
 		$data = DB::table('report_bag_production_results as a')
 			->leftJoin('report_bags as b', 'a.id_report_bags', '=', 'b.id')
 			->leftJoin('barcode_detail as c', 'a.barcode_start', '=', 'c.barcode_number')
+			->leftJoin('barcode_detail as d', 'a.barcode', '=', 'd.barcode_number')
 			->select('a.*', 'b.id_master_customers', 'c.used_next_shift', 'c.join')
+			->selectRaw('d.used_next_shift AS used_next_shift_barcode')
 			->whereRaw( "sha1(a.id_report_bags) = '$response_id_rb'")
 			->whereRaw( "sha1(a.id) = '$response_id_rb_pr'")
 			->groupBy('a.id')
 			->get();
 		//print_r($data[0]);exit;
 		if(isset($data[0])){
+			$data_detail_production = DB::table('report_bag_production_results AS a')
+				->leftJoin('work_orders AS b', 'a.id_work_orders', '=', 'b.id')
+				->leftJoin('report_bag_production_result_details AS c', function ($join) {
+					$join->on('a.id', '=', 'c.id_report_bag_production_results')
+						 ->on('a.id_report_bags', '=', 'c.id_report_bags')
+						 ->whereRaw('c.wrap_pcs!=""');
+				})
+				->select('a.barcode','a.used_next_shift_end')
+				->whereRaw( "sha1(a.id_report_bags) = '$response_id_rb'")
+				->groupBy('a.id')
+				->get();
+				
 			$id_master_customers = $data[0]->id_master_customers;
 			$ms_work_orders = DB::table('work_orders AS a')
 				->leftJoin('sales_orders AS b', 'a.id_sales_orders', '=', 'b.id')
@@ -1027,7 +1050,7 @@ class ProductionReportBagMakingController extends Controller
 					->whereRaw( "sha1(a.id_report_bag_production_results) = '$response_id_rb_pr'")
 					->get();
 				
-				return view('production.entry_report_bag_making_detail_edit_production_result', compact('data','ms_work_orders','data_detail'));			
+				return view('production.entry_report_bag_making_detail_edit_production_result', compact('data','ms_work_orders','data_detail','data_detail_production'));			
 			}else{
 				return Redirect::to('/production-ent-report-bag-making-detail/'.$response_id_rb)->with('pesan_danger', 'There Is An Error.');
 			}
@@ -1046,7 +1069,14 @@ class ProductionReportBagMakingController extends Controller
 			->whereRaw( "sha1(a.id_report_bags) = '$response_id_rb'")
 			->whereRaw( "sha1(a.id) = '$response_id_rb_pr'")
 			->get();
-			
+		
+		$cek_barcode = DB::table('report_bag_production_results')
+			->selectRaw('COUNT(report_bag_production_results.id) AS total_barcode')
+			->where('barcode', $data[0]->barcode)
+			->whereRaw( "sha1(id_report_bags) = '$response_id_rb'")
+			->groupBy('id_report_bags')
+			->get();
+		
 		$barcode_start = $_POST['id_master_barcode_start'];
 		$data_slitting = ProductionEntryReportSFProductionResult::whereRaw( "report_sf_production_results.barcode = '$barcode_start'")
 			->select('*')
@@ -1104,8 +1134,14 @@ class ProductionReportBagMakingController extends Controller
 				$validatedData['used_next_shift'] = '0';
 			}
 			
+			if(isset($_POST['used_next_shift_barcode'])){
+				$validatedData['used_next_shift_end'] = '1';						
+			}else{
+				$validatedData['used_next_shift_end'] = '0';
+			}
+			
 			$response = ProductionEntryReportBagMakingProductionResult::where('id', $data[0]->id)
-				->where('id', $data[0]->id)
+				//->where('id', $data[0]->id)
 				->update($validatedData);
 			
 			/*
@@ -1121,17 +1157,14 @@ class ProductionReportBagMakingController extends Controller
 			
 			if ($response){
 				
+				//Update Status Barcode Versi 3
 				$updatedData['status'] = 'In Stock BAG';			
 				$response_barcode = DB::table('barcode_detail')
 					->where('barcode_number', $validatedData['barcode'])
 					->update($updatedData);
 				
-				if($validatedData['barcode'] <> $data[0]->barcode){						
-					DB::table('barcode_detail')
-					->where('barcode_number', $data[0]->barcode)
-					->update(['status' => null, 'used_next_shift' => '1', 'join' => '-']);					
-				}
 				
+				//Update Status Used Next Shift Barcode START
 				if(!isset($_POST['used_next_shift']) || isset($_POST['used_next_shift']) || isset($_POST['join'])){
 					if(!isset($_POST['used_next_shift'])){
 						$updatedDataBS['used_next_shift'] = '0';						
@@ -1145,12 +1178,40 @@ class ProductionReportBagMakingController extends Controller
 					DB::table('barcode_detail')
 					->where('barcode_number', $validatedData['barcode_start'])
 					->update($updatedDataBS);
-				}
+				}				
 				if($validatedData['barcode_start'] <> $data[0]->barcode_start){						
 					DB::table('barcode_detail')
 					->where('barcode_number', $data[0]->barcode_start)
 					->update(['used_next_shift' => '1', 'join' => '-']);					
 				}
+				
+				//Update Status Used Next Shift Barcode END
+				if(!isset($_POST['used_next_shift_barcode']) || isset($_POST['used_next_shift_barcode'])){
+					if(!isset($_POST['used_next_shift_barcode'])){
+						$updatedDataBE['used_next_shift'] = '0';						
+					}
+					if(isset($_POST['used_next_shift_barcode'])){
+						$updatedDataBE['used_next_shift'] = '1';						
+					}
+					DB::table('barcode_detail')
+					->where('barcode_number', $validatedData['barcode'])
+					->update($updatedDataBE);
+				}				
+				if($validatedData['barcode'] <> $data[0]->barcode){	
+					//print_r($cek_barcode);exit;
+					if(($cek_barcode[0]->total_barcode-1)<1){
+						$penetrasiData['status'] = null;
+					}
+					
+					$penetrasiData['used_next_shift'] = '1';
+					$penetrasiData['join'] = '-';
+					
+					DB::table('barcode_detail')
+					->where('barcode_number', $data[0]->barcode)
+					->update($penetrasiData);					
+					
+				}
+				
 				//Audit Log		
 				$username= auth()->user()->email; 
 				$ipAddress=$_SERVER['REMOTE_ADDR'];
@@ -1175,18 +1236,36 @@ class ProductionReportBagMakingController extends Controller
 		$data = ProductionEntryReportBagMakingProductionResult::select("*")
 				->whereRaw( "sha1(id) = '$id'")
                 ->get();
-		//$barcode = $data[0]->barcode;
+				
+		$cek_barcode = DB::table('report_bag_production_results')
+			->selectRaw('COUNT(report_bag_production_results.id) AS total_barcode')
+			->where('barcode', $data[0]->barcode)
+			->whereRaw( "sha1(id_report_bags) = '$id_rb'")
+			->groupBy('id_report_bags')
+			->get();
 		
 		if(!empty($data[0])){
 			$data_detail = ProductionEntryReportBagMakingProductionResultDetail::select("*")
 				->whereRaw( "sha1(id_report_bags) = '$id_rb'")
 				->whereRaw( "sha1(id_report_bag_production_results) = '$id'")
                 ->get();
-			
-			//Penyesuaian Barcode
+				
+			/*
+			//Penyesuaian Barcode OLD
 			DB::table('barcode_detail')
 				->where('barcode_number', $data[0]->barcode)
 				->update(['status' => null, 'used_next_shift' => '1', 'join' => '-']);
+			*/	
+			
+			//Penyesuaian Barcode 
+			if(($cek_barcode[0]->total_barcode-1)<1){
+				$penetrasiData['status'] = null;
+			}			
+			$penetrasiData['used_next_shift'] = '1';
+			$penetrasiData['join'] = '-';			
+			DB::table('barcode_detail')
+			->where('barcode_number', $data[0]->barcode)
+			->update($penetrasiData);		
 				
 			//Penyesuaian Barcode Start
 			DB::table('barcode_detail')
@@ -1198,7 +1277,7 @@ class ProductionReportBagMakingController extends Controller
 			
 			if($delete){
 				//Jika Barcode Bisa Digunakan Lagi, Sesuaikan status data barcode menjadi NULL
-				$updatedData['status'] = null;
+				//$updatedData['status'] = null;
 					
 				foreach($data_detail as $data_details){
 					/*
@@ -1656,17 +1735,17 @@ class ProductionReportBagMakingController extends Controller
 				$deleteBagMaking = ProductionEntryReportBagMaking::whereRaw( "id = '".$data_update[0]->id_rb."'" )->delete();
 				
 				if($deleteBagMaking){
-					/*
-					if(!empty($data_detail_pr[0]->barcode)){
+					
+					if(!empty($data_detail[0]->barcode)){
 						$updatedData['status'] = null;
 						
-						foreach($data_detail_pr as $data){
+						foreach($data_detail as $data){
 							DB::table('barcode_detail')
 								->where('barcode_number', $data->barcode)
 								->update($updatedData);
 						}	
 					}
-					*/
+					
 					//Audit Log
 					$username= auth()->user()->email; 
 					$ipAddress=$_SERVER['REMOTE_ADDR'];

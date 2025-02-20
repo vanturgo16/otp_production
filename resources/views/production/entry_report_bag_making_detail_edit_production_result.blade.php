@@ -36,7 +36,7 @@
 		@if(!empty($data[0]))       
 		
 		<div class="row">
-			<div class="col-lg-5">
+			<div class="col-lg-6">
 				<div class="card">
 					<div class="card-header">
 						<h4 class="card-title"><i data-feather="check-square"></i> Production Result</h4>
@@ -231,7 +231,28 @@
 														}
 													});
 												});
-											</script>	
+											</script>												
+											<div class="row mb-4 field-wrapper">
+												<label for="horizontal-password-input" class="col-sm-4 col-form-label">
+													Used Next Shift
+													<span class="badge bg-secondary-subtle text-secondary">
+														Barcode START
+													</span>
+												</label>
+												<div class="col-sm-8 mt-3">
+													<label class="toggleSwitch nolabel" onclick="">
+														<input type="checkbox" name="used_next_shift" <?= $data[0]->used_next_shift == '1' ? 'checked' : '' ?>/>
+														<a></a>
+														<span>
+															<span class="left-span">No</span>
+															<span class="right-span">Yes</span>
+														</span>											
+													</label>
+													@if($errors->has('used_next_shift'))
+														<div class="text-danger"><b>{{ $errors->first('used_next_shift') }}</b></div>
+													@endif
+												</div>
+											</div>	
 											<div class="row mb-4 field-wrapper">
 												<label for="horizontal-password-input" class="col-sm-4 col-form-label">Join  </label>
 												<div class="col-sm-8">
@@ -243,22 +264,6 @@
 													</select>
 													@if($errors->has('join'))
 														<div class="text-danger"><b>{{ $errors->first('join') }}</b></div>
-													@endif
-												</div>
-											</div>												
-											<div class="row mb-4 field-wrapper">
-												<label for="horizontal-password-input" class="col-sm-4 col-form-label">Used Next Shift </label>
-												<div class="col-sm-8">
-													<label class="toggleSwitch nolabel" onclick="">
-														<input type="checkbox" name="used_next_shift" <?= $data[0]->used_next_shift == '1' ? 'checked' : '' ?>/>
-														<a></a>
-														<span>
-															<span class="left-span">No</span>
-															<span class="right-span">Yes</span>
-														</span>											
-													</label>
-													@if($errors->has('used_next_shift'))
-														<div class="text-danger"><b>{{ $errors->first('used_next_shift') }}</b></div>
 													@endif
 												</div>
 											</div>	
@@ -282,7 +287,11 @@
 													$.ajax({
 														type: "GET",
 														url: "/json_get_barcode",
-														data: { where : 'BAG', barcode_number : {!! "'".$data[0]->barcode."'" !!} },
+														data: { 
+															where : 'BAG', 
+															barcode_end : '<?php $total = count($data_detail_production); $i = 0; foreach ($data_detail_production as $data_detail_production){ $separator = (++$i < $total)?',':''; echo '"'.$data_detail_production->barcode.'"'.$separator; } ?>',
+															barcode_number : {!! "'".$data[0]->barcode."'" !!} 
+														},
 														dataType: "json",
 														beforeSend: function(e) {
 															if(e && e.overrideMimeType) {
@@ -299,7 +308,28 @@
 														}
 													});
 												});
-											</script>
+											</script>											
+											<div class="row mb-4 field-wrapper">
+												<label for="horizontal-password-input" class="col-sm-4 col-form-label">
+													Used Next Shift
+													<span class="badge bg-secondary-subtle text-secondary">
+														Barcode END
+													</span>
+												</label>
+												<div class="col-sm-8 mt-3">
+													<label class="toggleSwitch nolabel" onclick="">
+														<input type="checkbox" name="used_next_shift_barcode" <?= $data[0]->used_next_shift_barcode == '1' ? 'checked' : '' ?>/>
+														<a></a>
+														<span>
+															<span class="left-span">No</span>
+															<span class="right-span">Yes</span>
+														</span>											
+													</label>
+													@if($errors->has('used_next_shift_barcode'))
+														<div class="text-danger"><b>{{ $errors->first('used_next_shift_barcode') }}</b></div>
+													@endif
+												</div>
+											</div>	
 											<div class="row mb-4 field-wrapper required-field">
 												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Weight Starting </label>
 												<div class="col-sm-8">
@@ -399,7 +429,7 @@
 					
 				</div>
 			</div>
-			<div class="col-lg-7">
+			<div class="col-lg-6">
 				<div class="card">
 					<div class="card-header">
 						<h4 class="card-title">Table Wrap Detail</h4>						
