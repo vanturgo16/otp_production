@@ -28,11 +28,59 @@
                     <div class="card">
                         <div class="card-header">
                             <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <a href="/production-req-sparepart-auxiliaries-add" class="btn btn-success waves-effect waves-light">
-										<i class="bx bx-plus" title="Add Data" ></i>
-										ADD
-									</a>                                   
+                                <div class="col-sm-12">
+									<i class="mdi mdi-calendar text-primary me-1"></i> FILTER By DATE
+									<form class="row gx-3 gy-2 align-items-center mt-2">
+										<div class="hstack gap-3">
+											<input type="text" class="form-control" id="datepicker-range" name="daterange" id="daterange">
+											<script>
+												$(function() {													
+													//$('input[name="dates"]').daterangepicker();
+													$('input[name="daterange"]').daterangepicker({
+														opens: 'left'
+													}, function(start, end, label) {
+														$('.datatable-emu-json').DataTable().destroy(); 
+														$('.datatable-emu-json tbody').empty();
+														
+														var table = $('.datatable-emu-json').DataTable({
+														processing: true,
+														serverSide: true,
+														
+														ajax: {
+															url: '/production-req-sparepart-auxiliaries-json',
+															type: "GET",
+															data: function (d) {
+															  d.date_start = start.format('YYYY-MM-DD'); // Parameter tambahan
+															  d.date_end = end.format('YYYY-MM-DD'); // Bisa diubah sesuai kebutuhan
+															}
+														},
+														
+														columns: [
+															{data: 'request_number', name: 'wo_number', orderable: true, searchable: true},
+															{data: 'date', name: 'date', orderable: true, searchable: true},
+															{data: 'name', name: 'regu', orderable: true, searchable: true},
+															{data: 'status', name: 'shift', orderable: true, searchable: true},
+															{data: 'action', name: 'action', orderable: false, searchable: false},
+														],
+														aaSorting: [
+															[1, 'desc']
+														],
+														xhr: function (e, settings, json) {
+															console.log("Data dari server:", json); // Data yang diterima dari controller
+														}
+													});
+													});
+												});
+											</script>
+											<button type="submit" class="btn btn-outline-danger">
+												RESET
+											</button>
+											<div class="vr"></div>
+											<a href="/production-req-sparepart-auxiliaries-add" class="btn btn-success">
+												ADD
+											</a>
+										</div>
+									</form>
                                 </div>
                             </div>
                         </div>

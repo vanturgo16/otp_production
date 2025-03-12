@@ -35,6 +35,7 @@ Route::middleware(['auth', 'clear.permission.cache', 'permission:Produksi|Produk
     Route::post('/production-req-sparepart-auxiliaries-detail-add', [ProductionController::class, 'production_req_sparepart_auxiliaries_detail_add'])->name('production_req_sparepart_auxiliaries_detail_add');	Route::get('/production-req-sparepart-auxiliaries-detail-edit-get/{id}', [ProductionController::class, 'production_req_sparepart_auxiliaries_detail_edit_get'])->name('production_req_sparepart_auxiliaries_detail_edit_get');
 	Route::put('/production-req-sparepart-auxiliaries-detail-edit-save/{id}', [ProductionController::class, 'production_req_sparepart_auxiliaries_detail_edit_save'])->name('production_req_sparepart_auxiliaries_detail_edit_save');
 	Route::post('/production-req-sparepart-auxiliaries-detail-delete', [ProductionController::class, 'production_req_sparepart_auxiliaries_detail_delete'])->name('production_req_sparepart_auxiliaries_detail_delete');
+	Route::get('/production-req-sparepart-auxiliaries-print/{id}', [ProductionController::class, 'production_req_sparepart_auxiliaries_print'])->name('production_req_sparepart_auxiliaries_print');
 	//END REQUEST SPAREPART AND AUXILIARIES
 	//START ENTRY MATERIAL USE
 	Route::get('/production-ent-material-use', [ProductionController::class, 'production_entry_material_use'])->name('production_entry_material_use');

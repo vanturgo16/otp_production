@@ -9,7 +9,7 @@
   <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 
-  <title>REPORT MATERIAL USE</title>
+  <title>REQUEST SPAREPART & AUXILIARIES</title>
   <style type="text/css">
     th {
       background-color: #ecf0f1;
@@ -34,7 +34,7 @@
               <td>FORM</td>
             </tr>
             <tr>
-              <td style="background-color: #ecf0f1;">LAPORAN PEMAKAIAN BAHAN (EXTRUDER)</td>
+              <td style="background-color: #ecf0f1;">LAPORAN REQUEST SPAREPART & AUXILIARIES</td>
             </tr>
             <tr>
               <td><small>FM-SM-PO EXT 02, REV 03, 22 Januari 2018</small></td>
@@ -49,11 +49,11 @@
         <table class="">
           <tbody>
             <tr>
-              <td>Tanggal</td>
+              <td>Request Number</td>
               <td>: {{ $data[0]->created_at; }}</td>
             </tr>
             <tr>
-              <td>Shift</td>
+              <td>Departement</td>
               <td>: {{ $data[0]->shift; }}</td>
             </tr>
           </tbody>
@@ -63,12 +63,8 @@
         <table>
           <tbody>
             <tr>
-              <td>No. Mesin</td>
+              <td>STATUS</td>
               <td>: {{ $data[0]->work_center; }}</td>
-            </tr>
-            <tr>
-              <td>No. WO</td>
-              <td>: {{ $data[0]->wo_number; }}</td>
             </tr>
           </tbody>
         </table>
@@ -76,62 +72,31 @@
     </div>
 
     <table class="table table-bordered mt-3" style="font-size: 12px;">
-      <tbody>
-        <tr>
-          <th>No</th>
-          <th>Nama Material</th>
-          <th>Ratio</th>
-          <th>Sisa Camp (Kg)</th>
-          <th>Pengambilan (Kg)</th>
-          <th>Pakai (Kg)</th>
-          <th>Sisa (Kg)</th>
-          <th>Barcode</th>
-        </tr>
-
-
-        @forelse ($data_detail as $data)
-
-        <tr>
-          <td>{{ $loop->iteration }}</td>
-          <td>{{ $data->rm_name }}</td>
-          <td>-</td>
-          <td>
-            <pre>{{ $data->sisa_camp==0?0:$data->sisa_camp }}</pre>
-          </td>
-          <td>{{ $data->taking==0?0:$data->taking }}</td>
-          <td>{{ $data->usage==0?0:$data->usage }}</td>
-          <td>{{ $data->remaining==0?0:$data->remaining }}</td>
-          <td>{{ $data->lot_number }} ( EXT : {{ $data->ext_lot_number<>""?$data->ext_lot_number:'Tidak Tersedia'; }} )</td>
-
-        </tr>
-        @empty
-        <tr>
-          <td colspan="8" align="center">-</td>
-        </tr>
-
-        @endforelse
-
-
-      </tbody>
+		<thead>
+			<tr>
+			<tr>
+				<th width="20%">Request Sparepart & Auxiliaries</th>
+				<th width="20%">QTY</th>
+				<th width="20%">Remarks</th>
+			</tr>
+		</thead>
+		<tbody>
+		<?php if(!empty($data_detail[0])){ ?>
+			@foreach ($data_detail as $data)
+			<tr>
+				<td>{{ $data->description }}</td>
+				<td>{{ $data->qty }}</td> 
+				<td>{{ $data->remarks }}</td>
+			</tr>
+			@endforeach
+		<?php }else{ ?>
+			<tr>
+				<td class="pt-3 pb-3" colspan="14" align="center">Belum Ada Data Detail Yang Ditambahkan</td>
+			</tr>
+		<?php }; ?>
+		</tbody>
     </table>
 
-    <div class="row" style="font-size: 12px;">
-      <div class="col-md-4 text-center">
-        <p>Operator</p>
-        <p>&nbsp;</p>
-        <p>(...............)</p>
-      </div>
-      <div class="col-md-4 text-center">
-        <p>Kepala Produksi</p>
-        <p>&nbsp;</p>
-        <p>(...............)</p>
-      </div>
-      <div class="col-md-4 text-center">
-        <p>Kepala Shift</p>
-        <p>&nbsp;</p>
-        <p>(...............)</p>
-      </div>
-    </div>
   </div>
 
 
