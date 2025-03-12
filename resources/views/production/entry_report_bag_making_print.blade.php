@@ -219,12 +219,10 @@
           </table>
         </div>
         <div class="col-md-4" style="font-size: 12px;">
-          <strong>&nbsp;</strong>
+          <strong>Waste Produksi</strong>
 
           <table border="1" cellpadding="0" cellspacing="0" style="table-layout: auto;width: 100%">
-            <tr>
-              <th colspan="2" class="text-center">Waste Produksi</th>
-            </tr>
+            
             <tr>
               <th class="text-center">Kg</th>
               <th class="text-center">Penyebab Waste</th>
@@ -260,9 +258,10 @@
 				<th class="text-center">Roll</th>
 				<th class="text-center">Ukuran</th>
 				<th class="text-center">Kg</th>
-				<th class="text-center">Barcode</th>
+				<th class="text-center">Barcode Start</th>
 				<th class="text-center">Used Next Shift</th>
 				<th class="text-center">No. Work Order</th>
+				<th class="text-center">Barcode End</th>
 				<th class="text-center">Ukuran</th>
 				<th class="text-center">Amount Result<br/>(Pcs)</th>
 				<th class="text-center">Wrap<br/>(Bungkus)</th>
@@ -293,6 +292,7 @@
 					<td class="pl-2">{{ $data_detail->barcode_start }}</td>
 					<td class="pl-2">{{ $data_detail->used_next_shift=='1'?'Yes':'No' }}</td>
 					<td class="text-center"><b>{{ $data_detail->wo_number }}</b></td>
+					<td class="text-center">{{ $data_detail->barcode }}</td>
 					<td class="pl-2">{{ $note[3] }}</td>
 					<td class="pl-2">{{ $data_detail->amount_result }}</td><?php $sum_amount_result += $data_detail->amount_result; ?>
 					<td class="pl-2">{{ $data_detail->wrap }}</td><?php $sum_wrap += $data_detail->wrap; ?>
@@ -313,25 +313,24 @@
 			<?php }; ?>
 			<tr>
 				<th colspan="2" rowspan="3"></th>
-				<th colspan="4" rowspan="3"></th>
+				<th colspan="5" rowspan="3"></th>
 				<th colspan="1" rowspan="3" class="text-center">Jumlah</th>
-				<th class="text-right pr-1">Pcs </th>
-				<td class="text-left pl-2"> <b>{{ $sum_amount_result }}<b> </td>
-				<td class="text-left pl-2"> <b> - <b> </td>
-				<td class="text-left pl-2"> <b> - <b> </td>
-				<th colspan="2" rowspan="2"></th>
+				<th colspan="2" class="text-right pr-1">Pcs </th>
+				<th class="text-left pl-2"> <b>{{ $sum_amount_result }}<b> </th>
+				<th class="text-left pl-2"> <b> - <b> </th>
+				<th class="text-left pl-2"> <b> - <b> </th>
             </tr>
             <tr>
-            	<th class="text-right pr-1">Bungkus </th>
-            	<td class="text-left pl-2"> <b> - <b> </td>
-				<td class="text-left pl-2"> <b>{{ $sum_wrap }}<b> </td>
-            	<td class="text-left pl-2"> <b>-<b> </td>
+            	<th colspan="2" class="text-right pr-1">Bungkus </th>
+            	<th class="text-left pl-2"> <b> - <b> </th>
+				<th class="text-left pl-2"> <b>{{ $sum_wrap }}<b> </th>
+            	<th class="text-left pl-2"> <b>-<b> </th>
             </tr>
             <tr>
-            	<th class="text-right pr-1">Kg </th>
-            	<td class="text-left pl-2"> <b> - <b> </td>
-            	<td class="text-left pl-2"> <b>-<b> </td>
-				<td class="text-left pl-2"> <b>{{ $sum_waste }}<b> </td>
+            	<th colspan="2" class="text-right pr-1">Kg </th>
+            	<th class="text-left pl-2"> <b> - <b> </th>
+            	<th class="text-left pl-2"> <b>-<b> </th>
+				<th class="text-left pl-2"> <b>{{ $sum_waste }}<b> </th>
             </tr>
           </table>
         </div>

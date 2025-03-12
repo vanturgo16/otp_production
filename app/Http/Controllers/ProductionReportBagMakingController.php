@@ -832,6 +832,7 @@ class ProductionReportBagMakingController extends Controller
     }
 	public function production_entry_report_bag_making_detail_production_result_add(Request $request){
 		//print_r($_POST);exit;
+		
         if ($request->has('savemore')) {
             return "Tombol Save & Add More diklik.";
         } elseif ($request->has('save')) {
@@ -842,7 +843,17 @@ class ProductionReportBagMakingController extends Controller
 				->select('*')
 				->get();
 			
-			if(!empty($data_slitting[0]->id_report_sfs) && $_POST['wrap'] > 0 ){
+			$amount_result = $_POST['amount_result'];
+			$pcs_wrap = $_POST['pcs_wrap'];
+			
+			if(!empty($data_slitting[0]->id_report_sfs) && $amount_result > 0  && $pcs_wrap > 0 ){
+				$hasil = floor($amount_result/$pcs_wrap);
+				$sisa = $amount_result % $pcs_wrap;
+				
+				$hasil_akhir = $sisa > 0 ? $hasil + 1 : $hasil ;
+				
+				//echo $hasil_akhir . $sisa; exit;
+				
 				/*VERSI SEBELUMNYA
 				//CEK KETERSEDIAAN BARCODE
 				$where_query = "a.status IS NULL AND b.id_master_process_productions = '1'";				
@@ -864,7 +875,7 @@ class ProductionReportBagMakingController extends Controller
 				}
 				*/
 				
-				if($_POST['wrap'] > 0){
+				if($hasil_akhir > 0){
 					$data = ProductionEntryReportBagMaking::whereRaw( "sha1(report_bags.id) = '$request_id'")
 						->select('id')
 						->get();			
@@ -876,8 +887,8 @@ class ProductionReportBagMakingController extends Controller
 						'id_master_barcode_start.required' => 'Cannot Be Empty',
 						'weight_starting.required' => 'Cannot Be Empty',
 						'amount_result.required' => 'Cannot Be Empty',
-						//'wrap_pcs.required' => 'Cannot Be Empty',
-						'wrap.required' => 'Cannot Be Empty',
+						'pcs_wrap.required' => 'Cannot Be Empty',
+						//'wrap.required' => 'Cannot Be Empty',
 						'id_master_barcode.required' => 'Cannot Be Empty',
 							
 					];
@@ -889,8 +900,8 @@ class ProductionReportBagMakingController extends Controller
 						'id_master_barcode_start' => 'required',
 						'weight_starting' => 'required',
 						'amount_result' => 'required',
-						//'wrap_pcs' => 'required',
-						'wrap' => 'required',
+						'pcs_wrap' => 'required',
+						//'wrap' => 'required',
 						'id_master_barcode' => 'required',
 						
 					], $pesan);			
@@ -912,6 +923,7 @@ class ProductionReportBagMakingController extends Controller
 					$validatedData['id_report_bags'] = $data[0]->id;
 					$validatedData['id_report_sfs'] = $data_slitting[0]->id_report_sfs;
 					$validatedData['id_report_sf_production_results'] = $data_slitting[0]->id;
+					$validatedData['wrap'] = $hasil_akhir;
 					
 					if(isset($_POST['used_next_shift'])){
 						$validatedData['used_next_shift'] = '1';						
@@ -966,11 +978,11 @@ class ProductionReportBagMakingController extends Controller
 							->update($updatedDataBE);
 						}
 						
-						for($i = 0; $i < $response->wrap; $i++){
+						for($i = 0; $i < $hasil; $i++){
 							$data_detail = array(
 									'id_report_bags' => $response->id_report_bags,
 									'id_report_bag_production_results' => $response->id,
-									//'wrap_pcs' => '',
+									'wrap_pcs' => $pcs_wrap,
 									//'barcode' => '',
 									//'keterangan' => '',
 									'created_at' => date('Y-m-d H:i:s'),
@@ -978,6 +990,19 @@ class ProductionReportBagMakingController extends Controller
 								);
 							ProductionEntryReportBagMakingProductionResultDetail::create($data_detail);
 						}						
+						
+						if($sisa > 0){
+							$data_detail = array(
+									'id_report_bags' => $response->id_report_bags,
+									'id_report_bag_production_results' => $response->id,
+									'wrap_pcs' => $sisa,
+									//'barcode' => '',
+									//'keterangan' => '',
+									'created_at' => date('Y-m-d H:i:s'),
+									'updated_at' => date('Y-m-d H:i:s')
+								);
+							ProductionEntryReportBagMakingProductionResultDetail::create($data_detail);
+						}
 						
 						//Audit Log		
 						$username= auth()->user()->email; 
@@ -1077,14 +1102,23 @@ class ProductionReportBagMakingController extends Controller
 			->groupBy('id_report_bags')
 			->get();
 		
-		$barcode_start = $_POST['id_master_barcode_start'];
-		$data_slitting = ProductionEntryReportSFProductionResult::whereRaw( "report_sf_production_results.barcode = '$barcode_start'")
-			->select('*')
-			->get();
 		//$type_wo = explode('|', $_POST['id_master_products']);
 		
 		//print_r($_POST);exit;
-		if(!empty($data[0])){	
+		if(!empty($data[0])  && isset($_POST['id_master_barcode_start']) ){		
+			$amount_result = $_POST['amount_result'];
+			$pcs_wrap = $_POST['pcs_wrap'];			
+			
+			$hasil = floor($amount_result/$pcs_wrap);
+			$sisa = $amount_result % $pcs_wrap;
+			
+			$hasil_akhir = $sisa > 0 ? $hasil + 1 : $hasil ;
+			
+			$barcode_start = $_POST['id_master_barcode_start'];
+			$data_slitting = ProductionEntryReportSFProductionResult::whereRaw( "report_sf_production_results.barcode = '$barcode_start'")
+				->select('*')
+				->get();
+		
 			$pesan = [
 				'id_work_orders.required' => 'Cannot Be Empty',
 				'start.required' => 'Cannot Be Empty',
@@ -1092,8 +1126,8 @@ class ProductionReportBagMakingController extends Controller
 				'id_master_barcode_start.required' => 'Cannot Be Empty',
 				'weight_starting.required' => 'Cannot Be Empty',
 				'amount_result.required' => 'Cannot Be Empty',
-				//'wrap_pcs.required' => 'Cannot Be Empty',
-				'wrap.required' => 'Cannot Be Empty',
+				'pcs_wrap.required' => 'Cannot Be Empty',
+				//'wrap.required' => 'Cannot Be Empty',
 				'id_master_barcode.required' => 'Cannot Be Empty',
 					
 			];
@@ -1105,8 +1139,8 @@ class ProductionReportBagMakingController extends Controller
 				'id_master_barcode_start' => 'required',
 				'weight_starting' => 'required',
 				'amount_result' => 'required',
-				//'wrap_pcs' => 'required',
-				'wrap' => 'required',
+				'pcs_wrap' => 'required',
+				//'wrap' => 'required',
 				'id_master_barcode' => 'required',
 				
 			], $pesan);			
@@ -1127,6 +1161,8 @@ class ProductionReportBagMakingController extends Controller
 			
 			$validatedData['id_report_sfs'] = $data_slitting[0]->id_report_sfs;
 			$validatedData['id_report_sf_production_results'] = $data_slitting[0]->id;
+			
+			$validatedData['wrap'] = $data[0]->wrap <> $hasil_akhir ? $hasil_akhir : $data[0]->wrap ;
 			
 			if(isset($_POST['used_next_shift'])){
 				$validatedData['used_next_shift'] = '1';						
@@ -1178,7 +1214,8 @@ class ProductionReportBagMakingController extends Controller
 					DB::table('barcode_detail')
 					->where('barcode_number', $validatedData['barcode_start'])
 					->update($updatedDataBS);
-				}				
+				}		
+				
 				if($validatedData['barcode_start'] <> $data[0]->barcode_start){						
 					DB::table('barcode_detail')
 					->where('barcode_number', $data[0]->barcode_start)
@@ -1196,7 +1233,8 @@ class ProductionReportBagMakingController extends Controller
 					DB::table('barcode_detail')
 					->where('barcode_number', $validatedData['barcode'])
 					->update($updatedDataBE);
-				}				
+				}			
+				
 				if($validatedData['barcode'] <> $data[0]->barcode){	
 					//print_r($cek_barcode);exit;
 					if(($cek_barcode[0]->total_barcode-1)<1){
@@ -1212,6 +1250,38 @@ class ProductionReportBagMakingController extends Controller
 					
 				}
 				
+				if($data[0]->wrap <> $hasil_akhir || $data[0]->pcs_wrap <> $_POST['pcs_wrap'] ){
+					//deleted dulu detail nya
+					ProductionEntryReportBagMakingProductionResultDetail::whereRaw( "id_report_bag_production_results = '".$data[0]->id."'")->delete();
+					
+					//insert with loop
+					for($i = 0; $i < $hasil; $i++){
+						$data_detail = array(
+								'id_report_bags' => $data[0]->id_report_bags,
+								'id_report_bag_production_results' => $data[0]->id,
+								'wrap_pcs' => $pcs_wrap,
+								//'barcode' => '',
+								//'keterangan' => '',
+								'created_at' => date('Y-m-d H:i:s'),
+								'updated_at' => date('Y-m-d H:i:s')
+							);
+						ProductionEntryReportBagMakingProductionResultDetail::create($data_detail);
+					}						
+					
+					if($sisa > 0){
+						$data_detail = array(
+								'id_report_bags' => $data[0]->id_report_bags,
+								'id_report_bag_production_results' => $data[0]->id,
+								'wrap_pcs' => $sisa,
+								//'barcode' => '',
+								//'keterangan' => '',
+								'created_at' => date('Y-m-d H:i:s'),
+								'updated_at' => date('Y-m-d H:i:s')
+							);
+						ProductionEntryReportBagMakingProductionResultDetail::create($data_detail);
+					}
+				}
+				
 				//Audit Log		
 				$username= auth()->user()->email; 
 				$ipAddress=$_SERVER['REMOTE_ADDR'];
@@ -1222,10 +1292,10 @@ class ProductionReportBagMakingController extends Controller
 				
 				return Redirect::to('/production-entry-report-bag-making-detail-production-result-edit/'.$response_id_rb.'/'.$response_id_rb_pr)->with('pesan', 'Update Successfuly.');  
 			}else{
-				return Redirect::to('/production-entry-report-bag-making-detail-production-result-edit/'.$response_id_rb.'/'.$response_id_rb_pr)->with('pesan', 'There Is An Error.');
+				return Redirect::to('/production-entry-report-bag-making-detail-production-result-edit/'.$response_id_rb.'/'.$response_id_rb_pr)->with('pesan_danger', 'There Is An Error.');
 			}
 		}else{
-			return Redirect::to('/production-entry-report-bag-making-detail-production-result-edit/'.$response_id_rb.'/'.$response_id_rb_pr)->with('pesan', 'There Is An Error.');
+			return Redirect::to('/production-entry-report-bag-making-detail-production-result-edit/'.$response_id_rb.'/'.$response_id_rb_pr)->with('pesan_danger', 'There Is An Error.');
 		}
 		
     }
@@ -1911,10 +1981,10 @@ class ProductionReportBagMakingController extends Controller
 				
 				return Redirect::to('/production-entry-report-bag-making-detail-production-result-edit/'.$response_id_rb.'/'.$response_id_rb_pr)->with('pesan', 'Update Successfuly.');  
 			}else{
-				return Redirect::to('/production-entry-report-bag-making-detail-production-result-edit/'.$response_id_rb.'/'.$response_id_rb_pr)->with('pesan', 'There Is An Error.');
+				return Redirect::to('/production-entry-report-bag-making-detail-production-result-edit/'.$response_id_rb.'/'.$response_id_rb_pr)->with('pesan_danger', 'There Is An Error.');
 			}
 		}else{
-			return Redirect::to('/production-entry-report-bag-making-detail-production-result-edit/'.$response_id_rb.'/'.$response_id_rb_pr)->with('pesan', 'There Is An Error.');
+			return Redirect::to('/production-entry-report-bag-making-detail-production-result-edit/'.$response_id_rb.'/'.$response_id_rb_pr)->with('pesan_danger', 'There Is An Error.');
 		}
 		
     }
@@ -1959,10 +2029,10 @@ class ProductionReportBagMakingController extends Controller
 				
 				return Redirect::to('/production-entry-report-bag-making-detail-production-result-edit/'.$response_id_rb.'/'.$response_id_rb_pr)->with('pesan', 'Update Successfuly.');  
 			}else{
-				return Redirect::to('/production-entry-report-bag-making-detail-production-result-edit/'.$response_id_rb.'/'.$response_id_rb_pr)->with('pesan', 'There Is An Error.');
+				return Redirect::to('/production-entry-report-bag-making-detail-production-result-edit/'.$response_id_rb.'/'.$response_id_rb_pr)->with('pesan_danger', 'There Is An Error.');
 			}
 		}else{
-			return Redirect::to('/production-entry-report-bag-making-detail-production-result-edit/'.$response_id_rb.'/'.$response_id_rb_pr)->with('pesan', 'There Is An Error.');
+			return Redirect::to('/production-entry-report-bag-making-detail-production-result-edit/'.$response_id_rb.'/'.$response_id_rb_pr)->with('pesan_danger', 'There Is An Error.');
 		}
 	}
 	//END ENTRY REPORT BLOW

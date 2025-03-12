@@ -234,7 +234,7 @@
 											</script>												
 											<div class="row mb-4 field-wrapper">
 												<label for="horizontal-password-input" class="col-sm-4 col-form-label">
-													Used Next Shift
+													Used Next Shift<br>
 													<span class="badge bg-secondary-subtle text-secondary">
 														Barcode START
 													</span>
@@ -311,7 +311,7 @@
 											</script>											
 											<div class="row mb-4 field-wrapper">
 												<label for="horizontal-password-input" class="col-sm-4 col-form-label">
-													Used Next Shift
+													Used Next Shift<br>
 													<span class="badge bg-secondary-subtle text-secondary">
 														Barcode END
 													</span>
@@ -342,7 +342,7 @@
 											<div class="row mb-4 field-wrapper required-field">
 												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Amount Result </label>
 												<div class="col-sm-8">
-													<input type="text" class="form-control" name="amount_result" value="{{ $data[0]->amount_result; }}">
+													<input type="text" class="form-control" name="amount_result" id="amount_result" value="{{ $data[0]->amount_result; }}">
 													<div class="text-secondary"> Pcs</div>
 													@if($errors->has('amount_result'))
 														<div class="text-danger"><b>{{ $errors->first('amount_result') }}</b></div>
@@ -350,13 +350,103 @@
 												</div>
 											</div> 
 											<div class="row mb-4 field-wrapper required-field">
-												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Wrap </label>
+												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label mt-4">PCS Per Wrap </label>
 												<div class="col-sm-8">
-													<input type="text" class="form-control" name="wrap" value="{{ $data[0]->wrap; }}">
-													<div class="text-secondary"> Bungkus</div>
-													@if($errors->has('wrap'))
-														<div class="text-danger"><b>{{ $errors->first('wrap') }}</b></div>
+													<span class="badge bg-secondary-subtle text-secondary">
+														( Estimasi Jumlah PCS Per Bungkus/Wrap )
+													</span>
+													<input type="text" class="form-control mt-1" name="pcs_wrap" id="pcs_wrap" value="{{ $data[0]->pcs_wrap; }}">
+													<!--input type="hidden" class="form-control mt-1" name="pcs_wrap"-->
+													<div class="text-secondary">
+														<b>Pcs</b> 
+													</div>
+													@if($errors->has('pcs_wrap'))
+														<div class="text-danger"><b>{{ $errors->first('pcs_wrap') }}</b></div>
 													@endif
+												</div>
+											</div>
+											<script>
+												$(document).ready(function(){
+													document.getElementById('amount_result').value = {{ $data[0]->amount_result; }};
+													document.getElementById('pcs_wrap').value = {{ $data[0]->pcs_wrap; }};
+													
+													konten = '<div class="alert alert-dark alert-dismissible alert-label-icon label-arrow fade show" role="alert"><i class="mdi mdi-alert-outline label-icon"></i><font class="text-white">Informasi Tidak Tersedia</font></div>';
+													$( "#div-informasi" ).html( konten );
+													
+													var n_amount = parseFloat(document.getElementById('amount_result').value);
+													var n_pcs_wrap = parseFloat(document.getElementById('pcs_wrap').value);
+													
+													var n_pcs_wrap = n_pcs_wrap > n_amount ? n_amount : n_pcs_wrap ;
+													
+													var hasil = Math.floor(n_amount/n_pcs_wrap) ;
+													var sisa = n_amount%n_pcs_wrap ;
+													
+													var hasil = !isNaN(hasil)?hasil:0;
+													var sisa = !isNaN(sisa)?sisa:0;
+													
+													var hasil_akhir = sisa > 0 ? hasil + 1 : hasil;
+													var hasil_info = sisa > 0 ? '<strong>'+hasil+'</strong> Bungkus Isi <strong><font>'+n_pcs_wrap+'</font></strong> Pcs<br><strong>1</strong> Bungkus Isi <strong><font>'+sisa+'</font></strong> Pcs':'<strong>'+hasil+'</strong> Bungkus Isi <strong><font>'+n_pcs_wrap+'</font></strong> Pcs';
+													
+													konten = '<div class="alert alert-warning alert-dismissible alert-label-icon label-arrow fade show" role="alert"><i class="mdi mdi-alert-outline label-icon"></i>Total :<br><strong><font>'+hasil_akhir+'</font></strong> Bungkus<br><br>Rincian :<br>'+hasil_info+'</div>';
+													$( "#div-informasi" ).html( konten );
+													
+													/*
+													$("#pcs_wrap").keyup(function() {
+														var n_amount = parseFloat(document.getElementById('amount_result').value);
+														var n_pcs_wrap = parseFloat(document.getElementById('pcs_wrap').value);
+
+														if (!isNaN(n_amount) && !isNaN(n_pcs_wrap) && n_pcs_wrap!='0' && n_amount > n_pcs_wrap) {
+															document.getElementById('pcs_wrap').value = n_amount;
+														}
+													});
+													*/
+													var amount_result = document.getElementById('amount_result');
+											
+													amount_result.addEventListener('input', function() {
+														var n_amount = parseFloat(document.getElementById('amount_result').value);
+														var n_pcs_wrap = parseFloat(document.getElementById('pcs_wrap').value);
+														
+														var n_pcs_wrap = n_pcs_wrap > n_amount ? n_amount : n_pcs_wrap ;
+														
+														var hasil = Math.floor(n_amount/n_pcs_wrap) ;
+														var sisa = n_amount%n_pcs_wrap ;
+														
+														var hasil = !isNaN(hasil)?hasil:0;
+														var sisa = !isNaN(sisa)?sisa:0;
+														
+														var hasil_akhir = sisa > 0 ? hasil + 1 : hasil;
+														var hasil_info = sisa > 0 ? '<strong>'+hasil+'</strong> Bungkus Isi <strong><font>'+n_pcs_wrap+'</font></strong> Pcs<br><strong>1</strong> Bungkus Isi <strong><font>'+sisa+'</font></strong> Pcs':'<strong>'+hasil+'</strong> Bungkus Isi <strong><font>'+n_pcs_wrap+'</font></strong> Pcs';
+														
+														konten = '<div class="alert alert-warning alert-dismissible alert-label-icon label-arrow fade show" role="alert"><i class="mdi mdi-alert-outline label-icon"></i>Total :<br><strong><font>'+hasil_akhir+'</font></strong> Bungkus<br><br>Rincian :<br>'+hasil_info+'</div>';
+														$( "#div-informasi" ).html( konten );
+													});
+													
+													var pcs_wrap = document.getElementById('pcs_wrap');
+											
+													pcs_wrap.addEventListener('input', function() {
+														var n_amount = parseFloat(document.getElementById('amount_result').value);
+														var n_pcs_wrap = parseFloat(document.getElementById('pcs_wrap').value);
+														
+														var n_pcs_wrap = n_pcs_wrap > n_amount ? n_amount : n_pcs_wrap ;
+														
+														var hasil = Math.floor(n_amount/n_pcs_wrap) ;
+														var sisa = n_amount%n_pcs_wrap ;
+														
+														var hasil = !isNaN(hasil) ? hasil:0;
+														var sisa = !isNaN(sisa) ? sisa:0;
+														
+														var hasil_akhir = sisa > 0 ? hasil + 1 : hasil;
+														var hasil_info = sisa > 0 ? '<strong>'+hasil+'</strong> Bungkus Isi <strong><font>'+n_pcs_wrap+'</font></strong> Pcs<br><strong>1</strong> Bungkus Isi <strong><font>'+sisa+'</font></strong> Pcs':'<strong>'+hasil+'</strong> Bungkus Isi <strong><font>'+n_pcs_wrap+'</font></strong> Pcs';
+														
+														konten = '<div class="alert alert-warning alert-dismissible alert-label-icon label-arrow fade show" role="alert"><i class="mdi mdi-alert-outline label-icon"></i>Total :<br><strong><font>'+hasil_akhir+'</font></strong> Bungkus<br><br>Rincian :<br>'+hasil_info+'</div>';
+														$( "#div-informasi" ).html( konten );
+													});
+												});
+											</script>
+											<div class="row mb-4 field-wrapper">
+												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Wrap</label>
+												<div class="col-sm-8">
+													<div id="div-informasi"></div>
 												</div>
 											</div> 
 											<div class="row mb-4 field-wrapper">

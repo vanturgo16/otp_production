@@ -11,7 +11,8 @@ use Illuminate\Support\Facades\Redirect;
 use RealRashid\SweetAlert\Facades\Alert;
 use Browser;
 use Illuminate\Support\Facades\Crypt;
-use Yajra\DataTables\Facades\Datatables;
+//use Yajra\DataTables\Facades\Datatables;
+use DataTables;
 
 // Model
 //START REQUEST SPAREPART AND AUXILIARIES
@@ -57,11 +58,22 @@ class ProductionController extends Controller
     }
 	public function production_req_sparepart_auxiliaries_json()
     {
-        $datas = ProductionReqSparepartAuxiliaries::leftJoin('master_departements AS b', 'request_tool_auxiliaries.id_master_departements', '=', 'b.id')
-                ->select('request_tool_auxiliaries.*', 'b.name')
-                ->orderBy('request_tool_auxiliaries.created_at', 'desc')
-                ->get();
-				
+		$date_start = request()->get('date_start');
+		$date_end = request()->get('date_end');
+		
+		//MASIH ERROR KETIKA ADA PARAMETER
+		$query = ProductionReqSparepartAuxiliaries::leftJoin('master_departements AS b', 'request_tool_auxiliaries.id_master_departements', '=', 'b.id')
+			->select('request_tool_auxiliaries.*', 'b.name')
+			->orderBy('request_tool_auxiliaries.created_at', 'desc');
+
+		// Apply date filter if both values exist
+		if (!empty($date_start) && !empty($date_end)) {
+			$query->whereBetween('request_tool_auxiliaries.created_at', ["$date_start", "$date_end"]);
+		}
+
+		// Execute query
+		$datas = $query->get();
+		
 		return DataTables::of($datas)
 			->addColumn('action', function ($data) {
 				$return_approve = "return confirm('Are you sure to approve this item ?')";
@@ -72,7 +84,14 @@ class ProductionController extends Controller
 						<center>
 							<a onclick="'.$return_approve.'" href="/production-req-sparepart-auxiliaries-approve/'.sha1($data->id).'" class="btn btn-primary waves-effect waves-light">
 								<i class="bx bx-check" title="Approve"></i> APPROVE
+							</a>							
+							<a onclick="'.$return_delete.'" target="_blank" href="/production-req-sparepart-auxiliaries-delete/'.sha1($data->id).'" class="btn btn-danger waves-effect waves-light">
+								<i class="bx bx-trash-alt" title="Delete" ></i> DELETE
 							</a>
+							<a target="_blank" href="/production-req-sparepart-auxiliaries-detail/'.sha1($data->request_number).'" class="btn btn-info waves-effect waves-light">
+								<i class="bx bx-edit-alt" title="Edit"></i> EDIT
+							</a>
+
 					';
 				}elseif($data->status=='Approve'){
 					$tombol = '
@@ -90,14 +109,17 @@ class ProductionController extends Controller
 							<a onclick="'.$return_hold.'" href="/production-req-sparepart-auxiliaries-hold/'.sha1($data->id).'" class="btn btn-secondary waves-effect waves-light">
 								<i class="bx bx-block" title="Hold"></i> HOLD
 							</a>	
+							<a onclick="'.$return_delete.'" target="_blank" href="/production-req-sparepart-auxiliaries-delete/'.sha1($data->id).'" class="btn btn-danger waves-effect waves-light">
+								<i class="bx bx-trash-alt" title="Delete" ></i> DELETE
+							</a>
+							<a target="_blank" href="/production-req-sparepart-auxiliaries-detail/'.sha1($data->request_number).'" class="btn btn-info waves-effect waves-light">
+								<i class="bx bx-edit-alt" title="Edit"></i> EDIT
+							</a>
 					';
 				}
 				$tombol .= '
-						<a onclick="'.$return_delete.'" target="_blank" href="/production-req-sparepart-auxiliaries-delete/'.sha1($data->id).'" class="btn btn-danger waves-effect waves-light">
-							<i class="bx bx-trash-alt" title="Delete" ></i> DELETE
-						</a>
-						<a target="_blank" href="/production-req-sparepart-auxiliaries-detail/'.sha1($data->request_number).'" class="btn btn-info waves-effect waves-light">
-							<i class="bx bx-edit-alt" title="Edit"></i> EDIT
+						<a target="_blank" href="/production-req-sparepart-auxiliaries-print/'.sha1($data->id).'" class="btn btn-dark waves-effect waves-light">
+							<i class="bx bx-printer" title="Print"></i> PRINT
 						</a>
 					</center>
 				';
@@ -422,6 +444,27 @@ class ProductionController extends Controller
 		
 		return Redirect::to('/production-req-sparepart-auxiliaries-detail/'.$request_number)->with('pesan', 'Delete Successfuly.');
 	}
+	public function production_req_sparepart_auxiliaries_print($response_id)
+    {
+		$data = ProductionReqSparepartAuxiliaries::leftJoin('master_departements AS b', 'request_tool_auxiliaries.id_master_departements', '=', 'b.id')
+                ->select('request_tool_auxiliaries.*', 'b.name')
+				->whereRaw( "sha1(request_tool_auxiliaries.id) = '$response_id'")
+                ->orderBy('request_tool_auxiliaries.created_at', 'desc')
+                ->get();
+		//print_r($data);exit;	
+		if(!empty($data[0])){
+			$data_detail = DB::table('request_tool_auxiliaries_details as a')
+					->leftJoin('request_tool_auxiliaries as b', 'a.id_request_tool_auxiliaries', '=', 'b.id')
+					->leftJoin('master_tool_auxiliaries as c', 'a.id_master_tool_auxiliaries', '=', 'c.id')
+					->select('a.*', 'c.description')
+					->whereRaw( "sha1(b.id) = '$response_id'")
+					->get();  
+			return view('production.req_sparepart_auxiliaries_print',compact('data','data_detail'));
+		}else{
+			return Redirect::to('/production-req-sparepart-auxiliaries')->with('pesan_danger', 'There Is An Error.');
+		}
+		
+    }
 	//END REQUEST SPAREPART AND AUXILIARIES
 	
 	//START ENTRY MATERIAL USE

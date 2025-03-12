@@ -45,6 +45,10 @@
     <link rel="stylesheet" href="{{ asset('assets/css/production/style.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/production/toggle.css') }}">
     
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
 
     <style>
         div.field-wrapper label {
@@ -182,7 +186,6 @@
                                 <li><a href="/production-ent-report-slitting" data-key="t-blog-list"><i data-feather="check-square"></i> Report Slitting</a></li>
                                 <li><a href="/production-ent-report-folding" data-key="t-blog-list"><i data-feather="check-square"></i> Report Folding</a></li>
                                 <li><a href="/production-ent-report-bag-making" data-key="t-blog-list"><i data-feather="check-square"></i> Report Bag Making</a></li>
-                                <li><a href="/production-ent-report-production" data-key="t-blog-list"><i data-feather="check-square"></i> Report Production</a></li>
                             </ul>
                         </li>
                        
@@ -437,11 +440,12 @@
     <script src="{{ asset('assets/libs/admin-resources/jquery.vectormap/jquery-jvectormap-1.2.2.min.js') }}"></script>
     <script src="{{ asset('assets/libs/admin-resources/jquery.vectormap/maps/jquery-jvectormap-world-mill-en.js') }}">
     </script>
+	
     <!-- dashboard init -->
     <script src="{{ asset('assets/js/pages/dashboard.init.js') }}"></script>
     <script src="{{ asset('assets/js/app.js') }}"></script>
     <script src="{{ asset('assets/js/modal.js') }}"></script>
-	
+		
     <script src="{{ asset('assets/libs/choices.js/public/assets/scripts/choices.min.js') }}"></script>
     <script src="{{ asset('assets/js/pages/form-advanced.init.js') }}"></script>
 
