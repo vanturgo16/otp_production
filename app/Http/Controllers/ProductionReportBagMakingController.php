@@ -919,6 +919,7 @@ class ProductionReportBagMakingController extends Controller
 					unset($validatedData["id_master_products_detail"]);
 					
 					$validatedData['waste'] = $_POST['waste'];
+					$validatedData['cause_waste'] = $_POST['cause_waste'];
 					$validatedData['keterangan'] = $_POST['keterangan'];
 					$validatedData['id_report_bags'] = $data[0]->id;
 					$validatedData['id_report_sfs'] = $data_slitting[0]->id_report_sfs;
@@ -1151,6 +1152,7 @@ class ProductionReportBagMakingController extends Controller
 			$validatedData['barcode'] = $_POST['id_master_barcode'];
 			$validatedData['note'] = $_POST['id_master_products'];
 			$validatedData['waste'] = $_POST['waste'];
+			$validatedData['cause_waste'] = $_POST['cause_waste'];
 			$validatedData['keterangan'] = $_POST['keterangan'];
 			
 			unset($validatedData["start"]);
