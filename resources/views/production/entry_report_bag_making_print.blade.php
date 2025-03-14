@@ -218,7 +218,7 @@
             </tr>
           </table>
         </div>
-        <div class="col-md-4" style="font-size: 12px;">
+        <!--div class="col-md-4" style="font-size: 12px;">
           <strong>Waste Produksi</strong>
 
           <table border="1" cellpadding="0" cellspacing="0" style="table-layout: auto;width: 100%">
@@ -241,7 +241,7 @@
 			<?php }; ?>
             
           </table>
-        </div>
+        </div-->
       </div>
 
       <div class="row mt-3">
@@ -266,6 +266,7 @@
 				<th class="text-center">Amount Result<br/>(Pcs)</th>
 				<th class="text-center">Wrap<br/>(Bungkus)</th>
 				<th class="text-center">Waste<br/>(Kg)</th>
+				<th class="text-center">Cause<br/>Waste</th>
             </tr>
 			<!--tr>
 				<td class="text-center pt-2 pb-2" colspan="12">Sedang Di Desain Ulang</td>
@@ -297,6 +298,7 @@
 					<td class="pl-2">{{ $data_detail->amount_result }}</td><?php $sum_amount_result += $data_detail->amount_result; ?>
 					<td class="pl-2">{{ $data_detail->wrap }}</td><?php $sum_wrap += $data_detail->wrap; ?>
 					<td class="pl-2">{{ $data_detail->waste>0?$data_detail->waste:0; }}</td>
+					<td class="pl-2">{{ $data_detail->cause_waste=""?'-':$data_detail->cause_waste; }}</td>
 					<?php 
 						if(!empty($data_detail->waste)){
 							$sum_waste += $data_detail->waste; 
@@ -319,6 +321,7 @@
 				<th class="text-left pl-2"> <b>{{ $sum_amount_result }}<b> </th>
 				<th class="text-left pl-2"> <b> - <b> </th>
 				<th class="text-left pl-2"> <b> - <b> </th>
+				<th colspan="1" rowspan="3" class="text-center"></th>
             </tr>
             <tr>
             	<th colspan="2" class="text-right pr-1">Bungkus </th>

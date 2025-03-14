@@ -469,7 +469,15 @@
 													@endif
 												</div>
 											</div> 
-											
+											<div class="row mb-4 field-wrapper required-field">
+												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Cause Waste </label>
+												<div class="col-sm-8">
+													<input type="text" class="form-control" name="cause_waste" value="{{ $data[0]->cause_waste; }}">
+													@if($errors->has('cause_waste'))
+														<div class="text-danger"><b>{{ $errors->first('cause_waste') }}</b></div>
+													@endif
+												</div>
+											</div> 
 											
 											
 											<input type="hidden" class="form-control" name="token_rb" value="{{ Request::segment(2) }}">
