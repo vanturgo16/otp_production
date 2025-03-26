@@ -244,7 +244,7 @@
         </div-->
       </div>
 
-      <div class="row mt-3">
+      <div class="row mt-3 mb-3">
         <div class="col-md-12" style="font-size: 13px;">
           <table border="1" cellpadding="0" cellspacing="0" style="table-layout: auto;width: 100%">
             <tr>
@@ -298,7 +298,7 @@
 					<td class="pl-2">{{ $data_detail->amount_result }}</td><?php $sum_amount_result += $data_detail->amount_result; ?>
 					<td class="pl-2">{{ $data_detail->wrap }}</td><?php $sum_wrap += $data_detail->wrap; ?>
 					<td class="pl-2">{{ $data_detail->waste>0?$data_detail->waste:0; }}</td>
-					<td class="pl-2">{{ $data_detail->cause_waste=""?'-':$data_detail->cause_waste; }}</td>
+					<td class="pl-2">{{ $data_detail->cause_waste==""?'-':$data_detail->cause_waste; }}</td>
 					<?php 
 						if(!empty($data_detail->waste)){
 							$sum_waste += $data_detail->waste; 
