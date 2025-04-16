@@ -663,11 +663,12 @@ class ProductionController extends Controller
 					})
 					->leftJoin('master_raw_materials as c', 'b.id_master_products', '=', 'c.id')
 					->leftJoin('good_receipt_notes as d', 'a.id_grn', '=', 'd.id')
-					->where( "a.qty" , ">", "a.qty_out")
+					->whereRaw( "a.qty > a.qty_out")
 					->whereRaw( "ROUND(a.qty-a.qty_out, 1) > 0")
 					->select('c.description', 'a.*')
 					->selectRaw('ROUND(a.qty-a.qty_out, 1) as sisa')
 					->get();
+				// dd($ms_barcodes);
 			
 			$data_detail = DB::table('report_material_use_details as a')
 					->leftJoin('report_material_uses as b', 'a.id_report_material_uses', '=', 'b.id')

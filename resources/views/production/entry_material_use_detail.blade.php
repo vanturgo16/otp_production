@@ -181,7 +181,7 @@
 						<h4 class="card-title">Detail Report Material Use</h4>
 						
 					</div>
-					<div class="card-body p-4">
+					<div class="card-body p-4" id="detailTableSection">
 						<p class="card-title-desc"></p>
 						<div class="alert alert-info alert-border-left alert-dismissible fade show mb-0 text-justify" role="alert">
 							<i class="mdi mdi-alert-circle-outline align-middle me-3"></i><strong>Info</strong> - Jadikan external lot sebagai acuan penggunaan material. Lot number memiliki beberapa external lot number, penggunaan secara terperinci dapat memastikan jumlah stok material yang tersedia secara pasti di setiap external lot number. Jika material yang tersedia di salah satu external lot tidak mencukupi kebutuhan produksi, silahkan gunakan material di external lot yang lainnya.
@@ -189,7 +189,7 @@
 						</div>
 						<div class="mt-4 col-sm-12">
 							<div class="mt-4 mt-lg-0">
-								<form method="post" action="/production-entry-material-use-detail-add" class="form-material m-t-40" enctype="multipart/form-data">
+								<form method="post" action="/production-entry-material-use-detail-add#detailTableSection" class="form-material m-t-40" enctype="multipart/form-data">
 								@csrf
 								
 									<input id="request_id_original" type="hidden" class="form-control" name="request_id" value="{{ Request::segment(2) }}">

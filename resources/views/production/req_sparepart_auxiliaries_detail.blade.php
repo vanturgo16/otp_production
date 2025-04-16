@@ -106,11 +106,11 @@
 						<h4 class="card-title">Detail Request Sparepart & Auxiliaries</h4>
 						<!--  <p class="card-title-desc"> layout options : from inline, horizontal & custom grid implementations</p> -->
 					</div>
-					<div class="card-body p-4">
+					<div class="card-body p-4" id="detailTableSection">
 
 					<div class="col-sm-12">
 							<div class="mt-4 mt-lg-0">
-								<form method="post" action="/production-req-sparepart-auxiliaries-detail-add" class="form-material m-t-40" enctype="multipart/form-data">
+								<form method="post" action="/production-req-sparepart-auxiliaries-detail-add#detailTableSection" class="form-material m-t-40" enctype="multipart/form-data">
 								@csrf
 									<input type="hidden" class="form-control" name="request_number" value="{{ Request::segment(2) }}">
 									<div class="row mb-4 field-wrapper">
@@ -273,4 +273,11 @@
     </div>
 </div>
 
+@endsection
+@section('styles')
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
 @endsection

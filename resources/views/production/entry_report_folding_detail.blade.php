@@ -311,8 +311,9 @@
 					<div class="card-header">
 						<h4 class="card-title"><i data-feather="check-square"></i> Preparation Check</h4>
 					</div>
-					<div class="card-body p-4">
-						<form method="post" action="/production-ent-report-folding-update" class="form-material m-t-40" enctype="multipart/form-data">
+					<div class="card-body p-4" id="preparationCheck">
+
+						<form method="post" action="/production-ent-report-folding-update#preparationCheck" class="form-material m-t-40" enctype="multipart/form-data">
 						@csrf
 							<input type="hidden" class="form-control" name="request_id" value="{{ Request::segment(2) }}">
 							<div class="row mb-3 field-wrapper">
@@ -465,8 +466,9 @@
 						<h4 class="card-title"><i data-feather="check-square"></i> Hygiene Check</h4>
 						
 					</div>
-					<div class="card-body p-4">
-						<form method="post" action="/production-ent-report-folding-update" class="form-material m-t-40" enctype="multipart/form-data">
+					<div class="card-body p-4" id="hygieneCheck">
+
+						<form method="post" action="/production-ent-report-folding-update#hygieneCheck" class="form-material m-t-40" enctype="multipart/form-data">
 						@csrf
 							<input type="hidden" class="form-control" name="request_id" value="{{ Request::segment(2) }}">
 							<div class="row mb-3 field-wrapper">
@@ -577,7 +579,7 @@
 						<h4 class="card-title"><i data-feather="check-square"></i> Production Result</h4>
 						
 					</div>
-					<div class="card-body p-4">
+					<div class="card-body p-4" id="detailTableSection">
 						<div class="row">
 							<div class="col-lg-5">
 								<div class="card">
@@ -586,7 +588,7 @@
 										
 									</div>
 									<div class="card-body p-4">
-										<form method="post" action="/production-entry-report-folding-detail-production-result-add" class="form-material m-t-40" enctype="multipart/form-data">
+										<form method="post" action="/production-entry-report-folding-detail-production-result-add#detailTableSection" class="form-material m-t-40" enctype="multipart/form-data">
 											@csrf
 											<div class="row mb-4 field-wrapper required-field">
 												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Start Time </label>
@@ -981,7 +983,7 @@
 															
 															<td>	
 																<center>
-																	<form action="/production-entry-report-folding-detail-production-result-delete" method="post" class="d-inline" enctype="multipart/form-data">
+																	<form action="/production-entry-report-folding-detail-production-result-delete#detailTableSection" method="post" class="d-inline" enctype="multipart/form-data">
 																		@csrf		
 																		<input type="hidden" class="form-control" name="token_rf" value="{{ Request::segment(2) }}">
 																		<button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure to delete this item ?')" value="{{ sha1($data_detail->id) }}" name="hapus_detail">
@@ -1042,4 +1044,11 @@
     </div>
 </div>
 
+@endsection
+@section('styles')
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
 @endsection
