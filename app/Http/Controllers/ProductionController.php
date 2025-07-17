@@ -1920,6 +1920,83 @@ class ProductionController extends Controller
 		);
 		echo json_encode($callback);			
     }
+	public function jsonGetProdukFolding()
+    {
+        $type_product = request()->get('type_product');
+        $id_master_products = request()->get('id_master_products');
+        $modul = !empty(request()->get('modul'))?request()->get('modul'):'';
+		
+		if($type_product=='FG'){
+			$table = 'master_product_fgs AS a';
+			if($id_master_products!=''){
+				$datas = DB::table($table)
+					->select('a.*')
+					//->selectRaw("'FG' AS 'type_products'")
+					->whereRaw( "a.id = '$id_master_products'")
+					->get();
+			}else{
+				$datas = DB::table($table)
+					->select('a.*')
+					->get();
+			}
+		}
+		
+		if($type_product=='WIP'){
+			$table = 'master_wips AS a';
+			if($id_master_products!=''){
+				$datas = DB::table($table)
+					->select('a.*')
+					//->selectRaw("'WIP' AS 'type_products'")
+					->whereRaw( "a.id = '$id_master_products'")
+					->get();
+			}else{
+				$datas = DB::table($table)
+					->select('a.*')
+					->get();
+			}
+		}
+		/*
+		if($type_product=='FGWIP'){
+			$table1 = 'master_product_fgs AS a';
+			$table2 = 'master_wips AS a';
+			
+			$data1 = DB::table($table1)
+				->select('a.thickness', 'a.width', 'a.height', 'a.id', 'a.perforasi', 'a.description')
+				->selectRaw("'FG' AS type_product");
+			$data2 = DB::table($table2)
+				->select('a.thickness', 'a.width', 'a.length AS height', 'a.id', 'a.perforasi', 'a.description')
+				->selectRaw("'WIP' AS type_product");
+			
+			$datas = $data1->union($data2)->get();
+		}
+		*/
+		$lists = "<option value='' disabled='' selected=''>** Please Select A Product</option>";		
+		foreach($datas as $data){
+			/*
+			if($type_product=='FGWIP'){
+				$ukuran = $data->thickness." x ".$data->width." x ".$data->height;
+			}
+			*/
+			if($type_product=='WIP'){
+				$ukuran = $data->thickness." x ".$data->width." x ".$data->length;
+			}
+			if($type_product=='FG'){
+				$ukuran = $data->thickness." x ".$data->width." x ".$data->height;
+			}
+			
+			$selected = $data->id==$id_master_products?'selected':'';
+			$perforasi = !empty($data->perforasi)&&$data->perforasi!="-"?$data->perforasi:'-';
+			//$lists .= "<option value='".$data->type_products.'|'.$data->id.'|'.$data->description.'|'.$ukuran."' ".$selected.">".$data->description." | Perforasi : ".$perforasi."</option>";
+			$lists .= "<option value='".$type_product.'|'.$data->id.'|'.$data->description.'|'.$ukuran."' ".$selected.">".$data->description." | Perforasi : ".$perforasi."</option>";
+		}
+		
+		$callback = array(
+			'list_products'=> $lists
+			//'thickness'=> $data->thickness,
+			//'thickness_unit'=> $type_product=="FG" ? '<b>Meter '.$data->thickness.'</b>' : '<b>Meter</b>'
+		);
+		echo json_encode($callback);			
+    }
 	public function jsonGetProdukAutofill()
     {
         $type_product = request()->get('type_product');
@@ -1973,7 +2050,9 @@ class ProductionController extends Controller
 		$key = request()->get('barcode_number');
 		$wo = request()->get('wo_number');
 		$barcode_end = request()->get('barcode_end');
-        //echo $barcode_end;exit;
+		
+		$type_product = request()->get('type_product');
+        //echo $type_product;exit;
 		if($where == "BLOW"){
 			$where_query = "a.status IS NULL AND b.id_master_process_productions = '2'";
 			
@@ -1991,9 +2070,16 @@ class ProductionController extends Controller
 		}else if($where == "SLITTING START"){
 			$where_query = "e.status = 'Closed' AND a.status = 'In Stock BLW' AND ( a.used_next_shift = '1' ";
 			
-			if(!empty($key)){
-				$where_query .= " OR a.barcode_number = '$key'";
+			
+			$where_query .= " ) AND ( a.used_product IS NULL ";
+			
+			if(!empty($type_product) AND !empty($key)){
+				$where_query .= " OR (a.used_product = '$type_product' AND a.barcode_number = '$key')";
 			}
+			if(!empty($type_product) AND empty($key)){
+				$attempt = $type_product == "WIP" ? 8 : 100 ;
+				$where_query .= " OR (a.used_product = '$type_product' AND used_attempt < '$attempt')";
+			} //baru sampe sini pengecekan used attempt
 			
 			$where_query .= " )";
 			
@@ -2038,6 +2124,16 @@ class ProductionController extends Controller
 				$where_query .= " OR a.barcode_number = '$key'";
 			}
 			
+			$where_query .= " ) AND ( a.used_product IS NULL ";
+			
+			if(!empty($key)){
+				$where_query .= " OR (a.barcode_number = '$key')";
+			}
+			//if(empty($key)){
+				$attempt = 10 ;
+				$where_query .= " OR (used_attempt < '$attempt')";
+			//} 
+			
 			$where_query .= " )";
 			
 			$datas = DB::table('barcode_detail as a')				
@@ -2079,7 +2175,7 @@ class ProductionController extends Controller
 				->select('a.*')
 				->whereRaw($where_query)
 				->get();
-		}else if($where == "BAG START"){	
+		}else if($where == "BAG START"){
 			//$jns_wo = substr($wo, 2, 3);			
 			//$where = ($jns_wo=="SLT")?"In Stock SLT FG":"In Stock FLD";
 			$where_query = "a.status IN('In Stock SLT FG','In Stock FLD') AND ( a.used_next_shift = '1' ";
@@ -2087,6 +2183,16 @@ class ProductionController extends Controller
 			if(!empty($key)){
 				$where_query .= " OR a.barcode_number = '$key'";
 			}
+			
+			$where_query .= " ) AND ( a.used_product IS NULL ";
+			
+			if(!empty($key)){
+				$where_query .= " OR (a.barcode_number = '$key')";
+			}
+			//if(empty($key)){
+				$attempt = 50000 ;
+				$where_query .= " OR (used_attempt < '$attempt')";
+			//} 
 			
 			$where_query .= " )";
 			

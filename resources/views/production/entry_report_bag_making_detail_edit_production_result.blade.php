@@ -268,7 +268,7 @@
 												</div>
 											</div>	
 											<div class="row mb-4 field-wrapper required-field">
-												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Barcode </label>
+												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Barcode End</label>
 												<div class="col-sm-8">
 													<select class="form-select data-select2" name="id_master_barcode" id="id_master_barcode">
 														<option value="">** Please Select A Barcodes</option>
@@ -469,7 +469,7 @@
 													@endif
 												</div>
 											</div> 
-											<div class="row mb-4 field-wrapper required-field">
+											<div class="row mb-4 field-wrapper">
 												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Cause Waste </label>
 												<div class="col-sm-8">
 													<input type="text" class="form-control" name="cause_waste" value="{{ $data[0]->cause_waste; }}">

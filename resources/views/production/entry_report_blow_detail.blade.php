@@ -820,44 +820,7 @@
 													</script>
 												</div>
 											</div> 
-											<div class="row mb-4 field-wrapper required-field">
-												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Barcode </label>
-												<div class="col-sm-8">
-													<select class="form-select data-select2" name="id_master_barcode" id="id_master_barcode">
-														<option value="">** Please Select A Barcodes</option>
-													</select>
-													@if($errors->has('id_master_barcode'))
-														<div class="text-danger"><b>{{ $errors->first('id_master_barcode') }}</b></div>
-													@endif
-												</div>
-											</div> 
-											<script>									
-												$(document).ready(function(){
-													//$('#id_work_orders').prop('selectedIndex', 0);
-													//$('#id_master_work_centers').prop('selectedIndex', 0);
-													//$('#id_master_regus').prop('selectedIndex', 0);
-													//$('#shift').prop('selectedIndex', 0);
-													$.ajax({
-														type: "GET",
-														url: "/json_get_barcode",
-														data: { where : 'BLOW' },
-														dataType: "json",
-														beforeSend: function(e) {
-															if(e && e.overrideMimeType) {
-																e.overrideMimeType("application/json;charset=UTF-8");
-															}
-														},
-														success: function(response){
-															$("#id_master_barcode").html(response.list_barcode).show();
-															//$('#id_master_regus').prop('selectedIndex', 0);
-															//$('#shift').prop('selectedIndex', 0);
-														},
-														error: function (xhr, ajaxOptions, thrownError) {
-															alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
-														}
-													});
-												});
-											</script>	
+											
 											<div class="row mb-4 field-wrapper required-field">
 												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Thickness </label>
 												<div class="col-sm-8">
@@ -906,6 +869,46 @@
 													@endif
 												</div>
 											</div> 
+											
+											<div class="row mb-4 field-wrapper required-field">
+												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Barcode </label>
+												<div class="col-sm-8">
+													<select class="form-select data-select2" name="id_master_barcode" id="id_master_barcode">
+														<option value="">** Please Select A Barcodes</option>
+													</select>
+													@if($errors->has('id_master_barcode'))
+														<div class="text-danger"><b>{{ $errors->first('id_master_barcode') }}</b></div>
+													@endif
+												</div>
+											</div> 
+											<script>									
+												$(document).ready(function(){
+													//$('#id_work_orders').prop('selectedIndex', 0);
+													//$('#id_master_work_centers').prop('selectedIndex', 0);
+													//$('#id_master_regus').prop('selectedIndex', 0);
+													//$('#shift').prop('selectedIndex', 0);
+													$.ajax({
+														type: "GET",
+														url: "/json_get_barcode",
+														data: { where : 'BLOW' },
+														dataType: "json",
+														beforeSend: function(e) {
+															if(e && e.overrideMimeType) {
+																e.overrideMimeType("application/json;charset=UTF-8");
+															}
+														},
+														success: function(response){
+															$("#id_master_barcode").html(response.list_barcode).show();
+															//$('#id_master_regus').prop('selectedIndex', 0);
+															//$('#shift').prop('selectedIndex', 0);
+														},
+														error: function (xhr, ajaxOptions, thrownError) {
+															alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
+														}
+													});
+												});
+											</script>	
+											
 											<div class="row mb-4 field-wrapper required-field">
 												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label"><br>Status </label>
 												<div class="col-sm-8">

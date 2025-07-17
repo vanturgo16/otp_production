@@ -178,7 +178,7 @@
 										
 										$.ajax({
 											type: "GET",
-											url : '/json_get_produk', 
+											url : '/json_get_produk_folding', 
 											data: { type_product : 'FG', id_master_products : '' },
 											dataType: "json",
 											beforeSend: function(e) {

@@ -735,7 +735,7 @@
 											</script>
 											<div class="row mb-4 field-wrapper">
 												<label for="horizontal-password-input" class="col-sm-4 col-form-label">
-													Used Next Shift
+													Used Next Shift<br>
 													<span class="badge bg-secondary-subtle text-secondary">
 														Barcode START
 													</span>
@@ -812,7 +812,7 @@
 											</script>												
 											<div class="row mb-4 field-wrapper">
 												<label for="horizontal-password-input" class="col-sm-4 col-form-label">
-													Used Next Shift
+													Used Next Shift<br>
 													<span class="badge bg-secondary-subtle text-secondary">
 														Barcode END
 													</span>
@@ -952,7 +952,7 @@
 												</div>
 											</div> 
 											
-											<div class="row mb-4 field-wrapper required-field">
+											<div class="row mb-4 field-wrapper">
 												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Cause Waste </label>
 												<div class="col-sm-8">
 													<input type="text" class="form-control" name="cause_waste">
