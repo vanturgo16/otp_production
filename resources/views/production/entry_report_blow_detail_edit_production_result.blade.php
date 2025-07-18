@@ -112,6 +112,55 @@
 													</script>
 												</div>
 											</div> 
+												
+											<div class="row mb-4 field-wrapper required-field">
+												<label for="horizontal-firstname-input" class="col-sm-2 col-form-label">Thickness </label>
+												<div class="col-sm-10">
+													<div class="input-group">
+														<input class="form-control" name="thickness" type="text" value="{{ $data[0]->thickness; }}">
+														<div class="input-group-text" style="background-color:rgb(197, 197, 197)">MIC</div>
+													</div>
+													@if($errors->has('thickness'))
+														<div class="text-danger"><b>{{ $errors->first('thickness') }}</b></div>
+													@endif
+												</div>
+											</div> 
+											<div class="row mb-4 field-wrapper required-field">
+												<label for="horizontal-firstname-input" class="col-sm-2 col-form-label">Length </label>
+												<div class="col-sm-10">
+													<div class="input-group">
+														<input class="form-control" name="length" type="text" value="{{ $data[0]->length; }}">
+														<div id="length_unit" class="input-group-text" style="background-color:rgb(197, 197, 197)">-</div>
+													</div>
+													@if($errors->has('length'))
+														<div class="text-danger"><b>{{ $errors->first('length') }}</b></div>
+													@endif
+												</div>
+											</div> 
+											<div class="row mb-4 field-wrapper required-field">
+												<label for="horizontal-firstname-input" class="col-sm-2 col-form-label">Width </label>
+												<div class="col-sm-10">
+													<div class="input-group">
+														<input class="form-control" name="width" type="text" value="{{ $data[0]->width; }}">
+														<div id="width_unit" class="input-group-text" style="background-color:rgb(197, 197, 197)">-</div>
+													</div>
+													@if($errors->has('width'))
+														<div class="text-danger"><b>{{ $errors->first('width') }}</b></div>
+													@endif
+												</div>
+											</div> 
+											<div class="row mb-4 field-wrapper required-field">
+												<label for="horizontal-firstname-input" class="col-sm-2 col-form-label">Weight </label>
+												<div class="col-sm-10">
+													<div class="input-group">
+														<input class="form-control" name="weight" type="text" value="{{ $data[0]->weight; }}">
+														<div class="input-group-text" style="background-color:rgb(197, 197, 197)">KG</div>
+													</div>
+													@if($errors->has('weight'))
+														<div class="text-danger"><b>{{ $errors->first('weight') }}</b></div>
+													@endif
+												</div>
+											</div> 
 											<div class="row mb-4 field-wrapper required-field">
 												<label for="horizontal-firstname-input" class="col-sm-2 col-form-label">Barcode </label>
 												<div class="col-sm-10">
@@ -171,55 +220,8 @@
 														}
 													});
 												});
-											</script>	
-											<div class="row mb-4 field-wrapper required-field">
-												<label for="horizontal-firstname-input" class="col-sm-2 col-form-label">Thickness </label>
-												<div class="col-sm-10">
-													<div class="input-group">
-														<input class="form-control" name="thickness" type="text" value="{{ $data[0]->thickness; }}">
-														<div class="input-group-text" style="background-color:rgb(197, 197, 197)">MIC</div>
-													</div>
-													@if($errors->has('thickness'))
-														<div class="text-danger"><b>{{ $errors->first('thickness') }}</b></div>
-													@endif
-												</div>
-											</div> 
-											<div class="row mb-4 field-wrapper required-field">
-												<label for="horizontal-firstname-input" class="col-sm-2 col-form-label">Length </label>
-												<div class="col-sm-10">
-													<div class="input-group">
-														<input class="form-control" name="length" type="text" value="{{ $data[0]->length; }}">
-														<div id="length_unit" class="input-group-text" style="background-color:rgb(197, 197, 197)">-</div>
-													</div>
-													@if($errors->has('length'))
-														<div class="text-danger"><b>{{ $errors->first('length') }}</b></div>
-													@endif
-												</div>
-											</div> 
-											<div class="row mb-4 field-wrapper required-field">
-												<label for="horizontal-firstname-input" class="col-sm-2 col-form-label">Width </label>
-												<div class="col-sm-10">
-													<div class="input-group">
-														<input class="form-control" name="width" type="text" value="{{ $data[0]->width; }}">
-														<div id="width_unit" class="input-group-text" style="background-color:rgb(197, 197, 197)">-</div>
-													</div>
-													@if($errors->has('width'))
-														<div class="text-danger"><b>{{ $errors->first('width') }}</b></div>
-													@endif
-												</div>
-											</div> 
-											<div class="row mb-4 field-wrapper required-field">
-												<label for="horizontal-firstname-input" class="col-sm-2 col-form-label">Weight </label>
-												<div class="col-sm-10">
-													<div class="input-group">
-														<input class="form-control" name="weight" type="text" value="{{ $data[0]->weight; }}">
-														<div class="input-group-text" style="background-color:rgb(197, 197, 197)">KG</div>
-													</div>
-													@if($errors->has('weight'))
-														<div class="text-danger"><b>{{ $errors->first('weight') }}</b></div>
-													@endif
-												</div>
-											</div> 
+											</script>
+											
 											<div class="row mb-4 field-wrapper required-field">
 												<label for="horizontal-firstname-input" class="col-sm-2 col-form-label"><br>Status </label>
 												<div class="col-sm-10">

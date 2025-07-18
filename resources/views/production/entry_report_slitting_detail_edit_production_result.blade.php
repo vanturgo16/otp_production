@@ -113,93 +113,6 @@
 												</div>
 											</div> 
 											<div class="row mb-4 field-wrapper required-field">
-												<label for="horizontal-firstname-input" class="col-sm-2 col-form-label">Barcode Start</label>
-												<div class="col-sm-10">
-													<select class="form-select data-select2" name="id_master_barcode_start" id="id_master_barcode_start">
-														<option value="">** Please Select A Barcodes</option>
-													</select>
-													@if($errors->has('id_master_barcode_start'))
-														<div class="text-danger"><b>{{ $errors->first('id_master_barcode_start') }}</b></div>
-													@endif
-												</div>
-											</div> 
-											<script>									
-												$(document).ready(function(){
-													//$('#id_work_orders').prop('selectedIndex', 0);
-													//$('#id_master_work_centers').prop('selectedIndex', 0);
-													//$('#id_master_regus').prop('selectedIndex', 0);
-													//$('#shift').prop('selectedIndex', 0);
-													$.ajax({
-														type: "GET",
-														url: "/json_get_barcode",
-														data: { where : 'SLITTING START', barcode_number : {!! "'".$data[0]->barcode_start."'" !!}},
-														dataType: "json",
-														beforeSend: function(e) {
-															if(e && e.overrideMimeType) {
-																e.overrideMimeType("application/json;charset=UTF-8");
-															}
-														},
-														success: function(response){
-															$("#id_master_barcode_start").html(response.list_barcode).show();
-															//$('#id_master_regus').prop('selectedIndex', 0);
-															//$('#shift').prop('selectedIndex', 0);
-														},
-														error: function (xhr, ajaxOptions, thrownError) {
-															alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
-														}
-													});
-													$.ajax({
-														type: "GET",
-														url: "/json_get_produk_autofill",
-														data: { type_product : $('#id_work_orders option:selected').attr('data-type_product'), id_master_products : $('#id_work_orders option:selected').attr('data-id_master_products') },
-														dataType: "json",
-														beforeSend: function(e) {
-															if(e && e.overrideMimeType) {
-																e.overrideMimeType("application/json;charset=UTF-8");
-															}
-														},
-														success: function(response){
-															//$("#id_master_products_detail").html(response.list_products).show();
-															document.getElementById("width_unit").textContent = response.result[0]['width_unit_code'];
-															document.getElementById("length_unit").textContent = response.result[0]['length_unit_code'];
-														},
-														error: function (xhr, ajaxOptions, thrownError) {
-															alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
-														}
-													});
-												});
-											</script>	
-											<div class="row mb-4 field-wrapper">
-												<label for="horizontal-password-input" class="col-sm-2 col-form-label">Join  </label>
-												<div class="col-sm-10">
-													<select class="form-select data-select2" name="join" id="join">
-														<option value="">** Please Select A Join</option>
-														<option value="1" {{ $data[0]->join=='1'?'selected':'' }}>1</option>
-														<option value="2" {{ $data[0]->join=='2'?'selected':'' }}>2</option>
-														<option value="3" {{ $data[0]->join=='3'?'selected':'' }}>3</option>
-													</select>
-													@if($errors->has('join'))
-														<div class="text-danger"><b>{{ $errors->first('join') }}</b></div>
-													@endif
-												</div>
-											</div>
-											<div class="row mb-4 field-wrapper">
-												<label for="horizontal-password-input" class="col-sm-2 col-form-label">Used Next Shift </label>
-												<div class="col-sm-10">
-													<label class="toggleSwitch nolabel" onclick="">
-														<input type="checkbox" name="used_next_shift" <?= $data[0]->used_next_shift == '1' ? 'checked' : '' ?>/>
-														<a></a>
-														<span>
-															<span class="left-span">No</span>
-															<span class="right-span">Yes</span>
-														</span>											
-													</label>
-													@if($errors->has('used_next_shift'))
-														<div class="text-danger"><b>{{ $errors->first('used_next_shift') }}</b></div>
-													@endif
-												</div>
-											</div>			
-											<div class="row mb-4 field-wrapper required-field">
 												<label for="horizontal-password-input" class="col-sm-2 col-form-label">Work Orders </label>
 												<div class="col-sm-10">
 													<select class="form-select data-select2" name="id_work_orders" id="id_work_orders" required>
@@ -280,6 +193,25 @@
 																alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
 															}
 														});
+														$.ajax({
+															type: "GET",
+															url: "/json_get_barcode",
+															data: { where : 'SLITTING START', type_product : $('#id_work_orders option:selected').attr('data-type_product') },
+															dataType: "json",
+															beforeSend: function(e) {
+																if(e && e.overrideMimeType) {
+																	e.overrideMimeType("application/json;charset=UTF-8");
+																}
+															},
+															success: function(response){
+																$("#id_master_barcode_start").html(response.list_barcode).show();
+																//$('#id_master_regus').prop('selectedIndex', 0);
+																//$('#shift').prop('selectedIndex', 0);
+															},
+															error: function (xhr, ajaxOptions, thrownError) {
+																alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
+															}
+														});
 													});
 													
 												});
@@ -295,44 +227,6 @@
 													@endif
 												</div>
 											</div> 
-											<div class="row mb-4 field-wrapper required-field">
-												<label for="horizontal-firstname-input" class="col-sm-2 col-form-label">Barcode </label>
-												<div class="col-sm-10">
-													<select class="form-select data-select2" name="id_master_barcode" id="id_master_barcode">
-														<option value="">** Please Select A Barcodes</option>
-													</select>
-													@if($errors->has('id_master_barcode'))
-														<div class="text-danger"><b>{{ $errors->first('id_master_barcode') }}</b></div>
-													@endif
-												</div>
-											</div> 
-											<script>									
-												$(document).ready(function(){
-													//$('#id_work_orders').prop('selectedIndex', 0);
-													//$('#id_master_work_centers').prop('selectedIndex', 0);
-													//$('#id_master_regus').prop('selectedIndex', 0);
-													//$('#shift').prop('selectedIndex', 0);
-													$.ajax({
-														type: "GET",
-														url: "/json_get_barcode",
-														data: { where : 'SLITTING', barcode_number : {!! "'".$data[0]->barcode."'" !!} },
-														dataType: "json",
-														beforeSend: function(e) {
-															if(e && e.overrideMimeType) {
-																e.overrideMimeType("application/json;charset=UTF-8");
-															}
-														},
-														success: function(response){
-															$("#id_master_barcode").html(response.list_barcode).show();
-															//$('#id_master_regus').prop('selectedIndex', 0);
-															//$('#shift').prop('selectedIndex', 0);
-														},
-														error: function (xhr, ajaxOptions, thrownError) {
-															alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
-														}
-													});
-												});
-											</script>	
 											<div class="row mb-4 field-wrapper required-field">
 												<label for="horizontal-firstname-input" class="col-sm-2 col-form-label">Thickness </label>
 												<div class="col-sm-10">
@@ -381,6 +275,139 @@
 													@endif
 												</div>
 											</div> 
+											
+											<div class="row mb-4 field-wrapper required-field">
+												<label for="horizontal-firstname-input" class="col-sm-2 col-form-label">Barcode Start</label>
+												<div class="col-sm-10">
+													<select class="form-select data-select2" name="id_master_barcode_start" id="id_master_barcode_start">
+														<option value="">** Please Select A Barcodes</option>
+													</select>
+													@if($errors->has('id_master_barcode_start'))
+														<div class="text-danger"><b>{{ $errors->first('id_master_barcode_start') }}</b></div>
+													@endif
+												</div>
+											</div> 
+											<script>									
+												$(document).ready(function(){
+													//$('#id_work_orders').prop('selectedIndex', 0);
+													//$('#id_master_work_centers').prop('selectedIndex', 0);
+													//$('#id_master_regus').prop('selectedIndex', 0);
+													//$('#shift').prop('selectedIndex', 0);
+													$.ajax({
+														type: "GET",
+														url: "/json_get_barcode",
+														data: { where : 'SLITTING START', barcode_number : {!! "'".$data[0]->barcode_start."'" !!}, type_product : $('#id_work_orders option:selected').attr('data-type_product') },
+														dataType: "json",
+														beforeSend: function(e) {
+															if(e && e.overrideMimeType) {
+																e.overrideMimeType("application/json;charset=UTF-8");
+															}
+														},
+														success: function(response){
+															$("#id_master_barcode_start").html(response.list_barcode).show();
+															//$('#id_master_regus').prop('selectedIndex', 0);
+															//$('#shift').prop('selectedIndex', 0);
+														},
+														error: function (xhr, ajaxOptions, thrownError) {
+															alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
+														}
+													});
+													$.ajax({
+														type: "GET",
+														url: "/json_get_produk_autofill",
+														data: { type_product : $('#id_work_orders option:selected').attr('data-type_product'), id_master_products : $('#id_work_orders option:selected').attr('data-id_master_products') },
+														dataType: "json",
+														beforeSend: function(e) {
+															if(e && e.overrideMimeType) {
+																e.overrideMimeType("application/json;charset=UTF-8");
+															}
+														},
+														success: function(response){
+															//$("#id_master_products_detail").html(response.list_products).show();
+															document.getElementById("width_unit").textContent = response.result[0]['width_unit_code'];
+															document.getElementById("length_unit").textContent = response.result[0]['length_unit_code'];
+														},
+														error: function (xhr, ajaxOptions, thrownError) {
+															alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
+														}
+													});
+												});
+											</script>	
+											<div class="row mb-4 field-wrapper">
+												<label for="horizontal-password-input" class="col-sm-2 col-form-label">Join  </label>
+												<div class="col-sm-10">
+													<select class="form-select data-select2" name="join" id="join">
+														<option value="">** Please Select A Join</option>
+														<option value="1" {{ $data[0]->join=='1'?'selected':'' }}>1</option>
+														<option value="2" {{ $data[0]->join=='2'?'selected':'' }}>2</option>
+														<option value="3" {{ $data[0]->join=='3'?'selected':'' }}>3</option>
+													</select>
+													@if($errors->has('join'))
+														<div class="text-danger"><b>{{ $errors->first('join') }}</b></div>
+													@endif
+												</div>
+											</div>
+											<div class="row mb-4 field-wrapper">
+												<label for="horizontal-password-input" class="col-sm-2 col-form-label">
+													Used Next Shift<br>
+													<span class="badge bg-secondary-subtle text-secondary">
+														Barcode START
+													</span>
+												</label>
+												<div class="col-sm-10 mt-3">
+													<label class="toggleSwitch nolabel" onclick="">
+														<input type="checkbox" name="used_next_shift" <?= $data[0]->used_next_shift == '1' ? 'checked' : '' ?>/>
+														<a></a>
+														<span>
+															<span class="left-span">No</span>
+															<span class="right-span">Yes</span>
+														</span>											
+													</label>
+													@if($errors->has('used_next_shift'))
+														<div class="text-danger"><b>{{ $errors->first('used_next_shift') }}</b></div>
+													@endif
+												</div>
+											</div>			
+											
+											<div class="row mb-4 field-wrapper required-field">
+												<label for="horizontal-firstname-input" class="col-sm-2 col-form-label">Barcode End</label>
+												<div class="col-sm-10">
+													<select class="form-select data-select2" name="id_master_barcode" id="id_master_barcode">
+														<option value="">** Please Select A Barcodes</option>
+													</select>
+													@if($errors->has('id_master_barcode'))
+														<div class="text-danger"><b>{{ $errors->first('id_master_barcode') }}</b></div>
+													@endif
+												</div>
+											</div> 
+											<script>									
+												$(document).ready(function(){
+													//$('#id_work_orders').prop('selectedIndex', 0);
+													//$('#id_master_work_centers').prop('selectedIndex', 0);
+													//$('#id_master_regus').prop('selectedIndex', 0);
+													//$('#shift').prop('selectedIndex', 0);
+													$.ajax({
+														type: "GET",
+														url: "/json_get_barcode",
+														data: { where : 'SLITTING', barcode_number : {!! "'".$data[0]->barcode."'" !!} },
+														dataType: "json",
+														beforeSend: function(e) {
+															if(e && e.overrideMimeType) {
+																e.overrideMimeType("application/json;charset=UTF-8");
+															}
+														},
+														success: function(response){
+															$("#id_master_barcode").html(response.list_barcode).show();
+															//$('#id_master_regus').prop('selectedIndex', 0);
+															//$('#shift').prop('selectedIndex', 0);
+														},
+														error: function (xhr, ajaxOptions, thrownError) {
+															alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
+														}
+													});
+												});
+											</script>	
+											
 											<div class="row mb-4 field-wrapper required-field">
 												<label for="horizontal-firstname-input" class="col-sm-2 col-form-label"><br>Status </label>
 												<div class="col-sm-10">

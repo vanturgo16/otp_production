@@ -566,16 +566,19 @@ class ProductionReportFoldingController extends Controller
 						->leftJoin('sales_orders AS b', 'a.id_sales_orders', '=', 'b.id')
 						->leftJoin('master_customers AS c', 'b.id_master_customers', '=', 'c.id')
 						->select('a.*','c.id AS id_master_customers')
+						->whereRaw( "a.type_product = 'FG'")
 						->whereRaw( "left(wo_number,5) = 'WOFLD'")
 						->whereRaw( "a.id = '".$data_detail_production[0]->id_work_orders."'")
 						->get();
 				}else{
+					$order_name = explode('|', $data[0]->order_name);	
+					
 					$ms_work_orders = DB::table('work_orders AS a')
 						->leftJoin('sales_orders AS b', 'a.id_sales_orders', '=', 'b.id')
 						->leftJoin('master_customers AS c', 'b.id_master_customers', '=', 'c.id')
 						->select('a.*','c.id AS id_master_customers')
 						->whereRaw( "left(wo_number,5) = 'WOFLD'")
-						//->whereRaw( "a.type_product = 'WIP'")
+						->whereRaw( "a.id_master_products = '".$order_name[1]."'")
 						->get();
 				}
 				
@@ -788,123 +791,197 @@ class ProductionReportFoldingController extends Controller
         } elseif ($request->has('save')) {
 			
 			$barcode_start = $_POST['id_master_barcode_start'];
+			/*
 			$data_slitting = ProductionEntryReportSFProductionResult::whereRaw( "report_sf_production_results.barcode = '$barcode_start'")
 				->select('*')
 				->get();
+			*/
+			$data_slitting = DB::table('report_sf_production_results as a')
+				->leftJoin('report_sfs as b', 'a.id_report_sfs', '=', 'b.id')
+				->whereRaw( "a.barcode = '$barcode_start'" )
+				->select('a.*', 'b.report_number', 'b.order_name')
+				->get();
+			
+			$cek_attempt_barcode_start = DB::table('barcode_detail')
+				->select('*')
+				->where('barcode_number', $_POST['id_master_barcode_start'])
+				->get();
+				
+			$order_name = explode('|', $data_slitting[0]->note);
 			
 			//$type_wo = explode('|', $_POST['id_master_products']);
 			//echo $_POST['id_master_products'];exit;
 			//echo($data_blow[0]->id);exit;
 			//echo($data_slitting[0]->id_report_sfs);exit;
 			
-			if(!empty($data_slitting[0]->id_report_sfs)){
-				//print_r($_POST);exit;
-				$request_id = $_POST['request_id'];		
-				$data = ProductionEntryReportSF::whereRaw( "sha1(report_sfs.id) = '$request_id'")
-					->select('id')
-					->get();
-					
-				$pesan = [
-					'start.required' => 'Cannot Be Empty',
-					'finish.required' => 'Cannot Be Empty',
-					'id_master_barcode_start.required' => 'Cannot Be Empty',
-					'id_work_orders.required' => 'Cannot Be Empty',
-					'id_master_barcode.required' => 'Cannot Be Empty',
-					'thickness.required' => 'Cannot Be Empty',
-					'length.required' => 'Cannot Be Empty',
-					'width.required' => 'Cannot Be Empty',                
-					'weight.required' => 'Cannot Be Empty',
-					'status.required' => 'Cannot Be Empty',
-					'id_work_orders.required' => 'Cannot Be Empty',                
-				];
+			if($cek_attempt_barcode_start[0]->used_attempt+1>10){
+				return Redirect::to('/production-ent-report-folding-detail/'.$request_id)->with('pesan_danger','Barcode Start Tidak Mencukupi');
+			}else{
+				
+				if(!empty($data_slitting[0]->id_report_sfs)){
+					//print_r($_POST);exit;
+					$request_id = $_POST['request_id'];		
+					$data = ProductionEntryReportSF::whereRaw( "sha1(report_sfs.id) = '$request_id'")
+						->select('id')
+						->get();
+						
+					$pesan = [
+						'start.required' => 'Cannot Be Empty',
+						'finish.required' => 'Cannot Be Empty',
+						'id_master_barcode_start.required' => 'Cannot Be Empty',
+						'id_work_orders.required' => 'Cannot Be Empty',
+						'id_master_barcode.required' => 'Cannot Be Empty',
+						'thickness.required' => 'Cannot Be Empty',
+						'length.required' => 'Cannot Be Empty',
+						'width.required' => 'Cannot Be Empty',                
+						'weight.required' => 'Cannot Be Empty',
+						'status.required' => 'Cannot Be Empty',
+						'id_work_orders.required' => 'Cannot Be Empty',                
+					];
 
-				$validatedData = $request->validate([
-					'start' => 'required',
-					'finish' => 'required',
-					'id_master_barcode_start' => 'required',
-					'id_work_orders' => 'required',
-					'id_master_barcode' => 'required',
-					'thickness' => 'required',
-					'length' => 'required',
-					'width' => 'required',
-					'weight' => 'required',
-					'status' => 'required',
-					'id_work_orders' => 'required',
+					$validatedData = $request->validate([
+						'start' => 'required',
+						'finish' => 'required',
+						'id_master_barcode_start' => 'required',
+						'id_work_orders' => 'required',
+						'id_master_barcode' => 'required',
+						'thickness' => 'required',
+						'length' => 'required',
+						'width' => 'required',
+						'weight' => 'required',
+						'status' => 'required',
+						'id_work_orders' => 'required',
 
-				], $pesan);			
-				
-				$validatedData['start_time'] = $_POST['start'];		
-				$validatedData['finish_time'] = $_POST['finish'];		
-				$validatedData['barcode_start'] = $_POST['id_master_barcode_start'];
-				$validatedData['barcode'] = $_POST['id_master_barcode'];
-				$validatedData['note'] = $_POST['id_master_products_detail'];
-				$validatedData['waste'] = $_POST['waste'];
-				$validatedData['cause_waste'] = $_POST['cause_waste'];
-				
-				unset($validatedData["start"]);
-				unset($validatedData["finish"]);
-				unset($validatedData["id_master_barcode_start"]);
-				unset($validatedData["id_master_barcode"]);
-				unset($validatedData["id_master_products_detail"]);
-				
-				$validatedData['id_report_sfs'] = $data[0]->id;
-				$validatedData['id_report_blows'] = $data_slitting[0]->id_report_sfs;
-				$validatedData['id_report_blow_production_result'] = $data_slitting[0]->id;
-				$validatedData['type_result'] = 'Folding';
-				
-				$response = ProductionEntryReportSFProductionResult::create($validatedData);
-				
-				if(!empty($response)){
-					//HARUS UPDATE STATUS BARCODE
-					//$instock_type = $type_wo[0] == 'WIP' ? 'In Stock SLT WIP' : 'In Stock SLT FG';		
+					], $pesan);			
 					
-					$updatedData['status'] = $_POST['status']=="Good"? 'In Stock FLD' : $_POST['status'] ;//pukul rata jenis nya join lagi berdasarkan wo
+					$validatedData['start_time'] = $_POST['start'];		
+					$validatedData['finish_time'] = $_POST['finish'];		
+					$validatedData['barcode_start'] = $_POST['id_master_barcode_start'];
+					$validatedData['barcode'] = $_POST['id_master_barcode'];
+					$validatedData['note'] = $_POST['id_master_products_detail'];
+					$validatedData['waste'] = $_POST['waste'];
+					$validatedData['cause_waste'] = $_POST['cause_waste'];
 					
-					DB::table('barcode_detail')
-					->where('barcode_number', $response->barcode)
-					->update($updatedData);
-					/*OLD
-					if(empty($_POST['used_next_shift']) || isset($_POST['join'])){
-						if(empty($_POST['used_next_shift'])){
-							$updatedDataBS['used_next_shift'] = '0';						
-						}
-						if(isset($_POST['join'])){
-							$updatedDataBS['join'] = $_POST['join'];	
-						}
+					unset($validatedData["start"]);
+					unset($validatedData["finish"]);
+					unset($validatedData["id_master_barcode_start"]);
+					unset($validatedData["id_master_barcode"]);
+					unset($validatedData["id_master_products_detail"]);
+					
+					$validatedData['id_report_sfs'] = $data[0]->id;
+					$validatedData['id_report_blows'] = $data_slitting[0]->id_report_sfs;
+					$validatedData['id_report_blow_production_result'] = $data_slitting[0]->id;
+					$validatedData['type_result'] = 'Folding';
+					
+					$response = ProductionEntryReportSFProductionResult::create($validatedData);
+					
+					if(!empty($response)){
+						//HARUS UPDATE STATUS BARCODE
+						//$instock_type = $type_wo[0] == 'WIP' ? 'In Stock SLT WIP' : 'In Stock SLT FG';		
+						
+						$updatedData['status'] = $_POST['status']=="Good"? 'In Stock FLD' : $_POST['status'] ;//pukul rata jenis nya join lagi berdasarkan wo
+						
 						DB::table('barcode_detail')
-						->where('barcode_number', $response->barcode_start)
-						->update($updatedDataBS);
+						->where('barcode_number', $response->barcode)
+						->update($updatedData);
+						/*OLD
+						if(empty($_POST['used_next_shift']) || isset($_POST['join'])){
+							if(empty($_POST['used_next_shift'])){
+								$updatedDataBS['used_next_shift'] = '0';						
+							}
+							if(isset($_POST['join'])){
+								$updatedDataBS['join'] = $_POST['join'];	
+							}
+							DB::table('barcode_detail')
+							->where('barcode_number', $response->barcode_start)
+							->update($updatedDataBS);
+						}
+						*/
+						if(!isset($_POST['used_next_shift']) || isset($_POST['used_next_shift']) || isset($_POST['join'])){
+							$data_barcode_start = DB::table('barcode_detail')
+								->select('*')
+								->where('barcode_number', $response->barcode_start)
+								->get();
+							
+							if(!isset($_POST['used_next_shift'])){
+								$updatedDataBS['used_next_shift'] = '0';						
+							}
+							if(isset($_POST['used_next_shift'])){
+								$updatedDataBS['used_next_shift'] = '1';						
+							}
+							//if(isset($_POST['join'])){
+							if(isset($_POST['join']) && !empty($_POST['join'])){
+								$updatedDataBS['join'] = $_POST['join'];	
+							}
+							$updatedDataBS['used_product'] = !empty($data_barcode_start[0]->used_product) ? $data_barcode_start[0]->used_product : 'FG' ;
+							$updatedDataBS['used_attempt'] = $data_barcode_start[0]->used_attempt + 1;
+							
+							DB::table('barcode_detail')
+							->where('barcode_number', $response->barcode_start)
+							->update($updatedDataBS);
+						}
+						//PENGURANGAN STOCK WIP/FG
+						if($updatedDataBS['used_product']=='FG' AND $updatedDataBS['used_attempt']=='10'){
+							
+							if($updatedDataBS['used_product']=='FG' AND $updatedDataBS['used_attempt']=='10'){
+								//echo "FG";
+								$data_produk = DB::table('master_wips')
+									->select('*')
+									->where('id', $order_name[1])
+									->get();
+								//print_r($data_produk);
+								$updatedDataMS['stock'] = $data_produk[0]->stock - 1 ;
+								$updatedDataMS['weight'] = $data_produk[0]->weight - $data_slitting[0]->weight ;//
+								
+								$responseUpdateMaster = DB::table('master_wips')
+															->where('id', $order_name[1])
+															->update($updatedDataMS);
+							}
+							
+							if($responseUpdateMaster){	
+								$data_usage_to = DB::table('report_sf_production_results as a')
+									->leftJoin('report_sfs as b', 'a.id_report_sfs', '=', 'b.id')
+									->whereRaw( "a.barcode_start = '$response->barcode_start'" )
+									->whereRaw( "a.type_result = 'Folding'" )
+									->select(
+										DB::raw('GROUP_CONCAT(DISTINCT report_number SEPARATOR ", ") AS report_number')
+									)
+									->groupBy('a.barcode_start')
+									->get();
+								
+								$validatedData = ([
+									'id_good_receipt_notes_details' => $data_slitting[0]->report_number,
+									'usage_to' => $data_usage_to[0]->report_number,//hasil nya bisa lebih dari satu report number
+									'type_product' => $order_name[0],
+									'id_master_products' => $order_name[1],
+									'qty' => '1',
+									'type_stock' => 'OUT',
+									'weight' => $data_slitting[0]->weight,//
+									'date' => date("Y-m-d"),
+									'barcode' => $response->barcode_start,
+									'remarks' => 'From Slitting Usage To Folding'
+								]);	
+								HistoryStock::create($validatedData);
+							}
+							
+							
+						}
+						
+						//Audit Log		
+						$username= auth()->user()->email; 
+						$ipAddress=$_SERVER['REMOTE_ADDR'];
+						$location='0';
+						$access_from=Browser::browserName();
+						$activity='Add Production Result Entry Report Folding ID ="'.$response->id.'"';
+						$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+						
+						return Redirect::to('/production-ent-report-folding-detail/'.$request_id)->with('pesan', 'Add Successfuly.');
+					}else{
+						return Redirect::to('/production-ent-report-folding-detail/'.$request_id)->with('pesan_danger', 'There Is An Error.');
 					}
-					*/
-					if(!isset($_POST['used_next_shift']) || isset($_POST['used_next_shift']) || isset($_POST['join'])){
-						if(!isset($_POST['used_next_shift'])){
-							$updatedDataBS['used_next_shift'] = '0';						
-						}
-						if(isset($_POST['used_next_shift'])){
-							$updatedDataBS['used_next_shift'] = '1';						
-						}
-						if(isset($_POST['join'])){
-							$updatedDataBS['join'] = $_POST['join'];	
-						}
-						DB::table('barcode_detail')
-						->where('barcode_number', $response->barcode_start)
-						->update($updatedDataBS);
-					}
-					
-					//Audit Log		
-					$username= auth()->user()->email; 
-					$ipAddress=$_SERVER['REMOTE_ADDR'];
-					$location='0';
-					$access_from=Browser::browserName();
-					$activity='Add Production Result Entry Report Folding ID ="'.$response->id.'"';
-					$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
-					
-					return Redirect::to('/production-ent-report-folding-detail/'.$request_id)->with('pesan', 'Add Successfuly.');
 				}else{
 					return Redirect::to('/production-ent-report-folding-detail/'.$request_id)->with('pesan_danger', 'There Is An Error.');
 				}
-			}else{
-				return Redirect::to('/production-ent-report-folding-detail/'.$request_id)->with('pesan_danger', 'There Is An Error.');
 			}
         }
     }
@@ -940,135 +1017,264 @@ class ProductionReportFoldingController extends Controller
 		//sampe sini cek data sebelum edit terutama update status barcode
 		$response_id_rf = $_POST['token_rf'];
 		$response_id_rf_pr = $_POST['token_rf_pr'];
-		
+		/*
 		$data = DB::table('report_sf_production_results as a')
 			->select('a.*')
 			->whereRaw( "sha1(a.id_report_sfs) = '$response_id_rf'")
 			->whereRaw( "sha1(a.id) = '$response_id_rf_pr'")
 			->get();
+		*/
+		$data = DB::table('report_sf_production_results as a')
+			->leftJoin('report_sfs as b', 'a.id_report_sfs', '=', 'b.id')
+			->whereRaw( "sha1(a.id_report_sfs) = '$response_id_rf'")
+			->whereRaw( "sha1(a.id) = '$response_id_rf_pr'")
+			->select('a.*', 'b.report_number')
+			->get();
 			
 		$barcode_start = $_POST['id_master_barcode_start'];
-		
+		/*
 		$data_slitting = ProductionEntryReportSFProductionResult::whereRaw( "report_sf_production_results.barcode = '$barcode_start'")
 			->select('*')
 			->get();
-		//$type_wo = explode('|', $_POST['id_master_products']);
+		*/
+		$data_slitting = DB::table('report_sf_production_results as a')
+			->leftJoin('report_sfs as b', 'a.id_report_sfs', '=', 'b.id')
+			->whereRaw( "a.barcode = '$barcode_start'" )
+			->select('a.*', 'b.report_number', 'b.order_name')
+			->get();
 		
-		//print_r($data);exit;
-		if(!empty($data[0])){	
-			$pesan = [
-                'start.required' => 'Cannot Be Empty',
-				'finish.required' => 'Cannot Be Empty',
-				'id_master_barcode_start.required' => 'Cannot Be Empty',
-				'id_work_orders.required' => 'Cannot Be Empty',
-				'id_master_barcode.required' => 'Cannot Be Empty',
-				'thickness.required' => 'Cannot Be Empty',
-				'length.required' => 'Cannot Be Empty',
-				'width.required' => 'Cannot Be Empty',                
-				'weight.required' => 'Cannot Be Empty',
-				'status.required' => 'Cannot Be Empty',
-				'id_work_orders.required' => 'Cannot Be Empty',            
-            ];
+		$cek_attempt_barcode_start = DB::table('barcode_detail')
+			->select('*')
+			->where('barcode_number', $_POST['id_master_barcode_start'])
+			->get();
+		
+		$order_name = explode('|', $data_slitting[0]->note);
+		
+		$type_wo = explode('|', $_POST['id_master_products']);
+		
+		if($cek_attempt_barcode_start[0]->used_attempt+1>10){
+			return Redirect::to('/production-ent-report-folding-detail/'.$response_id_rf)->with('pesan','Barcode Start Tidak Mencukupi');
+		}else{
+			if(!empty($data[0])){	
+				$pesan = [
+					'start.required' => 'Cannot Be Empty',
+					'finish.required' => 'Cannot Be Empty',
+					'id_master_barcode_start.required' => 'Cannot Be Empty',
+					'id_work_orders.required' => 'Cannot Be Empty',
+					'id_master_barcode.required' => 'Cannot Be Empty',
+					'thickness.required' => 'Cannot Be Empty',
+					'length.required' => 'Cannot Be Empty',
+					'width.required' => 'Cannot Be Empty',                
+					'weight.required' => 'Cannot Be Empty',
+					'status.required' => 'Cannot Be Empty',
+					'id_work_orders.required' => 'Cannot Be Empty',            
+				];
 
-            $validatedData = $request->validate([
-                'start' => 'required',
-				'finish' => 'required',
-				'id_master_barcode_start' => 'required',
-				'id_work_orders' => 'required',
-				'id_master_barcode' => 'required',
-				'thickness' => 'required',
-				'length' => 'required',
-				'width' => 'required',
-				'weight' => 'required',
-				'status' => 'required',
-				'id_work_orders' => 'required',
+				$validatedData = $request->validate([
+					'start' => 'required',
+					'finish' => 'required',
+					'id_master_barcode_start' => 'required',
+					'id_work_orders' => 'required',
+					'id_master_barcode' => 'required',
+					'thickness' => 'required',
+					'length' => 'required',
+					'width' => 'required',
+					'weight' => 'required',
+					'status' => 'required',
+					'id_work_orders' => 'required',
 
-            ], $pesan);			
-			
+				], $pesan);			
 				
-			$validatedData['start_time'] = $_POST['start'];		
-			$validatedData['finish_time'] = $_POST['finish'];		
-			$validatedData['barcode_start'] = $_POST['id_master_barcode_start'];
-			$validatedData['barcode'] = $_POST['id_master_barcode'];
-			$validatedData['note'] = $_POST['id_master_products'];
-			$validatedData['waste'] = $_POST['waste'];
-			$validatedData['cause_waste'] = $_POST['cause_waste'];
-			
-			unset($validatedData["start"]);
-			unset($validatedData["finish"]);
-			unset($validatedData["id_master_barcode_start"]);
-			unset($validatedData["id_master_barcode"]);
-			unset($validatedData["id_master_products"]);
-			
-			$validatedData['id_report_blows'] = $data_slitting[0]->id_report_blows;
-			$validatedData['id_report_blow_production_result'] = $data_slitting[0]->id;
+					
+				$validatedData['start_time'] = $_POST['start'];		
+				$validatedData['finish_time'] = $_POST['finish'];		
+				$validatedData['barcode_start'] = $_POST['id_master_barcode_start'];
+				$validatedData['barcode'] = $_POST['id_master_barcode'];
+				$validatedData['note'] = $_POST['id_master_products'];
+				$validatedData['waste'] = $_POST['waste'];
+				$validatedData['cause_waste'] = $_POST['cause_waste'];
+				
+				unset($validatedData["start"]);
+				unset($validatedData["finish"]);
+				unset($validatedData["id_master_barcode_start"]);
+				unset($validatedData["id_master_barcode"]);
+				unset($validatedData["id_master_products"]);
+				
+				$validatedData['id_report_blows'] = $data_slitting[0]->id_report_blows;
+				$validatedData['id_report_blow_production_result'] = $data_slitting[0]->id;
+							
+				$response = ProductionEntryReportSFProductionResult::where('id', $data[0]->id)
+					->where('id', $data[0]->id)
+					->update($validatedData);
+				
+				/*
+				//Jika Barcode Bisa Digunakan Lagi, Sesuaikan status data barcode menjadi NULL
+				$updatedData['status'] = 'Un Used';
+				
+				DB::table('barcode_detail')
+				->where('barcode_number', $data->barcode)
+				->update($updatedData);
+				*/
+				if ($response){
 						
-			$response = ProductionEntryReportSFProductionResult::where('id', $data[0]->id)
-				->where('id', $data[0]->id)
-				->update($validatedData);
-			
-			/*
-			//Jika Barcode Bisa Digunakan Lagi, Sesuaikan status data barcode menjadi NULL
-			$updatedData['status'] = 'Un Used';
-			
-			DB::table('barcode_detail')
-			->where('barcode_number', $data->barcode)
-			->update($updatedData);
-			*/
-			if ($response){
+					//$instock_type = $type_wo[0] == 'WIP' ? 'In Stock SLT WIP' : 'In Stock SLT FG';			
+					$updatedData['status'] = $_POST['status']=="Good" ? 'In Stock FLD' : $_POST['status'];
+				
+					$response_barcode = DB::table('barcode_detail')
+						->where('barcode_number', $validatedData['barcode'])
+						->update($updatedData);
 					
-				//$instock_type = $type_wo[0] == 'WIP' ? 'In Stock SLT WIP' : 'In Stock SLT FG';			
-				$updatedData['status'] = $_POST['status']=="Good" ? 'In Stock FLD' : $_POST['status'];
-			
-				$response_barcode = DB::table('barcode_detail')
-					->where('barcode_number', $validatedData['barcode'])
-					->update($updatedData);
-				
-				if(!isset($_POST['used_next_shift']) || isset($_POST['used_next_shift']) || isset($_POST['join'])){
-					if(!isset($_POST['used_next_shift'])){
-						$updatedDataBS['used_next_shift'] = '0';						
+					if(!isset($_POST['used_next_shift']) || isset($_POST['used_next_shift']) || isset($_POST['join'])){
+						$data_barcode_start = DB::table('barcode_detail')
+							->select('*')
+							->where('barcode_number', $validatedData['barcode_start'])
+							->get();
+						
+						if(!isset($_POST['used_next_shift'])){
+							$updatedDataBS['used_next_shift'] = '0';						
+						}
+						if(isset($_POST['used_next_shift'])){
+							$updatedDataBS['used_next_shift'] = '1';						
+						}
+						if(isset($_POST['join'])){
+							$updatedDataBS['join'] = $_POST['join']==''?'-':$_POST['join'];	
+						}
+						
+						$updatedDataBS['used_product'] = !empty($data_barcode_start[0]->used_product) ? $data_barcode_start[0]->used_product : 'FG' ;
+						$updatedDataBS['used_attempt'] = $data_barcode_start[0]->used_attempt + 1;
+						
+						DB::table('barcode_detail')
+						->where('barcode_number', $validatedData['barcode_start'])
+						->update($updatedDataBS);					
 					}
-					if(isset($_POST['used_next_shift'])){
-						$updatedDataBS['used_next_shift'] = '1';						
-					}
-					if(isset($_POST['join'])){
-						$updatedDataBS['join'] = $_POST['join']==''?'-':$_POST['join'];	
-					}
-					DB::table('barcode_detail')
-					->where('barcode_number', $validatedData['barcode_start'])
-					->update($updatedDataBS);
-				}
-				
-				if($validatedData['barcode'] <> $data[0]->barcode){	
 					
-					DB::table('barcode_detail')
-					->where('barcode_number', $data[0]->barcode)
-					//->update(['status' => 'Un Used']);
-					//Jika Barcode Bisa Digunakan Lagi, Sesuaikan status data barcode menjadi NULL
-					->update(['status' => null]);
+					//PENYESUAIAN BARCODE END
+					if($validatedData['barcode'] <> $data[0]->barcode){						
+						DB::table('barcode_detail')
+						->where('barcode_number', $data[0]->barcode)
+						->update(['status' => null]);
+						
+					}
 					
+					//PENYESUAIAN BARCODE START
+					if($validatedData['barcode_start'] <> $data[0]->barcode_start){	
+						/*
+						DB::table('barcode_detail')
+						->where('barcode_number', $data[0]->barcode_start)
+						->update(['used_next_shift' => '1', 'join' => '-']);
+						*/
+						
+						//Penyesuaian Barcode Start OLD
+						$data_barcode_start_old = DB::table('barcode_detail')
+							->select('*')
+							->where('barcode_number', $data[0]->barcode_start)
+							->get();
+							
+						$data_slitting_barcode_start_old = DB::table('report_sf_production_results as a')
+							->leftJoin('report_sfs as b', 'a.id_report_sfs', '=', 'b.id')
+							->whereRaw( "a.barcode = '".$data[0]->barcode_start."'" )
+							->select('a.*', 'b.report_number', 'b.order_name')
+							->get();
+							
+						$order_name_barcode_start_old = explode('|', $data_slitting_barcode_start_old[0]->note);
+						
+						$updatedDataBSO['used_next_shift'] = '1';
+						$updatedDataBSO['join'] = '-';
+						$updatedDataBSO['used_product'] = ($data_barcode_start_old[0]->used_attempt - 1) > 0 ? $data_barcode_start_old[0]->used_product : null ;
+						$updatedDataBSO['used_attempt'] = $data_barcode_start_old[0]->used_attempt - 1;
+						
+						$update_bso = DB::table('barcode_detail')
+							->where('barcode_number', $data[0]->barcode_start)
+							->update($updatedDataBSO);					
+						
+						if($update_bso AND ($updatedDataBSO['used_product']=='FG' AND $data_barcode_start_old[0]->used_attempt=='10')){
+							
+							if($updatedDataBSO['used_product']=='FG' AND $data_barcode_start_old[0]->used_attempt=='10'){
+								
+								$data_produk = DB::table('master_wips')
+									->select('*')
+									->where('id', $order_name_barcode_start_old[1])
+									->get();
+								
+								$updatedDataMS_BSO['stock'] = $data_produk[0]->stock + 1 ;
+								$updatedDataMS_BSO['weight'] = $data_produk[0]->weight + $data_slitting_barcode_start_old[0]->weight;
+								
+								$responseUpdateMasterBSO = DB::table('master_wips')
+										->where('id', $order_name_barcode_start_old[1])
+										->update($updatedDataMS_BSO);
+							}
+							
+							if($responseUpdateMasterBSO){	
+								//ProductionEntryReportBlowProductionResult::whereRaw( "sha1(id) = '$id'" )->delete();
+								
+								DB::table('history_stocks')
+								->whereRaw( "barcode = '".$data[0]->barcode_start."' and type_stock='OUT'" )
+								->delete();
+							}
+						}
+						
+						//Penyesuaian Barcode Start NEW
+						if($updatedDataBS['used_product']=='FG' AND $updatedDataBS['used_attempt']=='10'){
+							
+							if($updatedDataBS['used_product']=='FG' AND $updatedDataBS['used_attempt']=='10'){
+								//echo "FG";
+								$data_produk = DB::table('master_wips')
+									->select('*')
+									->where('id', $order_name[1])
+									->get();
+								//print_r($data_produk);
+								$updatedDataMS['stock'] = $data_produk[0]->stock - 1 ;
+								$updatedDataMS['weight'] = $data_produk[0]->weight - $data_slitting[0]->weight ;
+								
+								$responseUpdateMaster = DB::table('master_wips')
+															->where('id', $order_name[1])
+															->update($updatedDataMS);
+							}
+							
+							if($responseUpdateMaster){	
+								$data_usage_to = DB::table('report_sf_production_results as a')
+									->leftJoin('report_sfs as b', 'a.id_report_sfs', '=', 'b.id')
+									->whereRaw( "a.barcode_start = '$response->barcode_start'" )
+									->select(
+										DB::raw('GROUP_CONCAT(DISTINCT report_number SEPARATOR ", ") AS report_number')
+									)
+									->groupBy('a.barcode_start')
+									->get();
+								
+								$validatedData = ([
+									'id_good_receipt_notes_details' => $data_slitting[0]->report_number,
+									'usage_to' => $data_usage_to[0]->report_number,//hasil nya bisa lebih dari satu report number
+									'type_product' => $order_name[0],
+									'id_master_products' => $order_name[1],
+									'qty' => '1',
+									'weight' => $data_slitting[0]->weight,
+									'type_stock' => 'OUT',
+									'date' => date("Y-m-d"),
+									'barcode' => $response->barcode_start,
+									'remarks' => 'From Slitting Usage To Folding'
+								]);	
+								HistoryStock::create($validatedData);
+							}
+							
+							
+						}
+					}
+					
+					//Audit Log		
+					$username= auth()->user()->email; 
+					$ipAddress=$_SERVER['REMOTE_ADDR'];
+					$location='0';
+					$access_from=Browser::browserName();
+					$activity='Save Edit Detail Production Result Entry Report Folding '.$data[0]->id;
+					$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+					
+					return Redirect::to('/production-ent-report-folding-detail/'.$response_id_rf)->with('pesan', 'Update Successfuly.');  
+				}else{
+					return Redirect::to('/production-ent-report-folding-detail/'.$response_id_rf)->with('pesan', 'There Is An Error.');
 				}
-				
-				if($validatedData['barcode_start'] <> $data[0]->barcode_start){						
-					DB::table('barcode_detail')
-					->where('barcode_number', $data[0]->barcode_start)
-					->update(['used_next_shift' => '1', 'join' => '-']);						
-				}
-				
-				//Audit Log		
-				$username= auth()->user()->email; 
-				$ipAddress=$_SERVER['REMOTE_ADDR'];
-				$location='0';
-				$access_from=Browser::browserName();
-				$activity='Save Edit Detail Production Result Entry Report Folding '.$data[0]->id;
-				$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
-				
-				return Redirect::to('/production-ent-report-folding-detail/'.$response_id_rf)->with('pesan', 'Update Successfuly.');  
 			}else{
 				return Redirect::to('/production-ent-report-folding-detail/'.$response_id_rf)->with('pesan', 'There Is An Error.');
 			}
-		}else{
-			return Redirect::to('/production-ent-report-folding-detail/'.$response_id_rf)->with('pesan', 'There Is An Error.');
 		}
 		
     }
@@ -1081,10 +1287,29 @@ class ProductionReportFoldingController extends Controller
 		$data = ProductionEntryReportSFProductionResult::select("*")
 				->whereRaw( "sha1(id) = '$id'")
                 ->get();
+		/*
+		print_r($_POST);
+		print_r($data);
+		exit;
+		*/
 		$barcode = $data[0]->barcode;
 		$barcode_start = $data[0]->barcode_start;
 		
 		if(!empty($data[0])){
+			//new
+			$data_barcode_start = DB::table('barcode_detail')
+				->select('*')
+				->where('barcode_number', $barcode_start)
+				->get();
+			
+			//new
+			$data_slitting = DB::table('report_sf_production_results as a')
+			->leftJoin('report_sfs as b', 'a.id_report_sfs', '=', 'b.id')
+			->whereRaw( "a.barcode = '$barcode_start'" )
+			->select('a.*', 'b.report_number', 'b.order_name')
+			->get();
+		
+			$order_name = explode('|', $data_slitting[0]->note);
 			
 			$delete = ProductionEntryReportSFProductionResult::whereRaw( "sha1(id) = '$id'" )->delete();
 			//echo $delete; exit;
@@ -1099,10 +1324,36 @@ class ProductionReportFoldingController extends Controller
 				
 				$updatedDataBS['used_next_shift'] = '1';
 				$updatedDataBS['join'] = '-';
+				$updatedDataBS['used_product'] = ($data_barcode_start[0]->used_attempt - 1) > 0 ? $data_barcode_start[0]->used_product : null ;
+				$updatedDataBS['used_attempt'] =  $data_barcode_start[0]->used_attempt - 1;
+				//$updatedDataBS['used_attempt'] =  ($data_barcode_start[0]->used_attempt - 1) > 0 ? $data_barcode_start[0]->used_attempt - 1 : 0 ;
 				
-				DB::table('barcode_detail')
-				->where('barcode_number', $barcode_start)
-				->update($updatedDataBS);
+				$update_bs = DB::table('barcode_detail')
+					->where('barcode_number', $barcode_start)
+					->update($updatedDataBS);
+				
+				if($update_bs AND ($updatedDataBS['used_product']=='FG' AND $data_barcode_start[0]->used_attempt=='10')){
+						
+					if($updatedDataBS['used_product']=='FG' AND $data_barcode_start[0]->used_attempt=='10'){
+						
+						$data_produk = DB::table('master_wips')
+							->select('*')
+							->where('id', $order_name[1])
+							->get();
+							
+						$updatedDataMS_BS['stock'] = $data_produk[0]->stock + 1 ;
+						$updatedDataMS_BS['weight'] = $data_produk[0]->weight + $data_slitting[0]->weight ;
+						
+						$responseUpdateMasterBS = DB::table('master_wips')
+								->where('id', $order_name[1])
+								->update($updatedDataMS_BS);
+					}
+					if($responseUpdateMasterBS){	
+						DB::table('history_stocks')
+						->whereRaw( "barcode = '".$barcode_start."' and type_stock='OUT'" )
+						->delete();
+					}
+				}
 				
 				//Audit Log		
 				$username= auth()->user()->email; 
@@ -1215,8 +1466,11 @@ class ProductionReportFoldingController extends Controller
 				'a.id',
 				'a.note',
 				DB::raw('SUM(IF(a.status="Good", 1, 0)) AS good'),
+				DB::raw('SUM(IF(a.status="Good", a.weight, 0)) AS weight_good'),
 				DB::raw('SUM(IF(a.status="Hold", 1, 0)) AS hold'),
+				DB::raw('SUM(IF(a.status="Hold", a.weight, 0)) AS weight_hold'),
 				DB::raw('SUM(IF(a.status="Reject", 1, 0)) AS reject'),
+				DB::raw('SUM(IF(a.status="Reject", a.weight, 0)) AS weight_reject'),
 				DB::raw('GROUP_CONCAT(CASE WHEN a.status="Good" THEN barcode END SEPARATOR ", ") AS barcode_good'),
 				DB::raw('GROUP_CONCAT(CASE WHEN a.status="Hold" THEN barcode END SEPARATOR ", ") AS barcode_hold'),
 				DB::raw('GROUP_CONCAT(CASE WHEN a.status="Reject" THEN barcode END SEPARATOR ", ") AS barcode_reject')
@@ -1243,6 +1497,8 @@ class ProductionReportFoldingController extends Controller
 						'type_product' => $data_update[0]->type_product,
 						'id_master_products' => $order_name[1],
 						'qty' => $data_update[0]->good,
+						'weight' => $data_update[0]->weight_good,
+						'is_closed' => '1',
 						'type_stock' => 'IN',
 						'date' => date("Y-m-d"),
 						'barcode' => $data_update[0]->barcode_good,
@@ -1257,6 +1513,8 @@ class ProductionReportFoldingController extends Controller
 						'type_product' => $data_update[0]->type_product,
 						'id_master_products' => $order_name[1],
 						'qty' => $data_update[0]->hold,
+						'weight' => $data_update[0]->weight_hold,
+						'is_closed' => '1',
 						'type_stock' => 'HOLD',
 						'date' => date("Y-m-d"),
 						'barcode' => $data_update[0]->barcode_hold,
@@ -1269,6 +1527,8 @@ class ProductionReportFoldingController extends Controller
 						'type_product' => $data_update[0]->type_product,
 						'id_master_products' => $order_name[1],
 						'qty' => $data_update[0]->reject,
+						'weight' => $data_update[0]->weight_reject,
+						'is_closed' => '1',
 						'type_stock' => 'REJECT',
 						'date' => date("Y-m-d"),
 						'barcode' => $data_update[0]->barcode_reject,
@@ -1278,9 +1538,10 @@ class ProductionReportFoldingController extends Controller
 				
 				if($responseGood or $responseHold or $responseReject){
 					if($responseGood){					
-						$stock_akhir = $data_product[0]->stock + $data_update[0]->good;				
+						$stock_akhir = $data_product[0]->stock + $data_update[0]->good;//STOK
+						$weight_akhir = $data_product[0]->weight + $data_update[0]->weight_good;//WEIGTH
 						
-						DB::table($master_table)->where('id', $order_name[1])->update(array('stock' => $stock_akhir, 'updated_at' => date('Y-m-d H:i:s'))); 						
+						DB::table($master_table)->where('id', $order_name[1])->update(array('weight' => $weight_akhir, 'stock' => $stock_akhir, 'updated_at' => date('Y-m-d H:i:s'))); 						
 					}
 					
 					$validatedData = ([
@@ -1345,8 +1606,11 @@ class ProductionReportFoldingController extends Controller
 					'a.id',
 					'a.note',
 					DB::raw('SUM(IF(a.status="Good", 1, 0)) AS good'),
+					DB::raw('SUM(IF(a.status="Good", a.weight, 0)) AS weight_good'),
 					DB::raw('SUM(IF(a.status="Hold", 1, 0)) AS hold'),
+					DB::raw('SUM(IF(a.status="Hold", a.weight, 0)) AS weight_hold'),
 					DB::raw('SUM(IF(a.status="Reject", 1, 0)) AS reject'),
+					DB::raw('SUM(IF(a.status="Reject", a.weight, 0)) AS weight_reject'),
 					DB::raw('GROUP_CONCAT(CASE WHEN a.status="Good" THEN barcode END SEPARATOR ", ") AS barcode_good'),
 					DB::raw('GROUP_CONCAT(CASE WHEN a.status="Hold" THEN barcode END SEPARATOR ", ") AS barcode_hold'),
 					DB::raw('GROUP_CONCAT(CASE WHEN a.status="Reject" THEN barcode END SEPARATOR ", ") AS barcode_reject')
@@ -1370,6 +1634,7 @@ class ProductionReportFoldingController extends Controller
 					
 					if(!empty($data_product[0])){	
 						if($data_update[0]->good>0){
+							/*
 							$validatedData = ([
 								'id_good_receipt_notes_details' => $data_update[0]->report_number,
 								'type_product' => $data_update[0]->type_product,
@@ -1381,13 +1646,15 @@ class ProductionReportFoldingController extends Controller
 								'remarks' => 'From GOOD Posted'
 							]);	
 							$responseGood = HistoryStock::create($validatedData);
-							
-							if($responseGood){					
-								$stock_akhir = $data_product[0]->stock - $data_update[0]->good;				
+							*/
+							//if($responseGood){					
+								$stock_akhir = $data_product[0]->stock - $data_update[0]->good;//STOK
+								$weight_akhir = $data_product[0]->weight - $data_update[0]->weight_good;//WEIGTH		
 								
-								DB::table($master_table)->where('id', $order_name[1])->update(array('stock' => $stock_akhir, 'updated_at' => date('Y-m-d H:i:s'))); 						
-							}
+								$responseMaster = DB::table($master_table)->where('id', $order_name[1])->update(array('weight' => $weight_akhir,'stock' => $stock_akhir, 'updated_at' => date('Y-m-d H:i:s'))); 						
+							//}
 						}
+						/*
 						if($data_update[0]->hold>0){
 							$validatedData = ([
 								'id_good_receipt_notes_details' => $data_update[0]->report_number,
@@ -1414,25 +1681,34 @@ class ProductionReportFoldingController extends Controller
 							]);	
 							$responseReject = HistoryStock::create($validatedData);
 						}
-						
-						if($responseGood or $responseHold or $responseReject){
+						*/
+						//if($responseGood or $responseHold or $responseReject){
+						if($responseMaster){
 							
 							$validatedData = ([
 								'status' => 'Un Posted',
 							]);				
 							
-							ProductionEntryReportSF::where('report_number', $data_update[0]->report_number)
+							$responseUpdate = ProductionEntryReportSF::where('report_number', $data_update[0]->report_number)
 								->update($validatedData);
 							
-							//Audit Log
-							$username= auth()->user()->email; 
-							$ipAddress=$_SERVER['REMOTE_ADDR'];
-							$location='0';
-							$access_from=Browser::browserName();
-							$activity='Un Posted Histori Stock Folding Report Number ="'.$data_update[0]->report_number.'" (Good : '.$data_update[0]->good.', Hold : '.$data_update[0]->hold.', Reject : '.$data_update[0]->reject.')';
-							$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
-								
-							return Redirect::to('/production-ent-report-folding')->with('pesan', 'Un Posted Successfuly.');
+							if($responseUpdate){								
+								DB::table('history_stocks')
+									->whereRaw( "id_good_receipt_notes_details = '".$data_update[0]->report_number."' and type_stock != 'OUT'" )
+									->delete();
+									
+								//Audit Log
+								$username= auth()->user()->email; 
+								$ipAddress=$_SERVER['REMOTE_ADDR'];
+								$location='0';
+								$access_from=Browser::browserName();
+								$activity='Un Posted Histori Stock Folding Report Number ="'.$data_update[0]->report_number.'" (Good : '.$data_update[0]->good.', Hold : '.$data_update[0]->hold.', Reject : '.$data_update[0]->reject.')';
+								$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+									
+								return Redirect::to('/production-ent-report-folding')->with('pesan', 'Un Posted Successfuly.');
+							}else{
+								return Redirect::to('/production-ent-report-folding')->with('pesan_danger', 'There Is An Error.');
+							}	
 						}else{
 							return Redirect::to('/production-ent-report-folding')->with('pesan_danger', 'There Is An Error.');
 						}
@@ -1490,9 +1766,61 @@ class ProductionReportFoldingController extends Controller
 						$updatedData['status'] = null;	
 						
 						foreach($data_detail as $data){
+							
 							DB::table('barcode_detail')
 								->where('barcode_number', $data->barcode)
 								->update($updatedData);
+							
+							//PENYESUAIAN BARCODE START
+							$barcode_start = $data->barcode_start;							
+							//new
+							$data_barcode_start = DB::table('barcode_detail')
+								->select('*')
+								->where('barcode_number', $barcode_start)
+								->get();
+							
+							//new
+							$data_slitting = DB::table('report_sf_production_results as a')
+							->leftJoin('report_sfs as b', 'a.id_report_sfs', '=', 'b.id')
+							->whereRaw( "a.barcode = '$barcode_start'" )
+							->select('a.*', 'b.report_number', 'b.order_name')
+							->get();
+						
+							$order_name = explode('|', $data_slitting[0]->note);
+							
+							$updatedDataBS['used_next_shift'] = '1';
+							$updatedDataBS['join'] = '-';
+							$updatedDataBS['used_product'] = ($data_barcode_start[0]->used_attempt - 1) > 0 ? $data_barcode_start[0]->used_product : null ;
+							$updatedDataBS['used_attempt'] =  $data_barcode_start[0]->used_attempt - 1;
+							
+							$update_bs = DB::table('barcode_detail')
+								->where('barcode_number', $barcode_start)
+								->update($updatedDataBS);
+							
+							if($update_bs AND ($updatedDataBS['used_product']=='FG' AND $data_barcode_start[0]->used_attempt=='10')){
+									
+								if($updatedDataBS['used_product']=='FG' AND $data_barcode_start[0]->used_attempt=='10'){
+									
+									$data_produk = DB::table('master_wips')
+										->select('*')
+										->where('id', $order_name[1])
+										->get();
+										
+									$updatedDataMS_BS['stock'] = $data_produk[0]->stock + 1 ;
+									$updatedDataMS_BS['weight'] = $data_produk[0]->weight + $data_slitting[0]->weight ;
+									
+									$responseUpdateMasterBS = DB::table('master_wips')
+											->where('id', $order_name[1])
+											->update($updatedDataMS_BS);
+								}
+								if($responseUpdateMasterBS){	
+									DB::table('history_stocks')
+									->whereRaw( "barcode = '".$barcode_start."' and type_stock='OUT'" )
+									->delete();
+								}
+							}
+							//PENYESUAIAN BARCODE START
+							
 						}			
 						
 						//Audit Log

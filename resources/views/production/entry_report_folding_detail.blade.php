@@ -121,12 +121,12 @@
 											@endif
 										</div>
 									</div>	
-										
+									
 									<script>									
 										$(document).ready(function(){
 											$.ajax({
 												type: "GET",
-												url: "/json_get_produk",
+												url: "/json_get_produk_folding",
 												data: { type_product : {!! "'".explode('|', $data[0]->order_name)[0]."'" !!}, id_master_products : {!! explode('|', $data[0]->order_name)[1] !!}, modul : 'folding' },//baru sampe sinihhh
 												dataType: "json",
 												beforeSend: function(e) {
@@ -572,6 +572,7 @@
 				</div>
 			</div>
 		</div>
+		
 		<div class="row">
 			<div class="col-lg-12">
 				<div class="card">
@@ -633,74 +634,6 @@
 												</div>
 											</div> 
 											<div class="row mb-4 field-wrapper required-field">
-												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Barcode Start</label>
-												<div class="col-sm-8">
-													<select class="form-select data-select2" name="id_master_barcode_start" id="id_master_barcode_start">
-														<option value="">** Please Select A Barcodes</option>
-													</select>
-													@if($errors->has('id_master_barcode_start'))
-														<div class="text-danger"><b>{{ $errors->first('id_master_barcode_start') }}</b></div>
-													@endif
-												</div>
-											</div> 
-											<script>									
-												$(document).ready(function(){
-													//$('#id_work_orders').prop('selectedIndex', 0);
-													//$('#id_master_work_centers').prop('selectedIndex', 0);
-													//$('#id_master_regus').prop('selectedIndex', 0);
-													//$('#shift').prop('selectedIndex', 0);
-													$.ajax({
-														type: "GET",
-														url: "/json_get_barcode",
-														data: { where : 'FOLDING START' },
-														dataType: "json",
-														beforeSend: function(e) {
-															if(e && e.overrideMimeType) {
-																e.overrideMimeType("application/json;charset=UTF-8");
-															}
-														},
-														success: function(response){
-															$("#id_master_barcode_start").html(response.list_barcode).show();
-															//$('#id_master_regus').prop('selectedIndex', 0);
-															//$('#shift').prop('selectedIndex', 0);
-														},
-														error: function (xhr, ajaxOptions, thrownError) {
-															alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
-														}
-													});
-												});
-											</script>		
-											<div class="row mb-4 field-wrapper">
-												<label for="horizontal-password-input" class="col-sm-4 col-form-label">Join  </label>
-												<div class="col-sm-8">
-													<select class="form-select data-select2" name="join" id="join">
-														<option value="">** Please Select A Join</option>
-														<option value="1">1</option>
-														<option value="2">2</option>
-														<option value="3">3</option>
-													</select>
-													@if($errors->has('join'))
-														<div class="text-danger"><b>{{ $errors->first('join') }}</b></div>
-													@endif
-												</div>
-											</div>													
-											<div class="row mb-4 field-wrapper">
-												<label for="horizontal-password-input" class="col-sm-4 col-form-label">Used Next Shift </label>
-												<div class="col-sm-8">
-													<label class="toggleSwitch nolabel" onclick="">
-														<input type="checkbox" name="used_next_shift" checked />
-														<a></a>
-														<span>
-															<span class="left-span">No</span>
-															<span class="right-span">Yes</span>
-														</span>											
-													</label>
-													@if($errors->has('used_next_shift'))
-														<div class="text-danger"><b>{{ $errors->first('used_next_shift') }}</b></div>
-													@endif
-												</div>
-											</div>	
-											<div class="row mb-4 field-wrapper required-field">
 												<label for="horizontal-password-input" class="col-sm-4 col-form-label">Work Orders </label>
 												<div class="col-sm-8">
 													<select class="form-select data-select2" name="id_work_orders" id="id_work_orders" required>
@@ -714,6 +647,7 @@
 													@endif
 												</div>
 											</div>
+											
 											<script>									
 												$(document).ready(function(){
 													
@@ -721,8 +655,8 @@
 														
 														$.ajax({
 															type: "GET",
-															url: "/json_get_produk",
-															data: { type_product : $('#id_work_orders option:selected').attr('data-type_product'), id_master_products : $('#id_work_orders option:selected').attr('data-id_master_products') },
+															url: "/json_get_produk_folding",
+															data: { type_product : $('#id_work_orders option:selected').attr('data-type_product'), id_master_products : $('#id_work_orders option:selected').attr('data-id_master_products') },															
 															dataType: "json",
 															beforeSend: function(e) {
 																if(e && e.overrideMimeType) {
@@ -780,44 +714,6 @@
 													@endif
 												</div>
 											</div> 
-											<div class="row mb-4 field-wrapper required-field">
-												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Barcode </label>
-												<div class="col-sm-8">
-													<select class="form-select data-select2" name="id_master_barcode" id="id_master_barcode">
-														<option value="">** Please Select A Barcodes</option>
-													</select>
-													@if($errors->has('id_master_barcode'))
-														<div class="text-danger"><b>{{ $errors->first('id_master_barcode') }}</b></div>
-													@endif
-												</div>
-											</div> 
-											<script>									
-												$(document).ready(function(){
-													//$('#id_work_orders').prop('selectedIndex', 0);
-													//$('#id_master_work_centers').prop('selectedIndex', 0);
-													//$('#id_master_regus').prop('selectedIndex', 0);
-													//$('#shift').prop('selectedIndex', 0);
-													$.ajax({
-														type: "GET",
-														url: "/json_get_barcode",
-														data: { where : 'FOLDING' },
-														dataType: "json",
-														beforeSend: function(e) {
-															if(e && e.overrideMimeType) {
-																e.overrideMimeType("application/json;charset=UTF-8");
-															}
-														},
-														success: function(response){
-															$("#id_master_barcode").html(response.list_barcode).show();
-															//$('#id_master_regus').prop('selectedIndex', 0);
-															//$('#shift').prop('selectedIndex', 0);
-														},
-														error: function (xhr, ajaxOptions, thrownError) {
-															alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
-														}
-													});
-												});
-											</script>	
 											<div class="row mb-4 field-wrapper required-field">
 												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Thickness </label>
 												<div class="col-sm-8">
@@ -892,6 +788,119 @@
 													@endif
 												</div>
 											</div> 
+											<div class="row mb-4 field-wrapper required-field">
+												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Barcode Start</label>
+												<div class="col-sm-8">
+													<select class="form-select data-select2" name="id_master_barcode_start" id="id_master_barcode_start">
+														<option value="">** Please Select A Barcodes</option>
+													</select>
+													@if($errors->has('id_master_barcode_start'))
+														<div class="text-danger"><b>{{ $errors->first('id_master_barcode_start') }}</b></div>
+													@endif
+												</div>
+											</div> 
+											<script>									
+												$(document).ready(function(){
+													//$('#id_work_orders').prop('selectedIndex', 0);
+													//$('#id_master_work_centers').prop('selectedIndex', 0);
+													//$('#id_master_regus').prop('selectedIndex', 0);
+													//$('#shift').prop('selectedIndex', 0);
+													$.ajax({
+														type: "GET",
+														url: "/json_get_barcode",
+														data: { where : 'FOLDING START' },
+														dataType: "json",
+														beforeSend: function(e) {
+															if(e && e.overrideMimeType) {
+																e.overrideMimeType("application/json;charset=UTF-8");
+															}
+														},
+														success: function(response){
+															$("#id_master_barcode_start").html(response.list_barcode).show();
+															//$('#id_master_regus').prop('selectedIndex', 0);
+															//$('#shift').prop('selectedIndex', 0);
+														},
+														error: function (xhr, ajaxOptions, thrownError) {
+															alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
+														}
+													});
+												});
+											</script>		
+											<div class="row mb-4 field-wrapper">
+												<label for="horizontal-password-input" class="col-sm-4 col-form-label">Join  </label>
+												<div class="col-sm-8">
+													<select class="form-select data-select2" name="join" id="join">
+														<option value="">** Please Select A Join</option>
+														<option value="1">1</option>
+														<option value="2">2</option>
+														<option value="3">3</option>
+													</select>
+													@if($errors->has('join'))
+														<div class="text-danger"><b>{{ $errors->first('join') }}</b></div>
+													@endif
+												</div>
+											</div>													
+											<div class="row mb-4 field-wrapper">
+												<label for="horizontal-password-input" class="col-sm-4 col-form-label">
+													Used Next Shift <br>
+													<span class="badge bg-secondary-subtle text-secondary">
+														Barcode START
+													</span>
+												</label>
+												<div class="col-sm-8 mt-3">
+													<label class="toggleSwitch nolabel" onclick="">
+														<input type="checkbox" name="used_next_shift" checked />
+														<a></a>
+														<span>
+															<span class="left-span">No</span>
+															<span class="right-span">Yes</span>
+														</span>											
+													</label>
+													@if($errors->has('used_next_shift'))
+														<div class="text-danger"><b>{{ $errors->first('used_next_shift') }}</b></div>
+													@endif
+												</div>
+											</div>	
+											
+											<div class="row mb-4 field-wrapper required-field">
+												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Barcode End</label>
+												<div class="col-sm-8">
+													<select class="form-select data-select2" name="id_master_barcode" id="id_master_barcode">
+														<option value="">** Please Select A Barcodes</option>
+													</select>
+													@if($errors->has('id_master_barcode'))
+														<div class="text-danger"><b>{{ $errors->first('id_master_barcode') }}</b></div>
+													@endif
+												</div>
+											</div> 
+											<script>									
+												$(document).ready(function(){
+													//$('#id_work_orders').prop('selectedIndex', 0);
+													//$('#id_master_work_centers').prop('selectedIndex', 0);
+													//$('#id_master_regus').prop('selectedIndex', 0);
+													//$('#shift').prop('selectedIndex', 0);
+													$.ajax({
+														type: "GET",
+														url: "/json_get_barcode",
+														data: { where : 'FOLDING' },
+														dataType: "json",
+														beforeSend: function(e) {
+															if(e && e.overrideMimeType) {
+																e.overrideMimeType("application/json;charset=UTF-8");
+															}
+														},
+														success: function(response){
+															$("#id_master_barcode").html(response.list_barcode).show();
+															//$('#id_master_regus').prop('selectedIndex', 0);
+															//$('#shift').prop('selectedIndex', 0);
+														},
+														error: function (xhr, ajaxOptions, thrownError) {
+															alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
+														}
+													});
+												});
+											</script>	
+											
 											<div class="row mb-4 field-wrapper">
 												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Waste </label>
 												<div class="col-sm-8">
