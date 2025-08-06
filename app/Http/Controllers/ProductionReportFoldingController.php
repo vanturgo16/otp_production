@@ -556,7 +556,8 @@ class ProductionReportFoldingController extends Controller
 				
 				$data_detail_production = DB::table('report_sf_production_results AS a')
 						->leftJoin('work_orders AS b', 'a.id_work_orders', '=', 'b.id')
-						->select('a.*','b.wo_number')
+						->leftJoin('barcode_detail as c', 'a.barcode_start', '=', 'c.barcode_number')
+						->select('a.*','b.wo_number', 'c.join')
 						->whereRaw( "sha1(a.id_report_sfs) = '$response_id'")
 						->get();	
 				

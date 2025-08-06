@@ -543,10 +543,12 @@ class ProductionReportSlittingController extends Controller
 			if($data[0]->status=="Un Posted"){
 				$data_detail_production = DB::table('report_sf_production_results AS a')
 						->leftJoin('work_orders AS b', 'a.id_work_orders', '=', 'b.id')
-						->select('a.*','b.wo_number')
+						->leftJoin('barcode_detail as c', 'a.barcode_start', '=', 'c.barcode_number')
+						->select('a.*', 'b.wo_number', 'c.used_next_shift', 'c.join')
 						->whereRaw( "sha1(a.id_report_sfs) = '$response_id'")
 						->orderBy('a.id', 'asc')
 						->get();
+						
 				// Tinggal tambahkan query where nya jika detail sudah ada, wo yg tampil tidak boleh berbeda	
 				//echo empty($data_detail_production[0])?"kosong":"isi";exit;
 				//print_r($data_detail_production);exit;
