@@ -590,7 +590,8 @@ class ProductionReportBagMakingController extends Controller
 								 ->on('a.id_report_bags', '=', 'c.id_report_bags')
 								 ->whereRaw('c.wrap_pcs!=""');
 						})
-						->select('a.*','b.wo_number')
+						->leftJoin('barcode_detail as d', 'a.barcode_start', '=', 'd.barcode_number')
+						->select('a.*','b.wo_number','d.join')
 						->selectRaw('COUNT(c.wrap_pcs) AS count_detail_pr')
 						->selectRaw('SUM(c.wrap_pcs) AS sum_wrap_pcs_pr')
 						->whereRaw( "sha1(a.id_report_bags) = '$response_id'")

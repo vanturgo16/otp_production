@@ -2050,6 +2050,7 @@ class ProductionController extends Controller
 		$key = request()->get('barcode_number');
 		$wo = request()->get('wo_number');
 		$barcode_end = request()->get('barcode_end');
+		$page = request()->get('page');
 		
 		$type_product = request()->get('type_product');
         //echo $type_product;exit;
@@ -2074,7 +2075,13 @@ class ProductionController extends Controller
 			$where_query .= " ) AND ( a.used_product IS NULL ";
 			
 			if(!empty($type_product) AND !empty($key)){
-				$where_query .= " OR (a.used_product = '$type_product' AND a.barcode_number = '$key')";
+				$attempt = $type_product == "WIP" ? 8 : 100 ;
+				
+				$where_query .= " OR ((a.used_product = '$type_product' AND a.barcode_number = '$key')";
+				if(!empty($page)){
+					$where_query .= " AND used_attempt < '$attempt' ";//baru sampe sini
+				}
+				$where_query .= " )";
 			}
 			if(!empty($type_product) AND empty($key)){
 				$attempt = $type_product == "WIP" ? 8 : 100 ;
@@ -2119,7 +2126,8 @@ class ProductionController extends Controller
 				->get();	
 		}else if($where == "FOLDING START"){
 			$where_query = "e.status = 'Closed' AND a.status = 'In Stock SLT WIP' AND ( a.used_next_shift = '1' ";
-			
+			$attempt = 10 ;
+				
 			if(!empty($key)){
 				$where_query .= " OR a.barcode_number = '$key'";
 			}
@@ -2127,10 +2135,13 @@ class ProductionController extends Controller
 			$where_query .= " ) AND ( a.used_product IS NULL ";
 			
 			if(!empty($key)){
-				$where_query .= " OR (a.barcode_number = '$key')";
+				$where_query .= " OR ((a.barcode_number = '$key')";
+				if(!empty($page)){
+					$where_query .= " AND (used_attempt < '$attempt')";
+				}
+				$where_query .= " )";
 			}
 			//if(empty($key)){
-				$attempt = 10 ;
 				$where_query .= " OR (used_attempt < '$attempt')";
 			//} 
 			
@@ -2179,6 +2190,7 @@ class ProductionController extends Controller
 			//$jns_wo = substr($wo, 2, 3);			
 			//$where = ($jns_wo=="SLT")?"In Stock SLT FG":"In Stock FLD";
 			$where_query = "a.status IN('In Stock SLT FG','In Stock FLD') AND ( a.used_next_shift = '1' ";
+			$attempt = 50000 ;
 			
 			if(!empty($key)){
 				$where_query .= " OR a.barcode_number = '$key'";
@@ -2187,10 +2199,13 @@ class ProductionController extends Controller
 			$where_query .= " ) AND ( a.used_product IS NULL ";
 			
 			if(!empty($key)){
-				$where_query .= " OR (a.barcode_number = '$key')";
+				$where_query .= " OR ((a.barcode_number = '$key')";
+				if(!empty($page)){
+					$where_query .= " AND (used_attempt < '$attempt')";
+				}
+				$where_query .= " )";
 			}
 			//if(empty($key)){
-				$attempt = 50000 ;
 				$where_query .= " OR (used_attempt < '$attempt')";
 			//} 
 			
@@ -2220,8 +2235,15 @@ class ProductionController extends Controller
 		}else if($where == "BAG"){
 			$where_query = "a.status IS NULL AND a.used_next_shift = '1' AND b.id_master_process_productions = '1'";
 			
-			if(!empty($key)){
-				$where_query .= " OR a.barcode_number = '$key'";
+			if(!empty($key)){		
+				$where_query .= " OR ((a.barcode_number = '$key')";
+				
+				if(!empty($page)){		
+					$where_query .= " AND (a.barcode_number IN($barcode_end) AND a.used_next_shift = '1' AND b.id_master_process_productions = '1')";
+				}
+				
+				$where_query .= " )";
+				
 			}
 			if(!empty($barcode_end)){
 				$where_query .= " OR (a.barcode_number IN($barcode_end) AND a.used_next_shift = '1' AND b.id_master_process_productions = '1')";
@@ -3068,8 +3090,11 @@ class ProductionController extends Controller
 				'a.id_report_blows',
 				'a.id',
 				DB::raw('SUM(IF(a.status="Good", 1, 0)) AS good'),
+				DB::raw('SUM(IF(a.status="Good", a.weight, 0)) AS weight_good'),
 				DB::raw('SUM(IF(a.status="Hold", 1, 0)) AS hold'),
+				DB::raw('SUM(IF(a.status="Hold", a.weight, 0)) AS weight_hold'),
 				DB::raw('SUM(IF(a.status="Reject", 1, 0)) AS reject'),
+				DB::raw('SUM(IF(a.status="Reject", a.weight, 0)) AS weight_reject'),
 				DB::raw('GROUP_CONCAT(CASE WHEN a.status="Good" THEN barcode END SEPARATOR ", ") AS barcode_good'),
 				DB::raw('GROUP_CONCAT(CASE WHEN a.status="Hold" THEN barcode END SEPARATOR ", ") AS barcode_hold'),
 				DB::raw('GROUP_CONCAT(CASE WHEN a.status="Reject" THEN barcode END SEPARATOR ", ") AS barcode_reject')
@@ -3095,6 +3120,8 @@ class ProductionController extends Controller
 						'type_product' => $data_update[0]->type_product,
 						'id_master_products' => $order_name[1],
 						'qty' => $data_update[0]->good,
+						'weight' => $data_update[0]->weight_good,
+						'is_closed' => '1',
 						'type_stock' => 'IN',
 						'date' => date("Y-m-d"),
 						'barcode' => $data_update[0]->barcode_good,
@@ -3109,6 +3136,8 @@ class ProductionController extends Controller
 						'type_product' => $data_update[0]->type_product,
 						'id_master_products' => $order_name[1],
 						'qty' => $data_update[0]->hold,
+						'weight' => $data_update[0]->weight_hold,
+						'is_closed' => '1',
 						'type_stock' => 'HOLD',
 						'date' => date("Y-m-d"),
 						'barcode' => $data_update[0]->barcode_hold,
@@ -3121,6 +3150,8 @@ class ProductionController extends Controller
 						'type_product' => $data_update[0]->type_product,
 						'id_master_products' => $order_name[1],
 						'qty' => $data_update[0]->reject,
+						'weight' => $data_update[0]->weight_reject,
+						'is_closed' => '1',
 						'type_stock' => 'REJECT',
 						'date' => date("Y-m-d"),
 						'barcode' => $data_update[0]->barcode_reject,
@@ -3130,9 +3161,10 @@ class ProductionController extends Controller
 				
 				if($responseGood or $responseHold or $responseReject){
 					if($responseGood){					
-						$stock_akhir = $data_product[0]->stock + $data_update[0]->good;				
+						$stock_akhir = $data_product[0]->stock + $data_update[0]->good;//STOK
+						$weight_akhir = $data_product[0]->weight + $data_update[0]->weight_good;//WEIGTH				
 						
-						DB::table('master_wips')->where('id', $order_name[1])->update(array('stock' => $stock_akhir)); 						
+						DB::table('master_wips')->where('id', $order_name[1])->update(array('weight' => $weight_akhir, 'stock' => $stock_akhir, 'updated_at' => date('Y-m-d H:i:s'))); 						
 					}
 					
 					$validatedData = ([
@@ -3194,8 +3226,11 @@ class ProductionController extends Controller
 					'a.id_report_blows',
 					'a.id',
 					DB::raw('SUM(IF(a.status="Good", 1, 0)) AS good'),
+					DB::raw('SUM(IF(a.status="Good", a.weight, 0)) AS weight_good'),
 					DB::raw('SUM(IF(a.status="Hold", 1, 0)) AS hold'),
+					DB::raw('SUM(IF(a.status="Hold", a.weight, 0)) AS weight_hold'),
 					DB::raw('SUM(IF(a.status="Reject", 1, 0)) AS reject'),
+					DB::raw('SUM(IF(a.status="Reject", a.weight, 0)) AS weight_reject'),
 					DB::raw('GROUP_CONCAT(CASE WHEN a.status="Good" THEN barcode END SEPARATOR ", ") AS barcode_good'),
 					DB::raw('GROUP_CONCAT(CASE WHEN a.status="Hold" THEN barcode END SEPARATOR ", ") AS barcode_hold'),
 					DB::raw('GROUP_CONCAT(CASE WHEN a.status="Reject" THEN barcode END SEPARATOR ", ") AS barcode_reject')
@@ -3215,6 +3250,7 @@ class ProductionController extends Controller
 				
 				if(!empty($data_product[0])){	
 					if($data_update[0]->good>0){
+						/*
 						$validatedData = ([
 							'id_good_receipt_notes_details' => $data_update[0]->report_number,
 							'type_product' => $data_update[0]->type_product,
@@ -3226,13 +3262,15 @@ class ProductionController extends Controller
 							'remarks' => 'From GOOD Posted'
 						]);	
 						$responseGood = HistoryStock::create($validatedData);
-						
-						if($responseGood){					
-							$stock_akhir = $data_product[0]->stock - $data_update[0]->good;				
+						*/
+						//if($responseGood){					
+							$stock_akhir = $data_product[0]->stock - $data_update[0]->good;//STOK
+							$weight_akhir = $data_product[0]->weight - $data_update[0]->weight_good;//WEIGTH						
 							
-							DB::table('master_wips')->where('id', $order_name[1])->update(array('stock' => $stock_akhir)); 						
-						}
+							$responseMaster = DB::table('master_wips')->where('id', $order_name[1])->update(array('stock' => $stock_akhir)); 						
+						//}
 					}
+					/*
 					if($data_update[0]->hold>0){
 						$validatedData = ([
 							'id_good_receipt_notes_details' => $data_update[0]->report_number,
@@ -3259,25 +3297,34 @@ class ProductionController extends Controller
 						]);	
 						$responseReject = HistoryStock::create($validatedData);
 					}
-					
-					if($responseGood or $responseHold or $responseReject){
+					*/
+					//if($responseGood or $responseHold or $responseReject){
+					if($responseMaster){
 						
 						$validatedData = ([
 							'status' => 'Un Posted',
 						]);				
 						
-						ProductionEntryReportBlow::where('report_number', $data_update[0]->report_number)
+						$responseUpdate = ProductionEntryReportBlow::where('report_number', $data_update[0]->report_number)
 							->update($validatedData);
 						
-						//Audit Log
-						$username= auth()->user()->email; 
-						$ipAddress=$_SERVER['REMOTE_ADDR'];
-						$location='0';
-						$access_from=Browser::browserName();
-						$activity='Un Posted Histori Stock Blow Report Number ="'.$data_update[0]->report_number.'" (Good : '.$data_update[0]->good.', Hold : '.$data_update[0]->hold.', Reject : '.$data_update[0]->reject.')';
-						$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
-							
-						return Redirect::to('/production-ent-report-blow')->with('pesan', 'Un Posted Successfuly.');
+						if($responseUpdate){								
+							DB::table('history_stocks')
+								->whereRaw( "id_good_receipt_notes_details = '".$data_update[0]->report_number."' and type_stock != 'OUT'" )
+								->delete();
+							//Audit Log
+							$username= auth()->user()->email; 
+							$ipAddress=$_SERVER['REMOTE_ADDR'];
+							$location='0';
+							$access_from=Browser::browserName();
+							$activity='Un Posted Histori Stock Blow Report Number ="'.$data_update[0]->report_number.'" (Good : '.$data_update[0]->good.', Hold : '.$data_update[0]->hold.', Reject : '.$data_update[0]->reject.')';
+							$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+								
+							return Redirect::to('/production-ent-report-blow')->with('pesan', 'Un Posted Successfuly.');
+						}else{
+							return Redirect::to('/production-ent-report-blow')->with('pesan_danger', 'There Is An Error.');
+						}	
+						
 					}else{
 						return Redirect::to('/production-ent-report-blow')->with('pesan_danger', 'There Is An Error.');
 					}

@@ -585,16 +585,21 @@
 							<div class="col-lg-5">
 								<div class="card">
 									<div class="card-header">
-										<h4 class="card-title">Form</h4>
-										
+										<h4 class="card-title">Form</h4>										
 									</div>
+									<?php 
+										$last = collect($data_detail_production)->last();
+										
+										$start = !empty($last) ? $last->start_time : '07:30' ;
+										$finish = !empty($last) ? $last->finish_time : '07:30' ;
+									?>
 									<div class="card-body p-4">
 										<form method="post" action="/production-entry-report-folding-detail-production-result-add#detailTableSection" class="form-material m-t-40" enctype="multipart/form-data">
 											@csrf
 											<div class="row mb-4 field-wrapper required-field">
 												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Start Time </label>
 												<div class="col-sm-8">
-													<input type="time" class="form-control" name="start" id="start" value="07:30">
+													<input type="time" class="form-control" name="start" id="start" value="{{ $start; }}">
 													<div id="displayHours_start" class="text-danger"></div>
 													@if($errors->has('start'))
 														<div class="text-danger"><b>{{ $errors->first('start') }}</b></div>
@@ -615,7 +620,7 @@
 											<div class="row mb-4 field-wrapper required-field">
 												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Finish Time </label>
 												<div class="col-sm-8">
-													<input type="time" class="form-control" name="finish" id="finish" value="07:30">
+													<input type="time" class="form-control" name="finish" id="finish" value="{{ $finish; }}">
 													<div id="displayHours_finish" class="text-danger"></div>
 													@if($errors->has('finish'))
 														<div class="text-danger"><b>{{ $errors->first('finish') }}</b></div>
@@ -639,7 +644,7 @@
 													<select class="form-select data-select2" name="id_work_orders" id="id_work_orders" required>
 														<option value="">** Please Select A Work Orders</option>
 														@foreach ($ms_work_orders as $data)
-															<option value="{{ $data->id }}" data-id_master_customers="{{ $data->id_master_customers }}" data-type_product="{{ $data->type_product }}" data-id_master_products="{{ $data->id_master_products }}">{{ $data->wo_number }}</option>
+															<option value="{{ $data->id }}" data-id_master_customers="{{ $data->id_master_customers }}" data-type_product="{{ $data->type_product }}" data-id_master_products="{{ $data->id_master_products }}" {{ !empty($last) && ($data->id == $last->id_work_orders) ? 'selected' : '' }}>{{ $data->wo_number }}</option>
 														@endforeach
 													</select>
 													@if($errors->has('id_work_orders'))
@@ -650,6 +655,94 @@
 											
 											<script>									
 												$(document).ready(function(){
+													$.ajax({
+														type: "GET",
+														url: "/json_get_barcode",
+														data: { where : 'FOLDING START' },
+														dataType: "json",
+														beforeSend: function(e) {
+															if(e && e.overrideMimeType) {
+																e.overrideMimeType("application/json;charset=UTF-8");
+															}
+														},
+														success: function(response){
+															$("#id_master_barcode_start").html(response.list_barcode).show();
+															//$('#id_master_regus').prop('selectedIndex', 0);
+															//$('#shift').prop('selectedIndex', 0);
+														},
+														error: function (xhr, ajaxOptions, thrownError) {
+															alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
+														}
+													});
+													
+													<?php if(!empty($last)){ ?>
+														$.ajax({
+															type: "GET",
+															url: "/json_get_produk_folding",
+															data: { type_product : $('#id_work_orders option:selected').attr('data-type_product'), id_master_products : $('#id_work_orders option:selected').attr('data-id_master_products') },															
+															dataType: "json",
+															beforeSend: function(e) {
+																if(e && e.overrideMimeType) {
+																	e.overrideMimeType("application/json;charset=UTF-8");
+																}
+															},
+															success: function(response){
+																$("#id_master_products_detail").html(response.list_products).show();
+															},
+															error: function (xhr, ajaxOptions, thrownError) {
+																alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
+															}
+														});
+														$.ajax({
+															type: "GET",
+															url: "/json_get_produk_autofill",
+															data: { type_product : $('#id_work_orders option:selected').attr('data-type_product'), id_master_products : $('#id_work_orders option:selected').attr('data-id_master_products') },
+															dataType: "json",
+															beforeSend: function(e) {
+																if(e && e.overrideMimeType) {
+																	e.overrideMimeType("application/json;charset=UTF-8");
+																}
+															},
+															success: function(response){
+																//$("#id_master_products_detail").html(response.list_products).show();
+																document.getElementById("thickness").value = response.result[0]['thickness'];
+																
+																document.getElementById("width").value = response.result[0]['width'];
+																document.getElementById("width_unit").textContent = response.result[0]['width_unit_code'];
+																if($('#id_work_orders option:selected').attr('data-type_product')=='FG'){
+																	document.getElementById("length").value = response.result[0]['height'];
+																}else{
+																	document.getElementById("length").value = response.result[0]['length'];
+																}
+																document.getElementById("length_unit").textContent = response.result[0]['length_unit_code'];
+																
+																document.getElementById("weight").value = response.result[0]['weight'];
+															},
+															error: function (xhr, ajaxOptions, thrownError) {
+																alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
+															}
+														});
+														$.ajax({
+															type: "GET",
+															url: "/json_get_barcode", //baru sampe sini. cek jika bs sudah tidaktersedia
+															data: { where : 'FOLDING START', barcode_number : {!! "'".$last->barcode_start."'" !!}, page : 'detail' },
+															dataType: "json",
+															beforeSend: function(e) {
+																if(e && e.overrideMimeType) {
+																	e.overrideMimeType("application/json;charset=UTF-8");
+																}
+															},
+															success: function(response){
+																$("#id_master_barcode_start").html(response.list_barcode).show();
+																//$('#id_master_regus').prop('selectedIndex', 0);
+																//$('#shift').prop('selectedIndex', 0);
+															},
+															error: function (xhr, ajaxOptions, thrownError) {
+																alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
+															}
+														});
+														
+													<?php }; ?>
 													
 													$("#id_work_orders").change(function(){		
 														
@@ -766,19 +859,19 @@
 												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label"><br>Status </label>
 												<div class="col-sm-8">
 													<div class="form-check">
-														<input class="form-check-input" type="radio" name="status" value="Good">
+														<input class="form-check-input" type="radio" name="status" value="Good"  {{ !empty($last) && ($last->status)=="Good"?'checked':''; }}>
 														<label>
 															Good
 														</label>
 													</div>
 													<div class="form-check">
-														<input class="form-check-input" type="radio" name="status" value="Hold">
+														<input class="form-check-input" type="radio" name="status" value="Hold" {{ !empty($last) && ($last->status)=="Hold"?'checked':''; }}>
 														<label>
 															Hold
 														</label>
 													</div>
 													<div class="form-check">
-														<input class="form-check-input" type="radio" name="status" value="Reject">
+														<input class="form-check-input" type="radio" name="status" value="Reject" {{ !empty($last) && ($last->status)=="Reject"?'checked':''; }}>
 														<label>
 															Reject
 														</label>
@@ -798,42 +891,16 @@
 														<div class="text-danger"><b>{{ $errors->first('id_master_barcode_start') }}</b></div>
 													@endif
 												</div>
-											</div> 
-											<script>									
-												$(document).ready(function(){
-													//$('#id_work_orders').prop('selectedIndex', 0);
-													//$('#id_master_work_centers').prop('selectedIndex', 0);
-													//$('#id_master_regus').prop('selectedIndex', 0);
-													//$('#shift').prop('selectedIndex', 0);
-													$.ajax({
-														type: "GET",
-														url: "/json_get_barcode",
-														data: { where : 'FOLDING START' },
-														dataType: "json",
-														beforeSend: function(e) {
-															if(e && e.overrideMimeType) {
-																e.overrideMimeType("application/json;charset=UTF-8");
-															}
-														},
-														success: function(response){
-															$("#id_master_barcode_start").html(response.list_barcode).show();
-															//$('#id_master_regus').prop('selectedIndex', 0);
-															//$('#shift').prop('selectedIndex', 0);
-														},
-														error: function (xhr, ajaxOptions, thrownError) {
-															alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
-														}
-													});
-												});
-											</script>		
+											</div> 	
 											<div class="row mb-4 field-wrapper">
 												<label for="horizontal-password-input" class="col-sm-4 col-form-label">Join  </label>
 												<div class="col-sm-8">
 													<select class="form-select data-select2" name="join" id="join">
 														<option value="">** Please Select A Join</option>
-														<option value="1">1</option>
-														<option value="2">2</option>
-														<option value="3">3</option>
+														
+														<option value="1" {{ !empty($last) && ($last->join) == '1' ? 'selected':'' }}>1</option>
+														<option value="2" {{ !empty($last) && ($last->join) == '2' ? 'selected':'' }}>2</option>
+														<option value="3" {{ !empty($last) && ($last->join) == '3' ? 'selected':'' }}>3</option>
 													</select>
 													@if($errors->has('join'))
 														<div class="text-danger"><b>{{ $errors->first('join') }}</b></div>
@@ -985,8 +1052,8 @@
 																Width : <b>{{ $data_detail->width }}</b> <br>
 																Weight : <b>{{ $data_detail->weight }}</b> <br><br>
 																Status : <b class="text-{{ $colors }}">{{ $data_detail->status }}</b> <br><br>
-																Waste : <b>{{ $data_detail->waste }}</b> <br>
-																Cause Waste : <b>{{ $data_detail->cause_waste }}</b> <br>
+																Waste : <b>{{ !empty($data_detail->waste)?$data_detail->waste:'-'; }}</b> <br>
+																Cause Waste : <b>{{ !empty($data_detail->cause_waste)?$data_detail->cause_waste:'-'; }}</b> <br>
 															</td>
 															
 															

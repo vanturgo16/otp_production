@@ -592,16 +592,21 @@
 			<div class="col-lg-12">
 				<div class="card">
 					<div class="card-header">
-						<h4 class="card-title"><i data-feather="check-square"></i> Production Result</h4>
-						
+						<h4 class="card-title"><i data-feather="check-square"></i> Production Result</h4>						
 					</div>
 					<div class="card-body p-4" id="detailTableSection">
 						<div class="row">
 							<div class="col-lg-5">
 								<div class="card">
 									<div class="card-header">
-										<h4 class="card-title">Form</h4>										
+										<h4 class="card-title">Form</h4>				
 									</div>
+									<?php 
+										$last = collect($data_detail_production)->last();
+										
+										$start = !empty($last) ? $last->start_time : '07:30' ;
+										$finish = !empty($last) ? $last->finish_time : '07:30' ;
+									?>
 									<div class="card-body p-4">
 										<form method="post" action="/production-entry-report-bag-making-detail-production-result-add#detailTableSection" class="form-material m-t-40" enctype="multipart/form-data">
 											@csrf
@@ -611,7 +616,9 @@
 													<select class="form-select data-select2" name="id_work_orders" id="id_work_orders" required>
 														<option value="">** Please Select A Work Orders</option>
 														@foreach ($ms_work_orders as $data)
-															<option value="{{ $data->id }}" data-id_master_customers="{{ $data->id_master_customers }}" data-type_product="{{ $data->type_product }}" data-id_master_products="{{ $data->id_master_products }}" data-wo_number="{{ $data->wo_number }}">{{ $data->wo_number }}</option>
+															
+															
+															<option value="{{ $data->id }}" data-id_master_customers="{{ $data->id_master_customers }}" data-type_product="{{ $data->type_product }}" data-id_master_products="{{ $data->id_master_products }}" data-wo_number="{{ $data->wo_number }}" {{ !empty($last) && ($data->id == $last->id_work_orders) ? 'selected' : '' }}>{{ $data->wo_number }}</option>
 														@endforeach
 													</select>
 													@if($errors->has('id_work_orders'))
@@ -621,9 +628,26 @@
 											</div>
 											<script>									
 												$(document).ready(function(){
-													
-													$("#id_work_orders").change(function(){		
-														
+													<?php if(!empty($last)){ ?>
+														$.ajax({
+															type: "GET",
+															url: "/json_get_produk",
+															data: { type_product : $('#id_work_orders option:selected').attr('data-type_product'), id_master_products : $('#id_work_orders option:selected').attr('data-id_master_products') },
+															dataType: "json",
+															beforeSend: function(e) {
+																if(e && e.overrideMimeType) {
+																	e.overrideMimeType("application/json;charset=UTF-8");
+																}
+															},
+															success: function(response){
+																$("#id_master_products_detail").html(response.list_products).show();
+															},
+															error: function (xhr, ajaxOptions, thrownError) {
+																alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
+															}
+														});
+													<?php }; ?>
+													$("#id_work_orders").change(function(){
 														$.ajax({
 															type: "GET",
 															url: "/json_get_produk",
@@ -660,7 +684,7 @@
 											<div class="row mb-4 field-wrapper required-field">
 												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Start Time </label>
 												<div class="col-sm-8">
-													<input type="time" class="form-control" name="start" id="start" value="07:30">
+													<input type="time" class="form-control" name="start" id="start" value="{{ $start; }}">
 													<div id="displayHours_start" class="text-danger"></div>
 													@if($errors->has('start'))
 														<div class="text-danger"><b>{{ $errors->first('start') }}</b></div>
@@ -681,7 +705,7 @@
 											<div class="row mb-4 field-wrapper required-field">
 												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Finish Time </label>
 												<div class="col-sm-8">
-													<input type="time" class="form-control" name="finish" id="finish" value="07:30">
+													<input type="time" class="form-control" name="finish" id="finish" value="{{ $finish; }}">
 													<div id="displayHours_finish" class="text-danger"></div>
 													@if($errors->has('finish'))
 														<div class="text-danger"><b>{{ $errors->first('finish') }}</b></div>
@@ -731,6 +755,27 @@
 															alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
 														}
 													});
+													<?php if(!empty($last)){ ?>
+														$.ajax({
+															type: "GET",
+															url: "/json_get_barcode",
+															data: { where : 'BAG START', wo_number : $('#id_work_orders option:selected').attr('data-wo_number'), barcode_number : {!! "'".$last->barcode_start."'" !!}, page : 'detail'},
+															dataType: "json",
+															beforeSend: function(e) {
+																if(e && e.overrideMimeType) {
+																	e.overrideMimeType("application/json;charset=UTF-8");
+																}
+															},
+															success: function(response){
+																$("#id_master_barcode_start").html(response.list_barcode).show();
+																//$('#id_master_regus').prop('selectedIndex', 0);
+																//$('#shift').prop('selectedIndex', 0);
+															},
+															error: function (xhr, ajaxOptions, thrownError) {
+																alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
+															}
+														});
+													<?php }; ?>
 												});
 											</script>
 											<div class="row mb-4 field-wrapper">
@@ -759,9 +804,9 @@
 												<div class="col-sm-8">
 													<select class="form-select data-select2" name="join" id="join">
 														<option value="">** Please Select A Join</option>
-														<option value="1">1</option>
-														<option value="2">2</option>
-														<option value="3">3</option>
+														<option value="1" {{ !empty($last) && ($last->join) == '1' ? 'selected':'' }}>1</option>
+														<option value="2" {{ !empty($last) && ($last->join) == '2' ? 'selected':'' }}>2</option>
+														<option value="3" {{ !empty($last) && ($last->join) == '3' ? 'selected':'' }}>3</option>
 													</select>
 													@if($errors->has('join'))
 														<div class="text-danger"><b>{{ $errors->first('join') }}</b></div>
@@ -808,6 +853,34 @@
 															alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
 														}
 													});
+													<?php if(!empty($last)){ ?>
+														$.ajax({//baru sampai sini
+															type: "GET",
+															url: "/json_get_barcode",
+															data: { 
+																where : 'BAG',
+																barcode_end : '<?php $total = count($data_detail_production); $i = 0; foreach ($data_detail_production as $data_detail){ $separator = (++$i < $total)?',':''; echo '"'.$data_detail->barcode.'"'.$separator; } ?>',
+																barcode_number : {!! "'".$last->barcode."'" !!},
+																page : 'detail' 
+																
+															},
+															dataType: "json",
+															beforeSend: function(e) {
+																if(e && e.overrideMimeType) {
+																	e.overrideMimeType("application/json;charset=UTF-8");
+																}
+															},
+															success: function(response){
+																$("#id_master_barcode").html(response.list_barcode).show();
+																//$('#id_master_regus').prop('selectedIndex', 0);
+																//$('#shift').prop('selectedIndex', 0);
+															},
+															error: function (xhr, ajaxOptions, thrownError) {
+																alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
+															}
+														});
+													<?php }; ?>
+													
 												});
 											</script>												
 											<div class="row mb-4 field-wrapper">
@@ -834,7 +907,7 @@
 											<div class="row mb-4 field-wrapper required-field">
 												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Weight Starting </label>
 												<div class="col-sm-8">
-													<input type="text" class="form-control" name="weight_starting">
+													<input type="text" class="form-control" name="weight_starting" value="{{ !empty($last) ? $last->weight_starting : '' }}">
 													@if($errors->has('weight_starting'))
 														<div class="text-danger"><b>{{ $errors->first('weight_starting') }}</b></div>
 													@endif
@@ -843,7 +916,7 @@
 											<div class="row mb-4 field-wrapper required-field">
 												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Amount Result </label>
 												<div class="col-sm-8">
-													<input type="text" class="form-control" name="amount_result" id="amount_result">
+													<input type="text" class="form-control" name="amount_result" id="amount_result" value="{{ !empty($last) ? $last->amount_result : '' }}">
 													<div class="text-secondary"><b>Pcs</b></div>
 													@if($errors->has('amount_result'))
 														<div class="text-danger"><b>{{ $errors->first('amount_result') }}</b></div>
@@ -856,7 +929,7 @@
 													<span class="badge bg-secondary-subtle text-secondary">
 														( Estimasi Jumlah PCS Per Bungkus/Wrap )
 													</span>
-													<input type="text" class="form-control mt-1" name="pcs_wrap" id="pcs_wrap">
+													<input type="text" class="form-control mt-1" name="pcs_wrap" id="pcs_wrap" value="{{ !empty($last) ? $last->pcs_wrap : '' }}">
 													<!--input type="hidden" class="form-control mt-1" name="pcs_wrap"-->
 													<div class="text-secondary">
 														<b>Pcs</b> 
@@ -868,11 +941,41 @@
 											</div>
 											<script>
 												$(document).ready(function(){
-													document.getElementById('amount_result').value = 0;
-													document.getElementById('pcs_wrap').value = 0;
+													<?php
+														if(!empty($last)){
+															$amount_result = $last->amount_result;
+															$pcs_wrap = $last->pcs_wrap;
+														}else{
+															$amount_result = 0;
+															$pcs_wrap = 0;
+														};													
+													?>
+													
+													document.getElementById('amount_result').value = {{ $amount_result }};
+													document.getElementById('pcs_wrap').value = {{ $pcs_wrap }};
 													
 													konten = '<div class="alert alert-dark alert-dismissible alert-label-icon label-arrow fade show" role="alert"><i class="mdi mdi-alert-outline label-icon"></i><font class="text-white">Informasi Tidak Tersedia</font></div>';
 													$( "#div-informasi" ).html( konten );
+													
+													<?php if(!empty($last)){ ?>
+														var n_amount = parseFloat(document.getElementById('amount_result').value);
+														var n_pcs_wrap = parseFloat(document.getElementById('pcs_wrap').value);
+														
+														var n_pcs_wrap = n_pcs_wrap > n_amount ? n_amount : n_pcs_wrap ;
+														
+														var hasil = Math.floor(n_amount/n_pcs_wrap) ;
+														var sisa = n_amount%n_pcs_wrap ;
+														
+														var hasil = !isNaN(hasil) ? hasil:0;
+														var sisa = !isNaN(sisa) ? sisa:0;
+														
+														var hasil_akhir = sisa > 0 ? hasil + 1 : hasil;
+														var hasil_info = sisa > 0 ? '<strong>'+hasil+'</strong> Bungkus Isi <strong><font>'+n_pcs_wrap+'</font></strong> Pcs<br><strong>1</strong> Bungkus Isi <strong><font>'+sisa+'</font></strong> Pcs':'<strong>'+hasil+'</strong> Bungkus Isi <strong><font>'+n_pcs_wrap+'</font></strong> Pcs';
+														
+														konten = '<div class="alert alert-warning alert-dismissible alert-label-icon label-arrow fade show" role="alert"><i class="mdi mdi-alert-outline label-icon"></i>Total :<br><strong><font>'+hasil_akhir+'</font></strong> Bungkus<br><br>Rincian :<br>'+hasil_info+'</div>';
+														$( "#div-informasi" ).html( konten );
+													<?php }; ?>
+													
 													/*
 													$("#pcs_wrap").keyup(function() {
 														var n_amount = parseFloat(document.getElementById('amount_result').value);
@@ -935,7 +1038,9 @@
 											<div class="row mb-4 field-wrapper">
 												<label for="horizontal-firstname-input" class="col-sm-4 col-form-label">Wrap Note </label>
 												<div class="col-sm-8">
-													<textarea rows="5" class="form-control" name="keterangan"></textarea>
+													<textarea rows="5" class="form-control" name="keterangan">
+														{{ !empty($last) ? $last->keterangan : '' }}
+													</textarea>
 													@if($errors->has('keterangan'))
 														<div class="text-danger"><b>{{ $errors->first('keterangan') }}</b></div>
 													@endif
