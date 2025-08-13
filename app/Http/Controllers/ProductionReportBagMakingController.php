@@ -1045,7 +1045,7 @@ class ProductionReportBagMakingController extends Controller
 										->get();
 									//print_r($data_produk);
 									$updatedDataMS['stock'] = $data_produk[0]->stock - 1 ;
-									$updatedDataMS['weight'] = $data_produk[0]->weight - $data_slitting[0]->weight ;//
+									$updatedDataMS['weight_stock'] = $data_produk[0]->weight_stock - $data_slitting[0]->weight ;//
 									
 									$responseUpdateMaster = DB::table('master_product_fgs')
 																->where('id', $order_name[1])
@@ -1383,7 +1383,7 @@ class ProductionReportBagMakingController extends Controller
 									->get();
 								
 								$updatedDataMS_BSO['stock'] = $data_produk[0]->stock + 1 ;
-								$updatedDataMS_BSO['weight'] = $data_produk[0]->weight + $data_slitting_barcode_start_old[0]->weight;
+								$updatedDataMS_BSO['weight_stock'] = $data_produk[0]->weight_stock + $data_slitting_barcode_start_old[0]->weight;
 								
 								$responseUpdateMasterBSO = DB::table('master_product_fgs')
 										->where('id', $order_name_barcode_start_old[1])
@@ -1412,7 +1412,7 @@ class ProductionReportBagMakingController extends Controller
 									->get();
 								//print_r($data_produk);
 								$updatedDataMS['stock'] = $data_produk[0]->stock - 1 ;
-								$updatedDataMS['weight'] = $data_produk[0]->weight - $data_slitting[0]->weight ;
+								$updatedDataMS['weight_stock'] = $data_produk[0]->weight_stock - $data_slitting[0]->weight ;
 								
 								$responseUpdateMaster = DB::table('master_product_fgs')
 															->where('id', $order_name[1])
@@ -1590,7 +1590,7 @@ class ProductionReportBagMakingController extends Controller
 						->get();
 						
 					$updatedDataMS_BS['stock'] = $data_produk[0]->stock + 1 ;
-					$updatedDataMS_BS['weight'] = $data_produk[0]->weight + $data_folding[0]->weight ;
+					$updatedDataMS_BS['weight_stock'] = $data_produk[0]->weight_stock + $data_folding[0]->weight ;
 					
 					$responseUpdateMasterBS = DB::table('master_product_fgs')
 							->where('id', $order_name[1])
@@ -2126,7 +2126,7 @@ class ProductionReportBagMakingController extends Controller
 										->get();
 										
 									$updatedDataMS_BS['stock'] = $data_produk[0]->stock + 1 ;
-									$updatedDataMS_BS['weight'] = $data_produk[0]->weight + $data_slitting[0]->weight ;
+									$updatedDataMS_BS['weight_stock'] = $data_produk[0]->weight_stock + $data_slitting[0]->weight ;
 									
 									$responseUpdateMasterBS = DB::table('master_product_fgs')
 											->where('id', $order_name[1])

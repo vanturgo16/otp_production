@@ -230,23 +230,78 @@ class ProductionController extends Controller
                 ->select('request_tool_auxiliaries.*', 'b.name')
                 ->whereRaw( "sha1(request_tool_auxiliaries.id) = '$response_id'")
                 ->get();
+				
+		$data_detail = DB::table('request_tool_auxiliaries_details')
+				->select('*')
+				->whereRaw( "sha1(id_request_tool_auxiliaries) = '$response_id'")
+				->get();
+		
+		//print_r($data_detail);exit;
 		
 		if(!empty($data[0])){
+			if(!empty($data_detail[0])){//tambahkan verifikasi jika data detail kosong
 			
-			$validatedData['status'] = 'Approve';			
-			
-			ProductionReqSparepartAuxiliaries::whereRaw( "sha1(id) = '$response_id'" )
-				->update($validatedData);
-		
-			//Audit Log		
-			$username= auth()->user()->email; 
-			$ipAddress=$_SERVER['REMOTE_ADDR'];
-			$location='0';
-			$access_from=Browser::browserName();
-			$activity='Approve Request Sparepart Auxiliaries "'.$data[0]->request_number.'"';
-			$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
-			
-			return Redirect::to('/production-req-sparepart-auxiliaries')->with('pesan', 'Approve Successfuly.');
+				$validatedData['status'] = 'Approve';			
+				
+				$response = ProductionReqSparepartAuxiliaries::whereRaw( "sha1(id) = '$response_id'" )
+							->update($validatedData);
+				
+				if($response){
+					foreach($data_detail as $data_for){
+						$id_master_tool_auxiliaries = $data_for->id_master_tool_auxiliaries;
+						
+						$data_tool_auxiliaries = DB::table('master_tool_auxiliaries')
+							->select('*')
+							->whereRaw( "id = '".$id_master_tool_auxiliaries."'")
+							->get();
+						//print_r($data_product);exit;
+						if(!empty($data_tool_auxiliaries[0])){
+							
+							if($data_for->remarks!=""){
+								$remarks = $data_for->id." | ".$data_for->remarks;//id detail | remarks
+							}else{
+								$remarks = $data_for->id;//id detail
+							}
+							/*//sementara remark
+							$validatedData = ([
+								'id_good_receipt_notes_details' => $data[0]->request_number,
+								'type_product' => 'TA',
+								'id_master_products' => $id_master_tool_auxiliaries,
+								'qty' => $data_for->qty,
+								
+								'is_closed' => '1',
+								'type_stock' => 'OUT',
+								'date' => date("Y-m-d"),
+								'barcode' => null,
+								'remarks' => $remarks
+							]);	
+							$responseHistory = HistoryStock::create($validatedData);
+								
+							
+							if($responseHistory){
+								$stock_akhir = $data_tool_auxiliaries[0]->stock - $data_for->qty;		
+								//tinggal buatt variabel nya kalo penetrasi weight sumber nya dari weight starting	
+								
+								DB::table('master_tool_auxiliaries')->where('id', $id_master_tool_auxiliaries)->update(array('stock' => $stock_akhir, 'updated_at' => date('Y-m-d H:i:s'))); 		
+							}
+							*/
+							//Audit Log		
+							$username= auth()->user()->email; 
+							$ipAddress=$_SERVER['REMOTE_ADDR'];
+							$location='0';
+							$access_from=Browser::browserName();
+							$activity='Approve Request Sparepart Auxiliaries "'.$data[0]->request_number.'"';
+							$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+						
+							return Redirect::to('/production-req-sparepart-auxiliaries')->with('pesan', 'Approve Successfuly.');
+						}else{
+							return Redirect::to('/production-ent-report-bag-making')->with('pesan_danger', 'There Is An Error. Data Produk Not Found.');
+						}
+					}
+				}
+			}else{
+				return Redirect::to('/production-req-sparepart-auxiliaries')->with('pesan_danger', 'Detail tidak tersedia');
+			}
 		}else{
 			return Redirect::to('/production-req-sparepart-auxiliaries')->with('pesan_danger', 'There Is An Error.');
 		}
@@ -350,36 +405,39 @@ class ProductionController extends Controller
 		if ($request->has('savemore')) {
             return "Tombol Save & Add More diklik.";
         } elseif ($request->has('save')) {
-			
-			$request_number = $_POST['request_number'];		
-			$data = ProductionReqSparepartAuxiliaries::whereRaw( "sha1(request_tool_auxiliaries.request_number) = '$request_number'")
-				->select('id','request_number')
-				->get();
-			
-            $pesan = [
-                'id_master_tool_auxiliaries.required' => 'Cannot Be Empty',
-                'qty.required' => 'Cannot Be Empty',         
-            ];
+			$request_number = $_POST['request_number'];	
+			if($request->input('qty')<1){
+				return Redirect::to('/production-req-sparepart-auxiliaries-detail/'.$request_number)->with('pesan_danger', 'Quantity harus lebih besar dari 0');
+			}else{	
+				$data = ProductionReqSparepartAuxiliaries::whereRaw( "sha1(request_tool_auxiliaries.request_number) = '$request_number'")
+					->select('id','request_number')
+					->get();
+				
+				$pesan = [
+					'id_master_tool_auxiliaries.required' => 'Cannot Be Empty',
+					'qty.required' => 'Cannot Be Empty',         
+				];
 
-            $validatedData = $request->validate([
-                'id_master_tool_auxiliaries' => 'required',
-                'qty' => 'required',
+				$validatedData = $request->validate([
+					'id_master_tool_auxiliaries' => 'required',
+					'qty' => 'required',
 
-            ], $pesan);
-			$validatedData['remarks'] = !empty($request->input('remarks'))?$request->input('remarks'):'';			
-			$validatedData['id_request_tool_auxiliaries'] = $data[0]->id;			
-			
-            ProductionReqSparepartAuxiliariesDetail::create($validatedData);
-			
-			//Audit Log		
-			$username= auth()->user()->email; 
-			$ipAddress=$_SERVER['REMOTE_ADDR'];
-			$location='0';
-			$access_from=Browser::browserName();
-			$activity='Add Detail Request Sparepart Auxiliaries '.$data[0]->request_number;
-			$this->auditLogs($username,$ipAddress,$location,$access_from,$activity); 
-			 
-            return Redirect::to('/production-req-sparepart-auxiliaries-detail/'.$request_number)->with('pesan', 'Add Successfuly.');      
+				], $pesan);
+				$validatedData['remarks'] = !empty($request->input('remarks'))?$request->input('remarks'):'';			
+				$validatedData['id_request_tool_auxiliaries'] = $data[0]->id;			
+				
+				ProductionReqSparepartAuxiliariesDetail::create($validatedData);
+				
+				//Audit Log		
+				$username= auth()->user()->email; 
+				$ipAddress=$_SERVER['REMOTE_ADDR'];
+				$location='0';
+				$access_from=Browser::browserName();
+				$activity='Add Detail Request Sparepart Auxiliaries '.$data[0]->request_number;
+				$this->auditLogs($username,$ipAddress,$location,$access_from,$activity); 
+				 
+				return Redirect::to('/production-req-sparepart-auxiliaries-detail/'.$request_number)->with('pesan', 'Add Successfuly.');      
+			}
         } 
 			
     }
@@ -415,8 +473,9 @@ class ProductionController extends Controller
 
         ProductionReqSparepartAuxiliariesDetail::where('id', $id)
 			->update($validatedData);
-
+		//print_r($response);exit;
         $request_number = $request->input('request_number');
+        //$request_number =  $response->request_number;
 		
 		//Audit Log		
 		$username= auth()->user()->email; 
@@ -3162,9 +3221,9 @@ class ProductionController extends Controller
 				if($responseGood or $responseHold or $responseReject){
 					if($responseGood){					
 						$stock_akhir = $data_product[0]->stock + $data_update[0]->good;//STOK
-						$weight_akhir = $data_product[0]->weight + $data_update[0]->weight_good;//WEIGTH				
+						$weight_akhir = $data_product[0]->weight_stock + $data_update[0]->weight_good;//WEIGTH				
 						
-						DB::table('master_wips')->where('id', $order_name[1])->update(array('weight' => $weight_akhir, 'stock' => $stock_akhir, 'updated_at' => date('Y-m-d H:i:s'))); 						
+						DB::table('master_wips')->where('id', $order_name[1])->update(array('weight_stock' => $weight_akhir, 'stock' => $stock_akhir, 'updated_at' => date('Y-m-d H:i:s'))); 						
 					}
 					
 					$validatedData = ([
@@ -3265,9 +3324,9 @@ class ProductionController extends Controller
 						*/
 						//if($responseGood){					
 							$stock_akhir = $data_product[0]->stock - $data_update[0]->good;//STOK
-							$weight_akhir = $data_product[0]->weight - $data_update[0]->weight_good;//WEIGTH						
+							$weight_akhir = $data_product[0]->weight_stock - $data_update[0]->weight_good;//WEIGTH						
 							
-							$responseMaster = DB::table('master_wips')->where('id', $order_name[1])->update(array('stock' => $stock_akhir)); 						
+							$responseMaster = DB::table('master_wips')->where('id', $order_name[1])->update(array('weight_stock' => $weight_akhir, 'stock' => $stock_akhir)); 						
 						//}
 					}
 					/*
