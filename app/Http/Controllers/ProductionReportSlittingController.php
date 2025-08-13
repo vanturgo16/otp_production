@@ -906,7 +906,7 @@ class ProductionReportSlittingController extends Controller
 									->get();
 								
 								$updatedDataMS['stock'] = $data_produk[0]->stock - 1 ;
-								$updatedDataMS['weight'] = $data_produk[0]->weight - $data_blow[0]->weight ;//
+								$updatedDataMS['weight_stock'] = $data_produk[0]->weight_stock - $data_blow[0]->weight ;//
 								
 								$responseUpdateMaster = DB::table('master_wips')
 															->where('id', $order_name[1])
@@ -920,7 +920,7 @@ class ProductionReportSlittingController extends Controller
 									->get();
 								//print_r($data_produk);
 								$updatedDataMS['stock'] = $data_produk[0]->stock - 1 ;
-								$updatedDataMS['weight'] = $data_produk[0]->weight - $data_blow[0]->weight ;//
+								$updatedDataMS['weight_stock'] = $data_produk[0]->weight_stock - $data_blow[0]->weight ;//
 								
 								$responseUpdateMaster = DB::table('master_wips')
 															->where('id', $order_name[1])
@@ -1184,7 +1184,7 @@ class ProductionReportSlittingController extends Controller
 									->get();
 								
 								$updatedDataMS_BSO['stock'] = $data_produk[0]->stock + 1 ;
-								$updatedDataMS_BSO['weight'] = $data_produk[0]->weight + $data_blow_barcode_start_old[0]->weight;
+								$updatedDataMS_BSO['weight_stock'] = $data_produk[0]->weight_stock + $data_blow_barcode_start_old[0]->weight;
 								
 								$responseUpdateMasterBSO = DB::table('master_wips')
 										->where('id', $order_name_barcode_start_old[1])
@@ -1198,7 +1198,7 @@ class ProductionReportSlittingController extends Controller
 									->get();
 								
 								$updatedDataMS_BSO['stock'] = $data_produk[0]->stock + 1 ;
-								$updatedDataMS_BSO['weight'] = $data_produk[0]->weight + $data_blow_barcode_start_old[0]->weight;
+								$updatedDataMS_BSO['weight_stock'] = $data_produk[0]->weight_stock + $data_blow_barcode_start_old[0]->weight;
 								
 								$responseUpdateMasterBSO = DB::table('master_wips')
 										->where('id', $order_name_barcode_start_old[1])
@@ -1227,7 +1227,7 @@ class ProductionReportSlittingController extends Controller
 									->get();
 								
 								$updatedDataMS['stock'] = $data_produk[0]->stock - 1 ;
-								$updatedDataMS['weight'] = $data_produk[0]->weight - $data_blow[0]->weight ;
+								$updatedDataMS['weight_stock'] = $data_produk[0]->weight_stock - $data_blow[0]->weight ;
 								
 								$responseUpdateMaster = DB::table('master_wips')
 															->where('id', $order_name[1])
@@ -1241,7 +1241,7 @@ class ProductionReportSlittingController extends Controller
 									->get();
 								//print_r($data_produk);
 								$updatedDataMS['stock'] = $data_produk[0]->stock - 1 ;
-								$updatedDataMS['weight'] = $data_produk[0]->weight - $data_blow[0]->weight ;
+								$updatedDataMS['weight_stock'] = $data_produk[0]->weight_stock - $data_blow[0]->weight ;
 								
 								$responseUpdateMaster = DB::table('master_wips')
 															->where('id', $order_name[1])
@@ -1364,7 +1364,7 @@ class ProductionReportSlittingController extends Controller
 							->get();
 						
 						$updatedDataMS_BS['stock'] = $data_produk[0]->stock + 1 ;
-						$updatedDataMS_BS['weight'] = $data_produk[0]->weight + $data_blow[0]->weight ;
+						$updatedDataMS_BS['weight_stock'] = $data_produk[0]->weight_stock + $data_blow[0]->weight ;
 						
 						$responseUpdateMasterBS = DB::table('master_wips')
 								->where('id', $order_name[1])
@@ -1378,7 +1378,7 @@ class ProductionReportSlittingController extends Controller
 							->get();
 						
 						$updatedDataMS_BS['stock'] = $data_produk[0]->stock + 1 ;
-						$updatedDataMS_BS['weight'] = $data_produk[0]->weight + $data_blow[0]->weight ;
+						$updatedDataMS_BS['weight_stock'] = $data_produk[0]->weight_stock + $data_blow[0]->weight ;
 						
 						$responseUpdateMasterBS = DB::table('master_wips')
 								->where('id', $order_name[1])
@@ -1582,10 +1582,10 @@ class ProductionReportSlittingController extends Controller
 					if($responseGood){					
 						//PENYESUAIAN STOK dan WEIGTH ke TABLE WIP/WIPS
 						$stock_akhir = $data_product[0]->stock + $data_update[0]->good;//STOK
-						$weight_akhir = $data_product[0]->weight + $data_update[0]->weight_good;//WEIGTH
+						$weight_akhir = $data_product[0]->weight_stock + $data_update[0]->weight_good;//WEIGTH
 						
 						
-						DB::table($master_table)->where('id', $order_name[1])->update(array('weight' => $weight_akhir, 'stock' => $stock_akhir, 'updated_at' => date('Y-m-d H:i:s')));
+						DB::table($master_table)->where('id', $order_name[1])->update(array('weight_stock' => $weight_akhir, 'stock' => $stock_akhir, 'updated_at' => date('Y-m-d H:i:s')));
 					}
 					
 					$validatedData = ([
@@ -1693,9 +1693,9 @@ class ProductionReportSlittingController extends Controller
 							*/
 							//if($responseGood){					
 								$stock_akhir = $data_product[0]->stock - $data_update[0]->good;//STOK
-								$weight_akhir = $data_product[0]->weight - $data_update[0]->weight_good;//WEIGTH		
+								$weight_akhir = $data_product[0]->weight_stock - $data_update[0]->weight_good;//WEIGTH		
 								
-								$responseMaster = DB::table($master_table)->where('id', $order_name[1])->update(array('weight' => $weight_akhir,'stock' => $stock_akhir, 'updated_at' => date('Y-m-d H:i:s'))); 						
+								$responseMaster = DB::table($master_table)->where('id', $order_name[1])->update(array('weight_stock' => $weight_akhir,'stock' => $stock_akhir, 'updated_at' => date('Y-m-d H:i:s'))); 						
 							//}
 						}
 						/*
@@ -1850,7 +1850,7 @@ class ProductionReportSlittingController extends Controller
 										->get();
 									
 									$updatedDataMS_BS['stock'] = $data_produk[0]->stock + 1 ;
-									$updatedDataMS_BS['weight'] = $data_produk[0]->weight + $data_blow[0]->weight ;
+									$updatedDataMS_BS['weight_stock'] = $data_produk[0]->weight_stock + $data_blow[0]->weight ;
 									
 									$responseUpdateMasterBS = DB::table('master_wips')
 											->where('id', $order_name[1])
@@ -1864,7 +1864,7 @@ class ProductionReportSlittingController extends Controller
 										->get();
 									
 									$updatedDataMS_BS['stock'] = $data_produk[0]->stock + 1 ;
-									$updatedDataMS_BS['weight'] = $data_produk[0]->weight + $data_blow[0]->weight ;
+									$updatedDataMS_BS['weight_stock'] = $data_produk[0]->weight_stock + $data_blow[0]->weight ;
 									
 									$responseUpdateMasterBS = DB::table('master_wips')
 											->where('id', $order_name[1])
