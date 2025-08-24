@@ -4,21 +4,23 @@
 
 <div class="page-content">
     <div class="container-fluid">
+        <!-- Title -->
         <div class="row">
             <div class="col-12">
                 <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                    <h4 class="mb-sm-0 font-size-18">Dashboard</h4>
+                    <h4 class="mb-sm-0 font-size-18">Dashboard Production</h4>
 
                     <div class="page-title-right">
                         <ol class="breadcrumb m-0">
-                            <li class="breadcrumb-item"><a href="javascript: void(0);">Dashboard</a></li>
-                            <!--li class="breadcrumb-item active">Dashboard</li-->
+                            <li class="breadcrumb-item"><a href="javascript:void(0);">Dashboard</a></li>
+                            <li class="breadcrumb-item active">Production</li>
                         </ol>
                     </div>
-
                 </div>
             </div>
         </div>
+
+        <!-- Alerts -->
         @if (session('success'))
             <div class="alert alert-success alert-dismissible alert-label-icon label-arrow fade show" role="alert">
                 <i class="mdi mdi-check-all label-icon"></i><strong>Success</strong> - {{ session('success') }}
@@ -28,12 +30,37 @@
         <div class="row">
             <div class="col-lg-12">
                 <div class="card">
+                    <div class="card-header bg-light">
+                        <h5 class="card-title mb-0">Req. sparepart & Aux</h5>
+                    </div>
                     <div class="card-body">
-                        <div class="row justify-content-center mt-3">
-                            <div class="col-12">
-                                <div class="text-center">
-                                    <h5>Welcome to the "Dashboard Production"</h5>
-                                    <p class="text-muted">Here you can Manage Production on the system PT Olefina Tifaplas Polikemindo</p>
+                        <div class="row text-start">
+                            <div class="col-md-3">
+                                <div class="border rounded p-3">
+                                    <p class="text-muted mb-0">Request</p>
+                                    <h4 class="mb-1">{{ $reportAux['Request'] }}</h4>
+                                    <small class="text-success">+0 Hari Ini</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="border rounded p-3">
+                                    <p class="text-muted mb-0">Approve</p>
+                                    <h4 class="mb-1">{{ $reportAux['Approve'] }}</h4>
+                                    <small class="text-success">+0 Hari Ini</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="border rounded p-3">
+                                    <p class="text-muted mb-0">Hold</p>
+                                    <h4 class="mb-1">{{ $reportAux['Hold'] }}</h4>
+                                    <small class="text-success">+0 Hari Ini</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="border rounded p-3">
+                                    <p class="text-muted mb-0">Total</p>
+                                    <h4 class="mb-1">{{ $reportAux['total'] }}</h4>
+                                    <small class="text-success">+0 Hari Ini</small>
                                 </div>
                             </div>
                         </div>
@@ -41,6 +68,213 @@
                 </div>
             </div>
         </div>
+
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h5 class="card-title mb-0">Entry Maaterial Use</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-start">
+                            <div class="col-md-3">
+                                <div class="border rounded p-3">
+                                    <p class="text-muted mb-0">Active</p>
+                                    <h4 class="mb-1">{{ $reportRaw['Active'] }}</h4>
+                                    <small class="text-success">+0 Hari Ini</small>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <div class="border rounded p-3">
+                                    <p class="text-muted mb-0">Hold</p>
+                                    <h4 class="mb-1">{{ $reportAux['Hold'] }}</h4>
+                                    <small class="text-success">+0 Hari Ini</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="border rounded p-3">
+                                    <p class="text-muted mb-0">Total</p>
+                                    <h4 class="mb-1">{{ $reportRaw['total'] }}</h4>
+                                    <small class="text-success">+0 Hari Ini</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 1: Production Request -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h5 class="card-title mb-0">Report Blow</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-start">
+                            <div class="col-md-3">
+                                <div class="border rounded p-3">
+                                    <p class="text-muted mb-0">Request / Un Post</p>
+                                    <h4 class="mb-1">{{ $reportBlow['unposted'] }}</h4>
+                                    <small class="text-success">+0 Hari Ini</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="border rounded p-3">
+                                    <p class="text-muted mb-0">Posted / Created PO</p>
+                                    <h4 class="mb-1">{{ $reportBlow['posted'] }}</h4>
+                                    <small class="text-success">+0 Hari Ini</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="border rounded p-3">
+                                    <p class="text-muted mb-0">Closed</p>
+                                    <h4 class="mb-1">{{ $reportBlow['closed']}}</h4>
+                                    <small class="text-success">+0 Hari Ini</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="border rounded p-3">
+                                    <p class="text-muted mb-0">Total</p>
+                                    <h4 class="mb-1">{{ $reportBlow['total'] }}</h4>
+                                    <small class="text-success">+0 Hari Ini</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2: Production Order -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h5 class="card-title mb-0">Report Slitting</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-start">
+                            <div class="col-md-3">
+                                <div class="border rounded p-3">
+                                    <p class="text-muted mb-0">Request / Un Post</p>
+                                    <h4 class="mb-1">{{ $reportSlt['unposted'] }}</h4>
+                                    <small class="text-success">+0 Hari Ini</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="border rounded p-3">
+                                    <p class="text-muted mb-0">Posted</p>
+                                    <h4 class="mb-1">{{ $reportSlt['posted'] }}</h4>
+                                    <small class="text-success">+0 Hari Ini</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="border rounded p-3">
+                                    <p class="text-muted mb-0">Closed</p>
+                                    <h4 class="mb-1">{{ $reportSlt['closed'] }}</h4>
+                                    <small class="text-success">+0 Hari Ini</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="border rounded p-3">
+                                    <p class="text-muted mb-0">Total</p>
+                                    <h4 class="mb-1">{{ $reportSlt['total'] }}</h4>
+                                    <small class="text-success">+0 Hari Ini</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h5 class="card-title mb-0">Report Folding</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-start">
+                            <div class="col-md-3">
+                                <div class="border rounded p-3">
+                                    <p class="text-muted mb-0">Request / Un Post</p>
+                                    <h4 class="mb-1">{{ $reportFld['unposted'] }}</h4>
+                                    <small class="text-success">+0 Hari Ini</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="border rounded p-3">
+                                    <p class="text-muted mb-0">Posted / Created PO</p>
+                                    <h4 class="mb-1">{{ $reportFld['posted'] }}</h4>
+                                    <small class="text-success">+0 Hari Ini</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="border rounded p-3">
+                                    <p class="text-muted mb-0">Closed</p>
+                                    <h4 class="mb-1">{{ $reportFld['closed'] }}</h4>
+                                    <small class="text-success">+0 Hari Ini</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="border rounded p-3">
+                                    <p class="text-muted mb-0">Total</p>
+                                    <h4 class="mb-1">{{ $reportFld['total'] }}</h4>
+                                    <small class="text-success">+0 Hari Ini</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h5 class="card-title mb-0">Report Bag Making</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-start">
+                            <div class="col-md-3">
+                                <div class="border rounded p-3">
+                                    <p class="text-muted mb-0">Request / Un Post</p>
+                                    <h4 class="mb-1">{{ $reportBag['unposted'] }}</h4>
+                                    <small class="text-success">+0 Hari Ini</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="border rounded p-3">
+                                    <p class="text-muted mb-0">Posted / Created PO</p>
+                                    <h4 class="mb-1">{{ $reportBag['posted'] }}</h4>
+                                    <small class="text-success">+0 Hari Ini</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="border rounded p-3">
+                                    <p class="text-muted mb-0">Closed</p>
+                                    <h4 class="mb-1">{{ $reportBag['closed'] }}</h4>
+                                    <small class="text-success">+0 Hari Ini</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="border rounded p-3">
+                                    <p class="text-muted mb-0">Total</p>
+                                    <h4 class="mb-1">{{ $reportBag['total'] }}</h4>
+                                    <small class="text-success">+0 Hari Ini</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 
