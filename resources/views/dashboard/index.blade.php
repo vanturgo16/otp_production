@@ -58,8 +58,8 @@
                             </div>
                             <div class="col-md-3">
                                 <div class="border rounded p-3 ">
-                                    <p class="text-purple mb-0">Total</p>
-                                    <h4 class="mb-1 text-purple">{{ $reportAux['total'] }}</h4>
+                                    <p class="text-primary mb-0">Total</p>
+                                    <h4 class="mb-1 text-primary">{{ $reportAux['total'] }}</h4>
                                     <small class="text-muted"><span class="text-bg-success rounded-2">+0</span> Hari Ini</small>
                                 </div>
                             </div>
