@@ -203,6 +203,13 @@ class ProductionController extends Controller
                 ->select('request_tool_auxiliaries.*', 'b.name')
                 ->whereRaw( "sha1(request_tool_auxiliaries.id) = '$response_id'")
                 ->get();
+				
+		$data_detail = DB::table('request_tool_auxiliaries_details')
+				->select('*')
+				->whereRaw( "sha1(id_request_tool_auxiliaries) = '$response_id'")
+				->get();
+				
+		print_r($data); exit;
 		
 		if(!empty($data[0])){
 			
@@ -224,22 +231,23 @@ class ProductionController extends Controller
 			return Redirect::to('/production-req-sparepart-auxiliaries')->with('pesan_danger', 'There Is An Error.');
 		}
 	}
+	
 	public function production_req_sparepart_auxiliaries_approve($response_id){
 		
 		$data = ProductionReqSparepartAuxiliaries::leftJoin('master_departements AS b', 'request_tool_auxiliaries.id_master_departements', '=', 'b.id')
                 ->select('request_tool_auxiliaries.*', 'b.name')
                 ->whereRaw( "sha1(request_tool_auxiliaries.id) = '$response_id'")
                 ->get();
-				
+		/*		
 		$data_detail = DB::table('request_tool_auxiliaries_details')
 				->select('*')
 				->whereRaw( "sha1(id_request_tool_auxiliaries) = '$response_id'")
 				->get();
-		
+		*/
 		//print_r($data_detail);exit;
 		
 		if(!empty($data[0])){
-			if(!empty($data_detail[0])){//tambahkan verifikasi jika data detail kosong
+			//if(!empty($data_detail[0])){//tambahkan verifikasi jika data detail kosong
 			
 				$validatedData['status'] = 'Approve';			
 				
@@ -247,6 +255,7 @@ class ProductionController extends Controller
 							->update($validatedData);
 				
 				if($response){
+					/*
 					foreach($data_detail as $data_for){
 						$id_master_tool_auxiliaries = $data_for->id_master_tool_auxiliaries;
 						
@@ -262,7 +271,7 @@ class ProductionController extends Controller
 							}else{
 								$remarks = $data_for->id;//id detail
 							}
-							/*//sementara remark
+							
 							$validatedData = ([
 								'id_good_receipt_notes_details' => $data[0]->request_number,
 								'type_product' => 'TA',
@@ -284,7 +293,7 @@ class ProductionController extends Controller
 								
 								DB::table('master_tool_auxiliaries')->where('id', $id_master_tool_auxiliaries)->update(array('stock' => $stock_akhir, 'updated_at' => date('Y-m-d H:i:s'))); 		
 							}
-							*/
+					*/		
 							//Audit Log		
 							$username= auth()->user()->email; 
 							$ipAddress=$_SERVER['REMOTE_ADDR'];
@@ -294,14 +303,18 @@ class ProductionController extends Controller
 							$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
 						
 							return Redirect::to('/production-req-sparepart-auxiliaries')->with('pesan', 'Approve Successfuly.');
+					/*
 						}else{
 							return Redirect::to('/production-ent-report-bag-making')->with('pesan_danger', 'There Is An Error. Data Produk Not Found.');
 						}
 					}
+					*/
 				}
+			/*
 			}else{
 				return Redirect::to('/production-req-sparepart-auxiliaries')->with('pesan_danger', 'Detail tidak tersedia');
 			}
+			*/
 		}else{
 			return Redirect::to('/production-req-sparepart-auxiliaries')->with('pesan_danger', 'There Is An Error.');
 		}
@@ -312,14 +325,41 @@ class ProductionController extends Controller
                 ->select('request_tool_auxiliaries.*', 'b.name')
                 ->whereRaw( "sha1(request_tool_auxiliaries.id) = '$response_id'")
                 ->get();
-		
-		if(!empty($data[0])){
+		$data_detail = ProductionReqSparepartAuxiliariesDetail::leftJoin('request_tool_auxiliaries as b', 'request_tool_auxiliaries_details.id_request_tool_auxiliaries', '=', 'b.id')
+				->whereRaw("sha1(b.id) = '$response_id'")
+				->select('request_tool_auxiliaries_details.*', 'b.request_number')
+				->get();
+				
+		if(!empty($data[0])){			
+			$response_delete = ProductionReqSparepartAuxiliaries::whereRaw( "sha1(id) = '$response_id'" )->delete();
 			
-			ProductionReqSparepartAuxiliaries::whereRaw( "sha1(id) = '$response_id'" )->delete();
-			ProductionReqSparepartAuxiliariesDetail::whereRaw( "sha1(id_request_tool_auxiliaries) = '$response_id'" )->delete();
-		
+			if($response_delete){
+				if($data_detail){
+					foreach($data_detail as $data_detail){
+						$response_delete_detail = ProductionReqSparepartAuxiliariesDetail::whereRaw( "id_request_tool_auxiliaries = '$data_detail->id_request_tool_auxiliaries'" )->delete();
+						
+						if($response_delete_detail){			
+							$data_tool_auxiliaries = DB::table('master_tool_auxiliaries')
+								->select('*')
+								->whereRaw( "id = '".$data_detail->id_master_tool_auxiliaries."'")
+								->get();
+								
+							$stock_akhir = $data_tool_auxiliaries[0]->stock + $data_detail->qty;
+							
+							//penyesuaian stok old
+							DB::table('master_tool_auxiliaries')->where('id', $data_detail->id_master_tool_auxiliaries)->update(array('stock' => $stock_akhir, 'updated_at' => date('Y-m-d H:i:s'))); 	
+								
+							//reset histori stock old
+							DB::table('history_stocks')
+								->whereRaw( "remarks like '%| ".$data_detail->id." |%' and type_stock = 'OUT' and type_product = 'TA'" )
+								->delete();								
+						}
+					}
+				}
+			}
+			//exit;
 			//Audit Log		
-			$username= auth()->user()->email; 
+			$username= auth()->user()->email;
 			$ipAddress=$_SERVER['REMOTE_ADDR'];
 			$location='0';
 			$access_from=Browser::browserName();
@@ -342,7 +382,7 @@ class ProductionController extends Controller
 							->select('name','id')
 							->get();
 			$ms_tool_auxiliaries = DB::table('master_tool_auxiliaries')
-							->select('description','id')
+							->select('description','id','stock')
 							->get();			
 					
 			$data_detail = DB::table('request_tool_auxiliaries_details as a')
@@ -409,38 +449,83 @@ class ProductionController extends Controller
 			if($request->input('qty')<1){
 				return Redirect::to('/production-req-sparepart-auxiliaries-detail/'.$request_number)->with('pesan_danger', 'Quantity harus lebih besar dari 0');
 			}else{	
-				$data = ProductionReqSparepartAuxiliaries::whereRaw( "sha1(request_tool_auxiliaries.request_number) = '$request_number'")
-					->select('id','request_number')
-					->get();
+				$id_master_tool_auxiliaries = explode('|', $request->input('id_master_tool_auxiliaries'));;
 				
-				$pesan = [
-					'id_master_tool_auxiliaries.required' => 'Cannot Be Empty',
-					'qty.required' => 'Cannot Be Empty',         
-				];
+				$id = $id_master_tool_auxiliaries[0];
+				$stock = $id_master_tool_auxiliaries[1];
+				
+				if( $stock<1 || $request->input('qty')>$stock ){
+					return Redirect::to('/production-req-sparepart-auxiliaries-detail/'.$request_number)->with('pesan_danger', 'Stock tidak tersedia');  
+				}else{
+					$data = ProductionReqSparepartAuxiliaries::whereRaw( "sha1(request_tool_auxiliaries.request_number) = '$request_number'")
+						->select('id','request_number')
+						->get();
+					
+					$pesan = [
+						'id_master_tool_auxiliaries.required' => 'Cannot Be Empty',
+						'qty.required' => 'Cannot Be Empty',         
+					];
 
-				$validatedData = $request->validate([
-					'id_master_tool_auxiliaries' => 'required',
-					'qty' => 'required',
-
-				], $pesan);
-				$validatedData['remarks'] = !empty($request->input('remarks'))?$request->input('remarks'):'';			
-				$validatedData['id_request_tool_auxiliaries'] = $data[0]->id;			
-				
-				ProductionReqSparepartAuxiliariesDetail::create($validatedData);
-				
-				//Audit Log		
-				$username= auth()->user()->email; 
-				$ipAddress=$_SERVER['REMOTE_ADDR'];
-				$location='0';
-				$access_from=Browser::browserName();
-				$activity='Add Detail Request Sparepart Auxiliaries '.$data[0]->request_number;
-				$this->auditLogs($username,$ipAddress,$location,$access_from,$activity); 
-				 
-				return Redirect::to('/production-req-sparepart-auxiliaries-detail/'.$request_number)->with('pesan', 'Add Successfuly.');      
+					$validatedData = $request->validate([
+						'id_master_tool_auxiliaries' => 'required',
+						'qty' => 'required',
+					], $pesan);
+					
+					$validatedData['id_master_tool_auxiliaries'] = $id;			
+					$validatedData['remarks'] = !empty($request->input('remarks'))?$request->input('remarks'):'';			
+					$validatedData['id_request_tool_auxiliaries'] = $data[0]->id;
+					
+					$response_add = ProductionReqSparepartAuxiliariesDetail::create($validatedData);
+					
+					if($response_add){
+						$data_tool_auxiliaries = DB::table('master_tool_auxiliaries')
+							->select('*')
+							->whereRaw( "id = '".$id."'")
+							->get();
+						
+						if($response_add->remarks!=""){
+							//id ta | id ta detail | remarks
+							$remarks = $response_add->id_request_tool_auxiliaries." | ".$response_add->id." | ".$response_add->remarks;
+						}else{
+							//id ta | id ta detail
+							$remarks = $response_add->id_request_tool_auxiliaries." | ".$response_add->id;
+						}
+						
+						$validatedData = ([
+							'id_good_receipt_notes_details' => $data[0]->request_number,
+							'type_product' => 'TA',
+							'id_master_products' => $response_add->id_master_tool_auxiliaries,
+							'qty' => $response_add->qty,
+							'is_closed' => '1',
+							'type_stock' => 'OUT',
+							'date' => date("Y-m-d"),
+							'barcode' => null,
+							'remarks' => $remarks
+						]);	
+						$responseHistory = HistoryStock::create($validatedData);
+						
+						if($responseHistory){
+							$stock_akhir = $data_tool_auxiliaries[0]->stock - $response_add->qty;		
+							
+							DB::table('master_tool_auxiliaries')->where('id', $response_add->id_master_tool_auxiliaries)->update(array('stock' => $stock_akhir, 'updated_at' => date('Y-m-d H:i:s'))); 		
+						}
+					}
+					
+					//Audit Log		
+					$username= auth()->user()->email; 
+					$ipAddress=$_SERVER['REMOTE_ADDR'];
+					$location='0';
+					$access_from=Browser::browserName();
+					$activity='Add Detail Request Sparepart Auxiliaries '.$data[0]->request_number;
+					$this->auditLogs($username,$ipAddress,$location,$access_from,$activity); 
+					 
+					return Redirect::to('/production-req-sparepart-auxiliaries-detail/'.$request_number)->with('pesan', 'Add Successfuly.');    
+				}	
 			}
         } 
 			
     }
+	//sudah tidak terpakai, karna modal edit sudah di ubah konsepnya
 	public function production_req_sparepart_auxiliaries_detail_edit_get(Request $request, $id)
     {
 		$data['find'] = ProductionReqSparepartAuxiliariesDetail::find($id);
@@ -457,41 +542,129 @@ class ProductionController extends Controller
         return response()->json(['data' => $data]);
     }
 	public function production_req_sparepart_auxiliaries_detail_edit_save(Request $request, $id){
-		$pesan = [
-            'id_master_tool_auxiliaries.required' => 'Cannot Be Empty',
-            'qty.required' => 'Cannot Be Empty',
-            'remarks.required' => 'Cannot Be Empty',
-            
-        ];
-
-        $validatedData = $request->validate([
-            'id_master_tool_auxiliaries' => 'required',
-            'qty' => 'required',
-            'remarks' => 'required',
-
-        ], $pesan);
-
-        ProductionReqSparepartAuxiliariesDetail::where('id', $id)
-			->update($validatedData);
-		//print_r($response);exit;
+		
         $request_number = $request->input('request_number');
-        //$request_number =  $response->request_number;
+		$data_old = ProductionReqSparepartAuxiliariesDetail::whereRaw( "sha1(request_tool_auxiliaries_details.id) = '$id'")
+			->leftJoin('request_tool_auxiliaries as b', 'request_tool_auxiliaries_details.id_request_tool_auxiliaries', '=', 'b.id')
+			->select('request_tool_auxiliaries_details.*', 'b.request_number')
+			->get();
 		
-		//Audit Log		
-		$username= auth()->user()->email; 
-		$ipAddress=$_SERVER['REMOTE_ADDR'];
-		$location='0';
-		$access_from=Browser::browserName();
-		$activity='Save Edit Detail Request Sparepart Auxiliaries '.$id;
-		$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
-		
-		return Redirect::to('/production-req-sparepart-auxiliaries-detail/'.$request_number)->with('pesan', 'Edit Successfuly.');  
+		if($request->input('qty')<1){
+			return Redirect::to('/production-req-sparepart-auxiliaries-detail/'.$request_number)->with('pesan_danger', 'Quantity harus lebih besar dari 0');
+		}else{	
+			$id_master_tool_auxiliaries = explode('|', $request->input('id_master_tool_auxiliaries'));;
+				
+			$id_mta = $id_master_tool_auxiliaries[0];
+			$stock = $id_master_tool_auxiliaries[1];
+			
+			if( $stock<1 || $request->input('qty')>$stock ){
+				return Redirect::to('/production-req-sparepart-auxiliaries-detail/'.$request_number)->with('pesan_danger', 'Stock tidak tersedia');  
+			}else{
+				$pesan = [
+					'id_master_tool_auxiliaries.required' => 'Cannot Be Empty',
+					'qty.required' => 'Cannot Be Empty',
+					'remarks.required' => 'Cannot Be Empty',					
+				];
+
+				$validatedData = $request->validate([
+					'id_master_tool_auxiliaries' => 'required',
+					'qty' => 'required',
+					'remarks' => 'required',
+				], $pesan);
+				
+				$validatedData['id_master_tool_auxiliaries'] = $id_mta;			
+				$validatedData['remarks'] = !empty($request->input('remarks'))?$request->input('remarks'):'';
+				
+				$response_update = ProductionReqSparepartAuxiliariesDetail::where('id', $data_old[0]->id)
+					->update($validatedData);
+					
+				$data_update = ProductionReqSparepartAuxiliariesDetail::find($data_old[0]->id);
+				
+				if($response_update){
+					$data_tool_auxiliaries_old = DB::table('master_tool_auxiliaries')
+						->select('*')
+						->whereRaw( "id = '".$data_old[0]->id_master_tool_auxiliaries."'")
+						->get();
+					$stock_akhir_old = $data_tool_auxiliaries_old[0]->stock + $data_old[0]->qty;
+					//penyesuaian stok old
+					DB::table('master_tool_auxiliaries')->where('id', $data_old[0]->id_master_tool_auxiliaries)->update(array('stock' => $stock_akhir_old, 'updated_at' => date('Y-m-d H:i:s'))); 	
+						
+					//reset histori stock old
+					DB::table('history_stocks')
+						->whereRaw( "remarks like '%| ".$data_old[0]->id." |%' and type_stock = 'OUT' and type_product = 'TA'" )
+						->delete();				
+					
+					if($data_update->remarks!=""){
+						//id ta | id ta detail | remarks
+						$remarks = $data_update->id_request_tool_auxiliaries." | ".$data_update->id." | ".$data_update->remarks;
+					}else{
+						//id ta | id ta detail
+						$remarks = $data_update->id_request_tool_auxiliaries." | ".$data_update->id;
+					}
+					
+					$validatedData = ([
+						'id_good_receipt_notes_details' => $data_old[0]->request_number,
+						'type_product' => 'TA',
+						'id_master_products' => $data_update->id_master_tool_auxiliaries,
+						'qty' => $data_update->qty,
+						
+						'is_closed' => '1',
+						'type_stock' => 'OUT',
+						'date' => date("Y-m-d"),
+						'barcode' => null,
+						'remarks' => $remarks
+					]);	
+					$responseHistory = HistoryStock::create($validatedData);
+					
+					if($responseHistory){						
+						$data_tool_auxiliaries_new = DB::table('master_tool_auxiliaries')
+							->select('*')
+							->whereRaw( "id = '".$data_update->id_master_tool_auxiliaries."'")
+							->get();
+						
+						$stock_akhir = $data_tool_auxiliaries_new[0]->stock - $data_update->qty;		
+						
+						DB::table('master_tool_auxiliaries')->where('id', $data_update->id_master_tool_auxiliaries)->update(array('stock' => $stock_akhir, 'updated_at' => date('Y-m-d H:i:s'))); 		
+					}
+				}
+				
+				//Audit Log		
+				$username= auth()->user()->email; 
+				$ipAddress=$_SERVER['REMOTE_ADDR'];
+				$location='0';
+				$access_from=Browser::browserName();
+				$activity='Save Edit Detail Request Sparepart Auxiliaries '.$id;
+				$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+				
+				return Redirect::to('/production-req-sparepart-auxiliaries-detail/'.$request_number)->with('pesan', 'Edit Successfuly.');  
+			}
+		}
     }
 	public function production_req_sparepart_auxiliaries_detail_delete(Request $request){
 		$id_delete = $request->input('hapus_detail');
 		$request_number = $request->input('request_number');
+		$data_old = ProductionReqSparepartAuxiliariesDetail::whereRaw( "sha1(request_tool_auxiliaries_details.id) = '$id_delete'")
+			->leftJoin('request_tool_auxiliaries as b', 'request_tool_auxiliaries_details.id_request_tool_auxiliaries', '=', 'b.id')
+			->select('request_tool_auxiliaries_details.*', 'b.request_number')
+			->get();
+		//print_r($data_old);exit;
+		$response_delete = ProductionReqSparepartAuxiliariesDetail::whereRaw( "sha1(id) = '$id_delete'" )->delete();
 		
-		ProductionReqSparepartAuxiliariesDetail::whereRaw( "sha1(id) = '$id_delete'" )->delete();
+		if($response_delete){			
+			$data_tool_auxiliaries_old = DB::table('master_tool_auxiliaries')
+				->select('*')
+				->whereRaw( "id = '".$data_old[0]->id_master_tool_auxiliaries."'")
+				->get();
+			$stock_akhir_old = $data_tool_auxiliaries_old[0]->stock + $data_old[0]->qty;
+			
+			//penyesuaian stok old
+			DB::table('master_tool_auxiliaries')->where('id', $data_old[0]->id_master_tool_auxiliaries)->update(array('stock' => $stock_akhir_old, 'updated_at' => date('Y-m-d H:i:s'))); 	
+				
+			//reset histori stock old
+			DB::table('history_stocks')
+				->whereRaw( "remarks like '%| ".$data_old[0]->id." |%' and type_stock = 'OUT' and type_product = 'TA'" )
+				->delete();	
+		}
 		
 		//Audit Log		
 		$username= auth()->user()->email; 
