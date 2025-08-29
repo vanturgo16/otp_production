@@ -126,7 +126,7 @@
 											<select class="form-select data-select2" name="id_master_tool_auxiliaries" id="id_master_tool_auxiliaries">
 												<option value="">** Please Select A Sparepart & Auxiliaries </option>
 												@foreach ($ms_tool_auxiliaries as $data)
-													<option data-tokens="{{ $data->description }}" value="{{ $data->id }}">{{ $data->description }}</option>
+													<option data-tokens="{{ $data->description }}" value="{{ $data->id }} | {{ $data->stock }}">{{ $data->description }} (Stok : {{ $data->stock==''?'0':$data->stock }})</option>
 												@endforeach
 											</select>
 											@if($errors->has('id_master_tool_auxiliaries'))
@@ -255,7 +255,7 @@
 													<h5 class="modal-title" id="editItemModalLabel">Edit Request Sparepart & Auxiliaries Detail</h5>
 													<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 												</div>
-												<form action="/production-req-sparepart-auxiliaries-detail-edit-save/{{ $data_detail->id }}" method="POST">
+												<form action="/production-req-sparepart-auxiliaries-detail-edit-save/{{ sha1($data_detail->id) }}" method="POST">
 													@csrf
 													<input type="hidden" name="request_number" class="form-control" value="{{ sha1($request_number); }}" readonly>
 													<div class="modal-body">
@@ -265,7 +265,8 @@
 															<select class="form-control data-select2x" name="id_master_tool_auxiliaries" id="id_master_tool_auxiliaries">
 																<option value="">** Please Select A Sparepart & Auxiliaries </option>
 																@foreach ($ms_tool_auxiliaries as $data)
-																	<option data-tokens="{{ $data->description }}" value="{{ $data->id }}" {{ $data_detail->id_master_tool_auxiliaries==$data->id?'selected':'' }} >{{ $data->description }}</option>
+																	<option data-tokens="{{ $data->description }}" value="{{ $data->id }} | {{ $data->stock }}" {{ $data_detail->id_master_tool_auxiliaries==$data->id?'selected':'' }} >{{ $data->description }} (Stok : {{ $data->stock==''?'0':$data->stock }})</option>
+																	
 																@endforeach
 															</select>
 															@if($errors->has('id_master_tool_auxiliaries'))
