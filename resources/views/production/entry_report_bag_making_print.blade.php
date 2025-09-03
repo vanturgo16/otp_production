@@ -23,7 +23,7 @@
           <table border="1" cellpadding="0" cellspacing="0" style="table-layout: auto;width: 100%">
             <tr>
               <td rowspan="4" style="width: 20%;" class="text-center">
-                <img src="http://eks.olefinatifaplas.my.id/img/otp-icon.jpg" width="60" height="60">
+                <img src="{{ asset('assets/images/icon-otp.png') }}" width="60" height="60">
                 <br/>
                 <strong><small>PT OLEFINA TIFAPLAS POLIKEMINDO</small></strong>
               </td>
