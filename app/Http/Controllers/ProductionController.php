@@ -2285,7 +2285,7 @@ class ProductionController extends Controller
 		$page = request()->get('page');
 		
 		$type_product = request()->get('type_product');
-        //echo $type_product;exit;
+        
 		if($where == "BLOW"){
 			$where_query = "a.status IS NULL AND b.id_master_process_productions = '2'";
 			
@@ -2318,7 +2318,7 @@ class ProductionController extends Controller
 			if(!empty($type_product) AND empty($key)){
 				$attempt = $type_product == "WIP" ? 8 : 100 ;
 				$where_query .= " OR (a.used_product = '$type_product' AND used_attempt < '$attempt')";
-			} //baru sampe sini pengecekan used attempt
+			}
 			
 			$where_query .= " )";
 			
@@ -2332,13 +2332,10 @@ class ProductionController extends Controller
 						 })
 						 ->where('c.type_result', '=', 'Slitting');
 				})
+				
 				//Cek Status Report BLW START
 				->leftJoin('report_blow_production_results as d', 'a.barcode_number', '=', 'd.barcode')
 				->leftJoin('report_blows as e', 'd.id_report_blows', '=', 'e.id')
-				//->where('e.status', 'Closed')
-				//Cek Status Report BLW END
-				//->where('a.status', 'In Stock BLW')
-				//->where('a.used_next_shift', '1')
 				->whereRaw($where_query)
 				->select('a.*')
 				->get();
@@ -2373,9 +2370,7 @@ class ProductionController extends Controller
 				}
 				$where_query .= " )";
 			}
-			//if(empty($key)){
-				$where_query .= " OR (used_attempt < '$attempt')";
-			//} 
+			$where_query .= " OR (used_attempt < '$attempt')";
 			
 			$where_query .= " )";
 			
@@ -2397,13 +2392,10 @@ class ProductionController extends Controller
 				->leftJoin('report_sfs as e', function($join) {
 					$join->on('d.id_report_sfs', '=', 'e.id');
 				})
-				//->where('e.status', 'Closed')
-				//Cek Status Report SLT END				
-				//->where('a.status', '=', 'In Stock SLT WIP')
-				//->where('a.used_next_shift', '1')
 				->whereRaw($where_query)
-				->select('a.*')
-				->get();
+				//->select('a.*')
+				//->get();
+				->pluck('a.barcode_number');
 		}else if($where == "FOLDING"){
 			$where_query = "a.status IS NULL AND b.id_master_process_productions = '3'";
 			
@@ -2415,12 +2407,11 @@ class ProductionController extends Controller
 				->leftJoin('barcodes as b', function($join) {
 					$join->on('a.id_barcode', '=', 'b.id');
 				})
-				->select('a.*')
 				->whereRaw($where_query)
-				->get();
+				//->select('a.*')
+				//->get();
+				->pluck('a.barcode_number');
 		}else if($where == "BAG START"){
-			//$jns_wo = substr($wo, 2, 3);			
-			//$where = ($jns_wo=="SLT")?"In Stock SLT FG":"In Stock FLD";
 			$where_query = "a.status IN('In Stock SLT FG','In Stock FLD') AND ( a.used_next_shift = '1' ";
 			$attempt = 50000 ;
 			
@@ -2437,9 +2428,7 @@ class ProductionController extends Controller
 				}
 				$where_query .= " )";
 			}
-			//if(empty($key)){
-				$where_query .= " OR (used_attempt < '$attempt')";
-			//} 
+			$where_query .= " OR (used_attempt < '$attempt')";
 			
 			$where_query .= " )";
 			
@@ -2451,15 +2440,11 @@ class ProductionController extends Controller
 							 $query->select('barcode_start')
 								   ->from('report_bag_production_results');
 						 });
-						 //->where('c.type_result', '=', 'Slitting');
 				})
 				//Cek Status Report FLD START
 				->leftJoin('report_sf_production_results as d', 'a.barcode_number', '=', 'd.barcode')
 				->leftJoin('report_sfs as e', 'd.id_report_sfs', '=', 'e.id')
 				->where('e.status', 'Closed')
-				//->where('a.used_next_shift', '1')
-				//Cek Status Report FLD END
-				//->where('a.status', $where)
 				->whereRaw($where_query)
 				->groupBy('a.barcode_number')
 				->select('a.*')
@@ -2495,13 +2480,20 @@ class ProductionController extends Controller
 		}
 		
 		
-				
+		/*	
 		$lists = "<option value='' disabled='' selected=''>** Please Select A Barcodes</option>";		
 		foreach($datas as $data){
 			$selected = $data->barcode_number==$key?'selected':'';
 			$lists .= "<option value='".$data->barcode_number."' ".$selected.">".$data->barcode_number."</option>";
 		}
-		
+		*/
+		$lists = "<option value='' disabled selected>** Please Select A Barcode **</option>";
+
+		foreach ($datas as $barcode) {
+			$selected = ($barcode == $key) ? 'selected' : '';
+			$lists .= "<option value='{$barcode}' {$selected}>{$barcode}</option>";
+		}
+
 		$callback = array('list_barcode'=>$lists);
 		echo json_encode($callback);		
     }
