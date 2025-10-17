@@ -2487,11 +2487,21 @@ class ProductionController extends Controller
 			$lists .= "<option value='".$data->barcode_number."' ".$selected.">".$data->barcode_number."</option>";
 		}
 		*/
-		$lists = "<option value='' disabled selected>** Please Select A Barcode **</option>";
+		
+		if($where == "FOLDING START" || $where == "FOLDING"){
+			$lists = "<option value='' disabled selected>** Please Select A Barcode **</option>";
 
-		foreach ($datas as $barcode) {
-			$selected = ($barcode == $key) ? 'selected' : '';
-			$lists .= "<option value='{$barcode}' {$selected}>{$barcode}</option>";
+			foreach ($datas as $barcode) {
+				$selected = ($barcode == $key) ? 'selected' : '';
+				$lists .= "<option value='{$barcode}' {$selected}>{$barcode}</option>";
+			}
+		}else{
+			$lists = "<option value='' disabled='' selected=''>** Please Select A Barcodes</option>";	
+			
+			foreach($datas as $data){
+				$selected = $data->barcode_number==$key?'selected':'';
+				$lists .= "<option value='".$data->barcode_number."' ".$selected.">".$data->barcode_number."</option>";
+			}
 		}
 
 		$callback = array('list_barcode'=>$lists);
